@@ -1,8 +1,9 @@
 # Documentação EaiMesa
 
-Índice. Leia nesta ordem para a **fatia 1** (cardápio); o restante descreve o MVP completo.
+Índice. Fatia atual: **pedidos (Kanban)**; o cardápio (fatia 1) já está no repo.
 
-1. [Fatia 1 — Cardápio](product/fatia-01-cardapio.md) — o que está sendo construído agora
+1. [Fatia 1 — Cardápio](product/fatia-01-cardapio.md)
+1b. [Fatia 2 — Pedidos](product/fatia-02-pedidos.md) — Kanban / KDS no painel
 2. [Visão do produto](product/visao.md) — o quê, para quem, o que fica de fora
 3. [Fluxos](product/fluxos.md) — publicar cardápio; depois guest/garçom
 4. [Pricing](product/pricing.md) — plano Bar

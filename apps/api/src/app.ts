@@ -7,6 +7,7 @@ import { AppError } from "./errors";
 import { sendUpload } from "./lib/uploads";
 import { authRoutes } from "./routes/auth";
 import { ownerCatalogRoutes } from "./routes/owner-catalog";
+import { ownerOrderRoutes } from "./routes/owner-orders";
 import { ownerVenueRoutes } from "./routes/owner-venue";
 import { publicMenuRoutes } from "./routes/public-menu";
 
@@ -34,6 +35,7 @@ export async function buildApp() {
   await app.register(authRoutes);
   await app.register(ownerVenueRoutes);
   await app.register(ownerCatalogRoutes);
+  await app.register(ownerOrderRoutes);
   await app.register(publicMenuRoutes);
 
   app.setErrorHandler((err, req, reply) => {

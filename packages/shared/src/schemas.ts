@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ORDER_STATUSES } from "./orders";
 import { isReservedSlug, normalizeSlug, SLUG_MAX, SLUG_MIN, SLUG_REGEX } from "./slug";
 
 export const slugSchema = z
@@ -76,4 +77,22 @@ export const patchItemSchema = z.object({
   priceCents: z.number().int().min(0).max(10_000_000).optional(),
   sortOrder: z.number().int().min(0).optional(),
   active: z.boolean().optional(),
+});
+
+export const createOrderSchema = z.object({
+  tableLabel: z.string().trim().min(1, "Informe a mesa ou o balcão.").max(40),
+  note: z.string().trim().max(280).optional().nullable(),
+  items: z
+    .array(
+      z.object({
+        catalogItemId: z.string().uuid(),
+        qty: z.number().int().min(1).max(99),
+        note: z.string().trim().max(80).optional().nullable(),
+      }),
+    )
+    .min(1, "Inclua pelo menos um item."),
+});
+
+export const patchOrderSchema = z.object({
+  status: z.enum(ORDER_STATUSES),
 });

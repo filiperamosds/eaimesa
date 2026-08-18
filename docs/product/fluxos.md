@@ -14,7 +14,9 @@ sequenceDiagram
   D->>W: /cadastro (e-mail, senha, nome, slug)
   W->>API: POST /v1/auth/register
   API-->>W: Set-Cookie eaimesa_owner
-  D->>W: /painel — categorias e itens
+  D->>W: /painel — Kanban de pedidos (abas: Pedidos, Cardápio, Meu bar)
+  W->>API: GET /v1/owner/orders
+  D->>W: /painel/cardapio — categorias e itens
   W->>API: CRUD /v1/owner/catalog/**
   C->>W: GET /bar-do-tiao
   W->>API: GET /v1/public/venues/bar-do-tiao
@@ -24,9 +26,25 @@ sequenceDiagram
 1. Dono cria conta + venue (nome + slug único).
 2. Monta categorias e itens (preço em centavos no servidor).
 3. Comparte `https://eaimesa.com.br/{slug}` (QR, Instagram, balcão).
-4. Cliente abre `/{slug}`: navega por **grupos**, toca o item para ver **foto** e descrição. **Não há carrinho nem pedido nesta fatia.**
+4. Cliente abre `/{slug}`: navega por **grupos**, toca o item para ver **foto** e descrição. **Não pede pelo link** (claim futuro). Pedidos de balcão: `/painel/pedidos`.
 
-Os fluxos 1–6 abaixo são o **MVP completo** (fatias seguintes). Permanecem válidos.
+## 0b. Fatia 2 — fila Kanban (balcão)
+
+Detalhe em [fatia-02-pedidos.md](fatia-02-pedidos.md). O cliente **ainda não** pede pelo slug.
+
+```mermaid
+sequenceDiagram
+  participant S as Staff (painel)
+  participant API as API
+
+  S->>API: POST /v1/owner/orders (itens + mesa)
+  API-->>S: Pedido pending
+  S->>API: PATCH status accepted / preparing / delivered
+```
+
+1. Staff entra (`/login`) e cai em `/painel/pedidos` (ou clica a aba **Pedidos**).
+2. Lança pedido de balcão ou vê os do seed.
+3. Avança o card nas colunas até **Entregues**.
 
 ## 1. Onboarding do bar (B2B)
 

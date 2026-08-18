@@ -44,7 +44,9 @@ URLs:
 | API | http://localhost:4000 |
 | Web (landing, painel, cardápio) | http://localhost:3000 |
 | Cardápio seed | http://localhost:3000/bar-do-tiao |
-| Painel | http://localhost:3000/painel |
+| Pedidos (Kanban) | http://localhost:3000/painel/pedidos |
+
+Login demo abre direto o Kanban. O cardápio público (`/bar-do-tiao`) **não** tem fila de pedidos.
 
 Não há segundo front na porta 3001.
 

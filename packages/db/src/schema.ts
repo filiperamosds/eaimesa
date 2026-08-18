@@ -116,3 +116,58 @@ export const catalogItemsRelations = relations(catalogItems, ({ one }) => ({
     references: [catalogCategories.id],
   }),
 }));
+
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"),
+    source: text("source").notNull().default("counter"),
+    tableLabel: text("table_label").notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("orders_venue_status_created").on(t.venueId, t.status, t.createdAt)],
+);
+
+export const orderItems = pgTable(
+  "order_items",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    catalogItemId: uuid("catalog_item_id").references(() => catalogItems.id, { onDelete: "set null" }),
+    nameSnapshot: text("name_snapshot").notNull(),
+    unitPriceCentsSnapshot: integer("unit_price_cents_snapshot").notNull(),
+    qty: integer("qty").notNull(),
+    note: text("note"),
+  },
+  (t) => [index("order_items_order").on(t.orderId)],
+);
+
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  venue: one(venues, {
+    fields: [orders.venueId],
+    references: [venues.id],
+  }),
+  items: many(orderItems),
+}));
+
+export const orderItemsRelations = relations(orderItems, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderItems.orderId],
+    references: [orders.id],
+  }),
+  catalogItem: one(catalogItems, {
+    fields: [orderItems.catalogItemId],
+    references: [catalogItems.id],
+  }),
+}));

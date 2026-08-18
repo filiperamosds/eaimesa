@@ -8,7 +8,7 @@ import type { Session } from "../lib/types";
 
 export function LoginForm() {
   const router = useRouter();
-  const next = useSearchParams().get("next") || "/painel";
+  const next = useSearchParams().get("next") || "/painel/pedidos";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export function LoginForm() {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      router.push(next.startsWith("/") ? next : "/painel");
+      router.push(next.startsWith("/") ? next : "/painel/pedidos");
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Falha no login.");

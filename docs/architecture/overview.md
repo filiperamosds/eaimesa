@@ -13,7 +13,7 @@
 | Auth guest | Cookie `eaimesa_guest` | Fatia futura |
 | Cache/fila | Redis | Fase 2 |
 
-Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md).
+Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md).
 
 ## Monorepo
 
@@ -46,8 +46,10 @@ Não existem `apps/guest` nem `apps/staff`.
 |------|-----|
 | `/` | Landing SaaS |
 | `/cadastro`, `/login` | Auth estabelecimento |
-| `/painel`, `/painel/cardapio`, `/painel/bar` | Dono autenticado |
-| `/{slug}` | Cardápio público |
+| `/painel` | Redirect para `/painel/pedidos` |
+| `/painel/pedidos` | Kanban do dono |
+| `/painel/cardapio`, `/painel/bar` | Cardápio e dados do bar |
+| `/{slug}` | Cardápio público (sem pedidos) |
 
 ## Integrações futuras
 

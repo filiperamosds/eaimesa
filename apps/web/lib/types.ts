@@ -50,3 +50,24 @@ export type PublicMenu = {
     }[];
   }[];
 };
+
+export type OrderStatus = "pending" | "accepted" | "preparing" | "delivered" | "cancelled";
+
+export type StaffOrder = {
+  id: string;
+  status: OrderStatus;
+  source: "counter" | "guest";
+  tableLabel: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+  totalCents: number;
+  items: {
+    id: string;
+    catalogItemId: string | null;
+    name: string;
+    unitPriceCents: number;
+    qty: number;
+    note: string | null;
+  }[];
+};
