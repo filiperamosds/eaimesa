@@ -1,4 +1,4 @@
-# Fatia 1 — Cardápio (escopo atual de implementação)
+# Fatia 1 — Cardápio
 
 Primeira entrega cobrável em pedaço: o estabelecimento entra, publica um cardápio, o cliente lê no celular. **Sem pedido, sem garçom, sem comanda.**
 
@@ -14,7 +14,7 @@ Primeira entrega cobrável em pedaço: o estabelecimento entra, publica um card�
 ## Não inclui (fatias seguintes)
 
 - Claim do garçom, PIN, cookie guest
-- Carrinho / pedido / fila (KDS)
+- Carrinho / pedido pelo cliente (claim). Fila Kanban: ver [fatia 2](fatia-02-pedidos.md).
 - Papel staff (garçom) separado do dono
 - Billing / gateway
 - App nativo, domínio customizado (`cardapio.bar.com`)

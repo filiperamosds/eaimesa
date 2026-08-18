@@ -37,6 +37,7 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
   }
 
   const links = [
+    { href: "/painel/pedidos", label: "Pedidos" },
     { href: "/painel/cardapio", label: "Cardápio" },
     { href: "/painel/bar", label: "Meu bar" },
   ];
@@ -44,7 +45,7 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-paper">
       <header className="border-b border-line bg-card">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-3">
+        <div className="mx-auto flex max-w-[88rem] items-center justify-between px-5 py-3">
           <div className="flex items-center gap-6">
             <Logo />
             <nav className="flex gap-4 text-sm">
@@ -69,7 +70,7 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <div className="mx-auto max-w-5xl px-5 py-8">{children}</div>
+      <div className="mx-auto max-w-[88rem] px-5 py-6">{children}</div>
     </div>
   );
 }

@@ -8,7 +8,7 @@ Um único frontend: landing, autenticação do estabelecimento e cardápio por s
 
 ## Fatia atual
 
-[Cardápio](docs/product/fatia-01-cardapio.md) — sem pedido e sem garçom.
+[Cardápio](docs/product/fatia-01-cardapio.md) e [pedidos Kanban](docs/product/fatia-02-pedidos.md).
 
 ```bash
 cp .env.example .env
@@ -21,7 +21,8 @@ pnpm dev
 
 - Site: http://localhost:3000
 - Cardápio demo: http://localhost:3000/bar-do-tiao
-- Painel: http://localhost:3000/painel (seed: `dono@bardotiao.local` / `demo1234`)
+- Pedidos: http://localhost:3000/painel/pedidos
+- Painel: `dono@bardotiao.local` / `demo1234` (seed local)
 
 Setup completo: [docs/ops/dev-setup.md](docs/ops/dev-setup.md).
 
@@ -32,6 +33,7 @@ Setup completo: [docs/ops/dev-setup.md](docs/ops/dev-setup.md).
 | Área | Arquivo |
 |------|---------|
 | Fatia 1 | [docs/product/fatia-01-cardapio.md](docs/product/fatia-01-cardapio.md) |
+| Fatia 2 | [docs/product/fatia-02-pedidos.md](docs/product/fatia-02-pedidos.md) |
 | Produto | [docs/product/visao.md](docs/product/visao.md) |
 | Fluxos | [docs/product/fluxos.md](docs/product/fluxos.md) |
 | Preço | [docs/product/pricing.md](docs/product/pricing.md) |

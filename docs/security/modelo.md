@@ -5,17 +5,17 @@
 1. **Tenancy:** `venue_id` sempre do token/sessão, nunca do body confiável.
 2. **QR público ≠ auth:** slug da casa não abre comanda.
 3. **Presença (MVP):** claim do garçom (TTL, uso único) + PIN para o grupo.
-4. **Preço no servidor:** painel envia `priceCents`; pedido futuro envia só `catalog_item_id` + qtd.
+4. **Preço no servidor:** painel envia `priceCents` no cardápio; pedido de balcão manda só `catalogItemId` + qtd.
 5. **Separação de auth:** cookie dono ≠ cookie guest (futuro) ≠ platform admin.
 
 ## Papéis
 
-| Papel | Auth | Escopo | Fatia 1 |
+| Papel | Auth | Escopo | Fatia 2 |
 |-------|------|--------|---------|
 | Público | — | Ler cardápio por slug | Sim |
-| Owner | Cookie `eaimesa_owner` | Cardápio e dados do venue | Sim |
+| Owner | Cookie `eaimesa_owner` | Cardápio, venue, **fila Kanban** | Sim |
 | Guest | Cookie `eaimesa_guest` | Uma tab, um venue | Não |
-| Staff | Cookie/JWT staff | Fila, claims, mesas | Não |
+| Staff | Cookie/JWT staff | Fila, claims, mesas | Ainda o dono no mesmo cookie |
 | Platform | SSO interno + 2FA | Tenants, suspensão | Não |
 
 ## Ameaças SaaS

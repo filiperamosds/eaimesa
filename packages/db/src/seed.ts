@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, sql } from "./client";
-import { accounts, catalogCategories, catalogItems, venues } from "./schema";
+import { accounts, catalogCategories, catalogItems, orderItems, orders, venues } from "./schema";
 
 const DEMO_EMAIL = "dono@bardotiao.local";
 const DEMO_PASSWORD = "demo1234";
@@ -132,6 +132,7 @@ async function seed() {
 
     if (!venue) throw new Error("Falha ao criar venue demo");
 
+    await tx.delete(orders).where(eq(orders.venueId, venue.id));
     await tx.delete(catalogItems).where(eq(catalogItems.venueId, venue.id));
     await tx.delete(catalogCategories).where(eq(catalogCategories.venueId, venue.id));
 
@@ -159,6 +160,63 @@ async function seed() {
         })),
       );
     }
+
+    const venueId = venue.id;
+    const demoItems = await tx.select().from(catalogItems).where(eq(catalogItems.venueId, venueId));
+    const byName = new Map(demoItems.map((i) => [i.name, i]));
+    const pick = (name: string) => byName.get(name);
+    const now = Date.now();
+
+    async function demoOrder(
+      tableLabel: string,
+      status: "pending" | "accepted" | "preparing" | "delivered",
+      minutesAgo: number,
+      lines: { name: string; qty: number }[],
+    ) {
+      const [order] = await tx
+        .insert(orders)
+        .values({
+          venueId,
+          status,
+          source: "counter",
+          tableLabel,
+          createdAt: new Date(now - minutesAgo * 60_000),
+          updatedAt: new Date(now - minutesAgo * 60_000),
+        })
+        .returning();
+      if (!order) return;
+      const rows = lines
+        .map((l) => {
+          const item = pick(l.name);
+          if (!item) return null;
+          return {
+            orderId: order.id,
+            venueId,
+            catalogItemId: item.id,
+            nameSnapshot: item.name,
+            unitPriceCentsSnapshot: item.priceCents,
+            qty: l.qty,
+          };
+        })
+        .filter((r): r is NonNullable<typeof r> => r !== null);
+      if (rows.length) await tx.insert(orderItems).values(rows);
+    }
+
+    await demoOrder("Mesa 3", "pending", 4, [
+      { name: "Calabresa acebolada", qty: 1 },
+      { name: "Chopp 500 ml", qty: 2 },
+    ]);
+    await demoOrder("Mesa 1", "pending", 12, [{ name: "Pão de alho", qty: 2 }]);
+    await demoOrder("Balcão", "accepted", 8, [
+      { name: "Caipirinha", qty: 1 },
+      { name: "Bolinho de bacalhau", qty: 1 },
+    ]);
+    await demoOrder("Mesa 7", "preparing", 18, [
+      { name: "Frango a passarinho", qty: 1 },
+      { name: "Fritas com cheddar", qty: 1 },
+      { name: "Brahma lata", qty: 3 },
+    ]);
+    await demoOrder("Mesa 2", "delivered", 40, [{ name: "Negroni", qty: 2 }]);
   });
 
   console.log("Seed ok: /bar-do-tiao — dono@bardotiao.local / demo1234");

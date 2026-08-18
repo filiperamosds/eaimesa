@@ -12,9 +12,9 @@ packages/
 
 Ordem de implementação:
 
-1. **Fatia 1 (atual):** db Venue/Account/Catalog → API auth + CRUD + GET público → web landing/auth/painel/`/{slug}`
-2. Mesas + claim + PIN + cookie guest (rotas no mesmo `apps/web`)
-3. Pedido + fila staff no painel
+1. **Fatia 1:** db Venue/Account/Catalog → API auth + CRUD + GET público → web landing/auth/painel/`/{slug}`
+2. **Fatia 2 (atual):** Order + Kanban `/painel/pedidos` + pedido de balcão
+3. Mesas + claim + PIN + cookie guest + pedido no slug
 4. Billing gate
 
 Ver [fatia 1](../docs/product/fatia-01-cardapio.md) e [ADR-003](../docs/decisions/ADR-003-frontend-unico.md).

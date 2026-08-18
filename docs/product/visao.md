@@ -18,13 +18,13 @@ Plataforma **SaaS multi-tenant**: cada estabelecimento paga aluguel mensal; o co
 
 ## Superfícies
 
-Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-frontend-unico.md) e a [fatia 1](fatia-01-cardapio.md).
+Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-frontend-unico.md), [fatia 1](fatia-01-cardapio.md) e [fatia 2](fatia-02-pedidos.md).
 
-| Superfície | Rota | Usuário | Fatia 1 | MVP completo |
+| Superfície | Rota | Usuário | Fatia 2 | MVP completo |
 |------------|------|---------|---------|--------------|
 | **Landing** | `/` | Visitante B2B | Sim | Sim |
 | **Auth estabelecimento** | `/cadastro`, `/login` | Dono | Sim | Sim |
-| **Painel** | `/painel/*` | Dono (depois staff) | Cardápio + slug | Mesas, staff, fila |
+| **Painel** | `/painel/*` | Dono (depois staff) | Cardápio, slug, **Kanban de pedidos** | Mesas, staff, claim |
 | **Cardápio público** | `/{slug}` | Cliente / Instagram | Somente leitura | + carrinho se houver sessão |
 | **Platform** | futuro | Operador EaiMesa | Não | Onboarding, billing, suspender |
 
@@ -36,7 +36,7 @@ Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-fron
 
 ## Fatia atual vs MVP
 
-Implementação **agora**: [fatia 1 — cardápio](fatia-01-cardapio.md).
+Implementação **agora**: [fatia 2 — pedidos](fatia-02-pedidos.md) (cardápio já entregue na fatia 1).
 
 ### MVP (quando as fatias somarem)
 

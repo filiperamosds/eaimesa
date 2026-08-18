@@ -95,6 +95,38 @@ Auth: cookie `eaimesa_owner`. Todas as queries filtram pelo `venue_id` da sessã
 
 Preço **sempre** em centavos no servidor. O cliente do painel converte reais → cents.
 
+### Owner — pedidos (fatia 2)
+
+Auth: cookie `eaimesa_owner`. `venue_id` da sessão.
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | `/v1/owner/orders` | Pedidos do venue (sem `cancelled`, 48 h) |
+| POST | `/v1/owner/orders` | Pedido de balcão; snapshot de preço |
+| PATCH | `/v1/owner/orders/{id}` | `{ status }` |
+
+#### POST /v1/owner/orders (body)
+
+```json
+{
+  "tableLabel": "Mesa 4",
+  "note": "sem gelo",
+  "items": [
+    { "catalogItemId": "uuid", "qty": 2, "note": null }
+  ]
+}
+```
+
+`source` gravado como `counter`. Status inicial `pending`.
+
+#### PATCH /v1/owner/orders/{id}
+
+```json
+{ "status": "accepted" }
+```
+
+Valores: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`.
+
 ## Planejado (fatias seguintes)
 
 Não implementar na fatia 1. Mantido para não perder o contrato do MVP.
@@ -117,7 +149,7 @@ Auth futura: cookie `eaimesa_staff` ou Bearer. Rotas no **mesmo** `apps/web` (`/
 
 | Método | Path | Role | Descrição |
 |--------|------|------|-----------|
-| GET | `/v1/staff/orders` | staff | Fila |
+| GET | `/v1/staff/orders` | staff | Fila (hoje: `/v1/owner/orders`) |
 | PATCH | `/v1/staff/orders/{id}` | staff | `{ status }` |
 | POST | `/v1/staff/tables/{tableId}/claims` | staff | Gera claim |
 | POST | `/v1/staff/tabs/{tabId}/lock` | staff | Trava tab |
@@ -152,6 +184,7 @@ Auth futura: cookie `eaimesa_staff` ou Bearer. Rotas no **mesmo** `apps/web` (`/
 | `SLUG_TAKEN` | 409 |
 | `SLUG_RESERVED` | 400 |
 | `CATEGORY_NOT_EMPTY` | 409 |
+| `ORDER_NOT_FOUND` | 404 |
 | `EMAIL_TAKEN` | 409 |
 | `VENUE_SUSPENDED` | 403 |
 | `CLAIM_EXPIRED` | 410 |
