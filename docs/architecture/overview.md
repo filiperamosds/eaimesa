@@ -1,44 +1,53 @@
 # Arquitetura — overview
 
-## Stack proposta (MVP)
+## Stack (MVP / fatia 1)
 
 | Camada | Tecnologia | Motivo |
 |--------|------------|--------|
-| Monorepo | **pnpm workspaces** | guest + staff + api compartilham types |
-| API | **Node.js + Fastify** (ou Nest se preferir) | REST, SSE/WebSocket leve |
-| DB | **PostgreSQL 16** | Transações, RLS opcional |
-| ORM | **Drizzle** ou **Prisma** | Migrations, types |
-| Guest + Staff UI | **Next.js** (PWA) | SSR leve, uma codebase por app |
-| Auth guest | Cookie **httpOnly** assinado | Sem token na URL |
-| Auth staff | **JWT** Bearer ou cookie separado | RBAC |
-| Cache/fila (fase 2) | Redis | Rate limit, pub/sub fila |
+| Monorepo | **pnpm workspaces** | web + api compartilham types |
+| API | **Node.js + Fastify** | REST, cookies, plugins |
+| DB | **PostgreSQL 16** | Transações; RLS depois |
+| ORM | **Drizzle** | Migrations SQL, types |
+| UI | **Next.js** (um app) | Landing + painel + cardápio |
+| Auth dono | Cookie **httpOnly** `eaimesa_owner` | JWT assinado |
+| Auth guest | Cookie `eaimesa_guest` | Fatia futura |
+| Cache/fila | Redis | Fase 2 |
 
-Ver [ADR-001](../decisions/ADR-001-stack.md).
+Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md).
 
-## Monorepo (planejado)
+## Monorepo
 
 ```
 EaiMesa/
 ├── apps/
-│   ├── api/          # REST + SSE
-│   ├── guest/        # PWA cliente (Next)
-│   └── staff/        # Painel garçom/dono (Next)
+│   ├── api/          # Fastify REST
+│   └── web/          # Next.js (único front)
 ├── packages/
-│   ├── db/           # schema, migrations
-│   ├── shared/       # types, validators (zod)
-│   └── config/       # eslint, tsconfig
+│   ├── db/           # schema Drizzle, SQL, seed
+│   └── shared/       # zod, slug, constantes
 ├── docs/
-└── docker-compose.yml
+├── docker-compose.yml
+└── .cursor/rules/    # docs-sync (atualizar specs)
 ```
 
-Código ainda **não** scaffolded — só documentação neste commit inicial.
+Não existem `apps/guest` nem `apps/staff`.
 
 ## Multi-tenant
 
 - Toda entidade operacional tem `venue_id`.
-- `venue_public_id` é o slug opaco na URL (`d1de031d33`).
-- Guest session carrega `venue_id` + `tab_id` — nunca confiar no body.
-- Staff JWT carrega `venue_id` + `role` (`owner` | `staff`).
+- URL pública do cardápio: `venue.slug` (`bar-do-tiao`).
+- `venue.public_id` é opaco e estável (uso interno / claims futuros).
+- Sessão do dono carrega `account_id` + `venue_id` + `role=owner` — nunca confiar no body para tenancy.
+- Staff JWT (futuro) carrega `venue_id` + `role` (`owner` | `staff`).
+
+## Rotas do front
+
+| Path | App |
+|------|-----|
+| `/` | Landing SaaS |
+| `/cadastro`, `/login` | Auth estabelecimento |
+| `/painel`, `/painel/cardapio`, `/painel/bar` | Dono autenticado |
+| `/{slug}` | Cardápio público |
 
 ## Integrações futuras
 
@@ -52,7 +61,7 @@ Código ainda **não** scaffolded — só documentação neste commit inicial.
 
 | Env | Uso |
 |-----|-----|
-| `local` | Docker Postgres + apps em dev |
+| `local` | Docker Postgres + api + web |
 | `staging` | Piloto 1 bar |
 | `prod` | SaaS |
 

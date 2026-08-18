@@ -1,0 +1,34 @@
+---
+description: Manter specs e documentação alinhados a qualquer mudança de produto, API, dados ou setup
+alwaysApply: true
+---
+
+# Specs e docs sempre atualizados
+
+A fonte de verdade do produto está em `docs/`. Código e documentação mudam **juntos** na mesma alteração — nunca entregar comportamento que contradiz os specs.
+
+## Quando atualizar (obrigatório)
+
+| Mudou | Atualize |
+|-------|----------|
+| Escopo, persona, fatia, URL pública | `docs/product/` |
+| Fluxo de usuário | `docs/product/fluxos.md` |
+| Contrato HTTP, auth, erros | `docs/api/endpoints.md` |
+| Tabelas, campos, estados | `docs/data/schema.md` |
+| Apps, stack, tenancy, deploys | `docs/architecture/` |
+| Decisão com trade-off | novo `docs/decisions/ADR-NNN-*.md` |
+| Como rodar / env / seed | `docs/ops/dev-setup.md` e `.env.example` |
+| Superfície de auth ou ameaça | `docs/security/modelo.md` |
+
+Se a mudança for uma **fatia** (ex. só cardápio), atualize o doc da fatia atual e o índice em `docs/README.md`.
+
+## Como
+
+- Ajuste o spec **antes ou junto** do código, não “depois se der tempo”.
+- Se um ADR antigo ficar inválido, marque **Supersedido** e aponte o novo.
+- README da raiz só resume; detalhe fica em `docs/`.
+- Não invente endpoint, slug ou entidade no código sem registrar no spec.
+
+## Front único
+
+Existe **um** app web (`apps/web`). Não proponha `apps/guest` + `apps/staff`. Rotas: `/` landing, `/login` `/cadastro` `/painel/*` autenticado, `/{slug}` cardápio público.

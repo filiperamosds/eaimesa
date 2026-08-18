@@ -1,19 +1,19 @@
 # ADR-001: Stack e monorepo
 
-**Status:** Aceito  
+**Status:** Aceito (frontends: ver [ADR-003](ADR-003-frontend-unico.md))  
 **Data:** 2026-08-17
 
 ## Contexto
 
-SaaS multi-tenant, 3 PWAs, API REST, Postgres. Time pequeno; precisa entregar MVP rápido com tipos compartilhados.
+SaaS multi-tenant, API REST, Postgres. Time pequeno; precisa entregar MVP rápido com tipos compartilhados. A quantidade de apps web foi revista na fatia 1: **um** Next.js, não guest + staff separados.
 
 ## Decisão
 
-- **Monorepo pnpm** com `apps/api`, `apps/guest`, `apps/staff`
+- **Monorepo pnpm** com `apps/api` (Fastify) e `apps/web` (Next.js único)
 - **TypeScript** end-to-end
-- **PostgreSQL** + Drizzle (ou Prisma — escolher na scaffold)
-- **Next.js** para frontends (PWA, installable)
-- **Fastify** para API (performance, plugins)
+- **PostgreSQL 16** + **Drizzle**
+- **Next.js** App Router para landing, painel do estabelecimento e cardápio público
+- **Fastify** para API (REST)
 
 ## Alternativas consideradas
 
@@ -26,4 +26,5 @@ SaaS multi-tenant, 3 PWAs, API REST, Postgres. Time pequeno; precisa entregar MV
 ## Consequências
 
 - Um PR pode cruzar API + UI
-- Deploy pode ser Vercel (front) + Fly/Railway (API) + Neon/RDS (DB)
+- Deploy: um front (Vercel ou similar) + Fly/Railway (API) + Neon/RDS (DB)
+- Guest PWA e painel staff **não** são apps separados; entram como rotas em `apps/web` (ADR-003)

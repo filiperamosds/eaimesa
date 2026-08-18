@@ -1,23 +1,21 @@
 # Documentação EaiMesa
 
-Índice da especificação. Leia nesta ordem para implementar o MVP.
+Índice. Leia nesta ordem para a **fatia 1** (cardápio); o restante descreve o MVP completo.
 
-1. [Visão do produto](product/visao.md) — o quê, para quem, o que fica de fora
-2. [Fluxos](product/fluxos.md) — guest, garçom, dono, plataforma
-3. [Pricing](product/pricing.md) — plano Bar, faixa de preço
-4. [Arquitetura](architecture/overview.md) — monorepo, serviços, stack
-5. [Sessão claim + PIN](architecture/sessao-claim-pin.md) — núcleo de segurança
-6. [Segurança](security/modelo.md) — tenancy, ameaças, controles
-7. [Modelo de dados](data/schema.md) — entidades e estados
-8. [API](api/endpoints.md) — REST esboço, auth, erros
-9. [Dev setup](ops/dev-setup.md) — como rodar quando houver código
-10. [ADRs](decisions/ADR-001-stack.md) — decisões fixas
+1. [Fatia 1 — Cardápio](product/fatia-01-cardapio.md) — o que está sendo construído agora
+2. [Visão do produto](product/visao.md) — o quê, para quem, o que fica de fora
+3. [Fluxos](product/fluxos.md) — publicar cardápio; depois guest/garçom
+4. [Pricing](product/pricing.md) — plano Bar
+5. [Arquitetura](architecture/overview.md) — monorepo, um front, Fastify
+6. [Sessão claim + PIN](architecture/sessao-claim-pin.md) — núcleo futuro de pedido
+7. [Segurança](security/modelo.md) — tenancy, cookies, ameaças
+8. [Modelo de dados](data/schema.md) — entidades fatia 1 + planejadas
+9. [API](api/endpoints.md) — REST fatia 1 + contrato futuro
+10. [Dev setup](ops/dev-setup.md) — pnpm, Postgres, seed `bar-do-tiao`
+11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, **front único**, **slug**
 
-## Canvas do Cursor
+## Cursor
 
-Durante o brainstorm foram criados canvases interativos no Cursor IDE (pastas `.cursor/projects/.../canvases/`). **Eles não fazem parte deste repositório.**
+Regra sempre ativa: `.cursor/rules/docs-sync.mdc` — mudança de produto/API/dados **atualiza estes specs na mesma alteração**.
 
-- **No celular:** use GitHub/GitLab para ler estes `.md`, ou exporte PDF do README.
-- **No Cursor:** abra o arquivo `.canvas.tsx` ao lado do chat (só no desktop Cursor).
-
-O conteúdo relevante dos canvases foi migrado para `docs/product/` e `docs/architecture/`.
+Canvases `.canvas.tsx` do IDE **não** fazem parte deste repositório. O conteúdo relevante está em `docs/product/` e `docs/architecture/`.

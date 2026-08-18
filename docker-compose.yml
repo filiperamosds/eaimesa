@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: eaimesa-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: eaimesa
+      POSTGRES_PASSWORD: eaimesa
+      POSTGRES_DB: eaimesa
+    ports:
+      - "5432:5432"
+    volumes:
+      - eaimesa-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eaimesa -d eaimesa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  eaimesa-pg:

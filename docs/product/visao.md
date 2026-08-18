@@ -10,31 +10,37 @@ Plataforma **SaaS multi-tenant**: cada estabelecimento paga aluguel mensal; o co
 
 | Peça | Função |
 |------|--------|
-| **Código da casa** (`/d1de031d33`) | Identifica o bar. Cardápio público. **Não autoriza pedir.** |
-| **Claim do garçom** (`/d1de031d33/c/{token}`) | Secret de uso único, TTL curto. Abre a comanda na mesa. |
-| **PIN da tab** | Grupo entra no mesmo celular / outros aparelhos. |
-| **Cookie guest** | Sessão httpOnly após redeem do claim. |
+| **Slug da casa** (`/bar-do-tiao`) | URL pública configurável. Cardápio. **Não autoriza pedir.** |
+| **Claim do garçom** (`/bar-do-tiao/c/{token}` — fatia futura) | Secret de uso único, TTL curto. Abre a comanda na mesa. |
+| **PIN da tab** (futuro) | Grupo entra no mesmo celular / outros aparelhos. |
+| **Cookie guest** (futuro) | Sessão httpOnly após redeem do claim. |
+| **Cookie dono** (`eaimesa_owner`) | Sessão do estabelecimento no painel. |
 
 ## Superfícies
 
-| Superfície | Usuário | MVP |
-|------------|---------|-----|
-| **Guest PWA** | Cliente na mesa | Cardápio, carrinho, comanda, PIN |
-| **Staff** | Garçom / bar | Gerar claim, fila, travar mesa, fechar tab |
-| **Owner** | Dono da casa | Cardápio, mesas, staff, código público |
-| **Platform** | Operador EaiMesa | Onboarding tenant, billing, suspender | 
+Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-frontend-unico.md) e a [fatia 1](fatia-01-cardapio.md).
+
+| Superfície | Rota | Usuário | Fatia 1 | MVP completo |
+|------------|------|---------|---------|--------------|
+| **Landing** | `/` | Visitante B2B | Sim | Sim |
+| **Auth estabelecimento** | `/cadastro`, `/login` | Dono | Sim | Sim |
+| **Painel** | `/painel/*` | Dono (depois staff) | Cardápio + slug | Mesas, staff, fila |
+| **Cardápio público** | `/{slug}` | Cliente / Instagram | Somente leitura | + carrinho se houver sessão |
+| **Platform** | futuro | Operador EaiMesa | Não | Onboarding, billing, suspender |
 
 ## Personas
 
-- **Dono** — 1 bar, ~10 mesas, quer menos hardware e pedido confiável.
-- **Garçom** — gera QR na mesa, confirma fila, fecha quando caixa manda.
-- **Cliente** — lê QR do garçom uma vez; resto no celular.
+- **Dono** — 1 bar, ~10 mesas, quer menos hardware e pedido confiável. Na fatia 1: publicar o cardápio em URL própria.
+- **Garçom** — gera QR na mesa, confirma fila, fecha quando caixa manda. **Fora da fatia 1.**
+- **Cliente** — na fatia 1 só **lê** o cardápio; pedido exige claim (MVP).
 
-## MVP (fatia cobrável)
+## Fatia atual vs MVP
 
-### Inclui
+Implementação **agora**: [fatia 1 — cardápio](fatia-01-cardapio.md).
 
-- Signup B2B: e-mail, CNPJ, CPF responsável, OTP
+### MVP (quando as fatias somarem)
+
+- Signup B2B: e-mail, senha; CNPJ/OTP entram depois
 - Plano **Bar**: até 15 mesas, 1 venue, pedidos ilimitados
 - Cardápio CRUD (texto, preço no servidor)
 - Mesas + claim do garçom + PIN + cookie guest
@@ -53,12 +59,15 @@ Plataforma **SaaS multi-tenant**: cada estabelecimento paga aluguel mensal; o co
 
 ## Métricas de sucesso (piloto)
 
-- Pedido remoto (só código da casa) → **403**
+- Pedido remoto (só slug da casa) → **403** (quando houver pedido)
 - Dois bares no mesmo DB → **isolamento** (A não lê B)
+- `/{slug}` de um bar não lista itens de outro
 - Sábado com rede ruim → fila staff funciona; claim expirado não abre tab
 
 ## Naming / URLs
 
 - Marca: **EaiMesa**
 - Domínio alvo: `eaimesa.com.br`
-- Path guest: `/{venuePublicId}` e `/{venuePublicId}/c/{claimToken}` (redirect após redeem)
+- Path do cardápio: `/{slug}` (ex. `/bar-do-tiao`) — [ADR-004](../decisions/ADR-004-slug-publico.md)
+- Path futuro de claim: `/{slug}/c/{claimToken}` (redirect após redeem)
+- `venue.public_id` opaco existe no banco; **não** é a URL do cardápio na fatia 1

@@ -3,65 +3,68 @@
 ## Princípios
 
 1. **Tenancy:** `venue_id` sempre do token/sessão, nunca do body confiável.
-2. **QR público ≠ auth:** código da casa não abre comanda.
-3. **Presença:** claim do garçom (TTL, uso único) + PIN para o grupo.
-4. **Preço no servidor:** cliente envia só `catalog_item_id` + quantidade.
-5. **Separação de auth:** guest cookie ≠ staff JWT ≠ platform admin.
+2. **QR público ≠ auth:** slug da casa não abre comanda.
+3. **Presença (MVP):** claim do garçom (TTL, uso único) + PIN para o grupo.
+4. **Preço no servidor:** painel envia `priceCents`; pedido futuro envia só `catalog_item_id` + qtd.
+5. **Separação de auth:** cookie dono ≠ cookie guest (futuro) ≠ platform admin.
 
 ## Papéis
 
-| Papel | Auth | Escopo |
-|-------|------|--------|
-| Guest | Cookie `eaimesa_guest` | Uma tab, um venue |
-| Staff | JWT staff | Fila, claims, mesas do venue |
-| Owner | JWT staff + role `owner` | Cardápio, billing, usuários |
-| Platform | SSO interno + 2FA | Tenants, suspensão |
+| Papel | Auth | Escopo | Fatia 1 |
+|-------|------|--------|---------|
+| Público | — | Ler cardápio por slug | Sim |
+| Owner | Cookie `eaimesa_owner` | Cardápio e dados do venue | Sim |
+| Guest | Cookie `eaimesa_guest` | Uma tab, um venue | Não |
+| Staff | Cookie/JWT staff | Fila, claims, mesas | Não |
+| Platform | SSO interno + 2FA | Tenants, suspensão | Não |
 
 ## Ameaças SaaS
 
 | Ameaça | Controle |
 |--------|----------|
-| IDOR entre bares | Filtro `venue_id`; testes automatizados; RLS Postgres |
-| Pedido remoto | Claim + PIN; código da casa read-only |
-| Preço adulterado | Recalcular no servidor |
-| XSS no cardápio | Texto puro / sanitize; CSP |
-| Guest → admin | RBAC server-side; rotas separadas |
-| Tenant suspenso vendendo | Gate em `create-order` |
-| PII em log | Mascara CPF/telefone; retenção 90d pós-tab |
-| Secret na URL persistente | Redirect pós-redeem; cookie httpOnly |
+| IDOR entre bares | Filtro `venue_id` da sessão; testes depois; RLS |
+| Pedido remoto | Claim + PIN (quando houver pedido); slug é read-only |
+| Preço adulterado no pedido | Recalcular no servidor |
+| XSS no cardápio | Texto; escape no React; CSP depois |
+| Guest → admin | Cookies distintos; RBAC server-side |
+| Enumeração de slug | 404 genérico; slugs não sequenciais |
+| PII em log | Não logar senha; e-mail só em auth errors genéricos |
+| Secret na URL | Cookie httpOnly após login |
 
 ## Headers e cookies
 
 - HTTPS + HSTS em produção
-- `Content-Security-Policy` restritiva nos PWAs
-- Cookie: `Secure; HttpOnly; SameSite=Lax`
-- CORS: origins explícitos (`guest.*`, `staff.*`, `api.*`)
+- Cookie dono: `Secure` (prod); `HttpOnly`; `SameSite=Lax`; `Path=/`
+- CORS: **uma** origin (`APP_URL` = `apps/web`), `credentials: true`
+- Não usar o mesmo JWT para dono e guest
 
 ## Rate limits (inicial)
 
 | Ação | Limite |
 |------|--------|
-| Redeem claim | 10/min/IP |
-| PIN join | 5 falhas / 15 min / tab |
-| Create order | 30/min/tab |
-| Login staff | 10/min/IP |
+| Login / register | 10/min/IP |
+| Redeem claim (futuro) | 10/min/IP |
+| PIN join (futuro) | 5 falhas / 15 min / tab |
+
+Na fatia 1 o limiter de login pode ser in-memory (um processo).
 
 ## LGPD
 
-- **Controlador:** estabelecimento (pedidos dos clientes).
+- **Controlador:** estabelecimento (quando houver pedidos).
 - **Operador:** EaiMesa (infra, processamento).
-- Contrato de operador; exclusão ao churn do tenant.
+- Cadastro B2B na fatia 1: só e-mail + senha + nome do bar. CNPJ/CPF na fatia KYC.
 - CPF do **consumidor** não coletar no MVP para pedir.
 
-## Cadastro B2B (KYC)
+## Cadastro B2B (KYC — fatia posterior)
 
 - CNPJ + CPF responsável + e-mail verificado + OTP celular.
-- CPF mascarado na UI staff (`***.***.***-12`).
-- Secrets em SSM/Secrets Manager — ver `.env.example` só local.
+- CPF mascarado na UI (`***.***.***-12`).
+- Secrets em env local / SSM em prod — ver `.env.example`.
 
 ## Nunca
 
-- Token de sessão na query string após redeem
-- `/mesa/1` sequencial
-- Um JWT para guest e staff
+- Token de sessão na query string
+- `/mesa/1` sequencial como auth
+- Um JWT para guest e owner
+- Confiar em `venueId` enviado pelo client no CRUD
 - Impressora do bar exposta na internet (fase 2: agente outbound)

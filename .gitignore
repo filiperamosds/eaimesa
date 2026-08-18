@@ -35,5 +35,10 @@ coverage/
 # Docker
 docker-data/
 
+# Uploads locais (fotos do cardápio)
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+
 # OS
 Thumbs.db
+.pnpm-debug.log*

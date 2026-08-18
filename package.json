@@ -1,0 +1,16 @@
+{
+  "name": "eaimesa",
+  "private": true,
+  "packageManager": "pnpm@9.15.9",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @eaimesa/api --filter @eaimesa/web dev",
+    "dev:api": "pnpm --filter @eaimesa/api dev",
+    "dev:web": "pnpm --filter @eaimesa/web dev",
+    "db:migrate": "pnpm --filter @eaimesa/db migrate",
+    "db:seed": "pnpm --filter @eaimesa/db seed",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

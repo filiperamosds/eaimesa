@@ -1,90 +1,81 @@
 # Modelo de dados
 
-Convenções: UUID interno; `venue_public_id` string opaca 10–16 chars; timestamps UTC.
+Convenções: UUID interno; `slug` kebab-case único; `public_id` string opaca 10–16 chars; timestamps UTC; dinheiro em **centavos** (`price_cents`).
 
-## Entidades
+## Entidades — fatia 1 (implementadas)
 
-### Platform (futuro próximo)
+### Account
 
-- **Account** — login do dono (e-mail, hash senha, 2FA opt).
-- **PlatformUser** — operador EaiMesa.
+Login do dono.
 
-### Tenant
+- `id`, `email` UNIQUE, `password_hash`, `created_at`
 
-- **Venue**
-  - `id`, `public_id`, `name`, `slug_display?`
-  - `subscription_status`: `trial` | `active` | `past_due` | `suspended`
-  - `accepts_orders`: bool
-  - `created_at`
+### Venue
 
-- **VenueMember** — `user_id`, `venue_id`, `role`: `owner` | `staff`
+- `id`, `owner_account_id` → Account
+- `name`, `slug` UNIQUE, `public_id` UNIQUE
+- `subscription_status`: `trial` | `active` | `past_due` | `suspended`
+- `accepts_orders`: bool (**false** na fatia 1)
+- `created_at`, `updated_at`
 
-- **Table**
-  - `id`, `venue_id`, `label` (ex. "Mesa 4"), `sort_order`, `active`
+Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando houver staff.
 
 ### Cardápio
 
-- **CatalogCategory** — `venue_id`, `name`, `sort_order`, `active`
+- **CatalogCategory** — `venue_id`, `name`, `sort_order`, `active`, timestamps
 - **CatalogItem**
-  - `venue_id`, `category_id`, `name`, `description`, `price_cents`
-  - `active`, `max_note_length`
+  - `venue_id`, `category_id`, `name`, `description`, `image_url` (http(s) ou `/v1/uploads/{uuid}.ext`)
+  - `price_cents`, `sort_order`, `active`, `max_note_length` (default 80; UI na fatia pedido)
+
+## Entidades — planejadas (não criar na fatia 1)
+
+### Platform
+
+- **PlatformUser** — operador EaiMesa.
+
+### Tenant extra
+
+- **VenueMember** — `user_id`, `venue_id`, `role`: `owner` | `staff`
+- **Table** — `id`, `venue_id`, `label`, `sort_order`, `active`
 
 ### Comanda
 
-- **Tab**
-  - `venue_id`, `table_id`
-  - `status`: `open` | `locked` | `closed`
-  - `pin_hash` (4 dígitos, hash)
-  - `opened_at`, `closed_at`
-
-- **TableClaim**
-  - `venue_id`, `table_id`, `staff_user_id`
-  - `token_hash`, `expires_at`, `redeemed_at?`, `revoked_at?`
-  - `tab_id?` (preenchido no redeem)
-
-- **GuestSession**
-  - `tab_id`, `device_fingerprint?`, `expires_at`, `revoked_at?`
+- **Tab** — `status`: `open` | `locked` | `closed`; `pin_hash`
+- **TableClaim** — `token_hash`, TTL, uso único
+- **GuestSession** — `tab_id`, `expires_at`
 
 ### Pedidos
 
-- **Order**
-  - `tab_id`, `venue_id`, `status`: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`
-  - `idempotency_key`, `guest_session_id`, `note?`
-
-- **OrderItem**
-  - `order_id`, `catalog_item_id`, `name_snapshot`, `unit_price_cents_snapshot`, `qty`
+- **Order** / **OrderItem** (snapshot de nome e `unit_price_cents`)
 
 ### Auditoria
 
-- **AuditLog**
-  - `venue_id`, `actor_type`, `actor_id`, `action`, `metadata_json`, `created_at`
+- **AuditLog** — `venue_id`, `actor_type`, `actor_id`, `action`, `metadata_json`
 
-## Índices críticos
+## Índices críticos (fatia 1)
 
-- `venue(public_id)` UNIQUE
-- `tab(venue_id, table_id, status)` WHERE status = 'open' — no máximo 1 tab open/mesa (regra app)
-- `table_claim(token_hash)` UNIQUE
-- `guest_session(id)` + lookup por tab
+- `venues(slug)` UNIQUE
+- `venues(public_id)` UNIQUE
+- `accounts(email)` UNIQUE
+- `catalog_categories(venue_id, sort_order)`
+- `catalog_items(venue_id, category_id)`
 
-## Regras de negócio (DB + app)
+## Regras de negócio
 
-1. Fechar tab → revoke sessions + claims pendentes da tab.
-2. Novo claim na mesa → revoke claims não usados anteriores dessa mesa.
-3. `OrderItem` sempre grava snapshot de preço/nome.
+1. CRUD de catálogo só com `venue_id` da sessão do dono.
+2. Menu público: `active = true` em categoria e item.
+3. DELETE categoria com itens → `CATEGORY_NOT_EMPTY`.
+4. `OrderItem` (futuro) sempre grava snapshot de preço/nome.
+5. Fechar tab (futuro) → revoke sessions + claims pendentes.
 
-## Diagrama ER (simplificado)
+## Diagrama ER (fatia 1)
 
 ```mermaid
 erDiagram
-  Venue ||--o{ Table : has
+  Account ||--|| Venue : owns
+  Venue ||--o{ CatalogCategory : has
+  CatalogCategory ||--o{ CatalogItem : contains
   Venue ||--o{ CatalogItem : has
-  Venue ||--o{ VenueMember : has
-  Table ||--o{ Tab : hosts
-  Tab ||--o{ GuestSession : has
-  Tab ||--o{ Order : has
-  Order ||--|{ OrderItem : contains
-  Table ||--o{ TableClaim : generates
-  Tab ||--o| TableClaim : opened_by
 ```
 
 ## Postgres RLS (recomendado fase 1.5)

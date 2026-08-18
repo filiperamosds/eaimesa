@@ -2,11 +2,11 @@
 
 Núcleo de confiança do produto. Três peças **separadas**.
 
-## 1. Código da casa (`venue_public_id`)
+## 1. Código da casa (`slug`)
 
-- Ex.: `d1de031d33`
-- Estável, público, pode ir no Instagram.
-- `GET /v/{venuePublicId}` → cardápio (somente leitura se sem sessão).
+- Ex.: `bar-do-tiao` (configurável). `public_id` opaco existe no banco mas **não** é a URL do cardápio.
+- Público (Instagram, QR na porta).
+- `GET /v1/public/venues/{slug}` → cardápio (somente leitura se sem sessão).
 - **Nunca** autoriza `POST /guest/orders`.
 
 ## 2. Claim (TableClaim)
@@ -21,14 +21,14 @@ Gerado pelo staff autenticado para uma mesa.
 | Uso | **Single redeem** — primeiro scan consome |
 | Escopo | `venue_id` + `table_id` + `staff_user_id` |
 | Invalidação | Novo claim na mesma mesa invalida anterior não usado |
-| URL | `/{venuePublicId}/c/{token}` |
+| URL | `/{slug}/c/{token}` |
 
 ### Redeem
 
 ```
-POST /v/{venuePublicId}/c/{token}/redeem
+POST /v1/public/venues/{slug}/c/{token}/redeem
 → 200 Set-Cookie: eaimesa_guest=...; HttpOnly; Secure; SameSite=Lax
-→ 302 Location: /{venuePublicId}
+→ 302 Location: /{slug}
 → Body inclui pin_display (4 dígitos) para compartilhar na mesa
 ```
 
