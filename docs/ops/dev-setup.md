@@ -4,8 +4,38 @@
 
 - Node.js **20+** (recomendado 22; `.nvmrc` na raiz)
 - pnpm 9+ (`corepack enable && corepack prepare pnpm@9 --activate`)
-- PostgreSQL 16 — **Homebrew** (recomendado neste Mac, sem Docker) **ou** Docker Compose
+- PostgreSQL 16 — escolha **uma** origem:
+  - **Cursor Cloud** (este repo no agente remoto) — Postgres nativo via apt; **não** use Docker nem Homebrew
+  - **Mac local** — Homebrew (recomendado) **ou** Docker Compose
 - Git
+
+`DATABASE_URL` em todos os casos: `postgresql://eaimesa:eaimesa@localhost:5432/eaimesa` (só local/cloud de dev; nunca prod).
+
+## Cursor Cloud (agente remoto)
+
+O VM do Cloud Agent **não traz Docker** e não tem Homebrew. O Postgres sobe como serviço do Ubuntu.
+
+Configuração versionada: `.cursor/environment.json`
+
+| Fase | Script | O que faz |
+|------|--------|-----------|
+| `install` | `scripts/cursor-cloud/install.sh` | `apt` Postgres 16 + `pnpm install` + `.env` a partir do example |
+| `start` | `scripts/cursor-cloud/start.sh` | liga o cluster, cria user/db `eaimesa`, `pnpm db:migrate` |
+
+O daemon **precisa** estar no `start`: o `install` só deixa pacotes em disco; processos não sobrevivem ao snapshot/boot.
+
+Num workspace Cloud já aberto (este agente, ou se o `start` ainda não rodou):
+
+```bash
+bash scripts/cursor-cloud/install.sh
+bash scripts/cursor-cloud/start.sh
+pnpm db:seed
+pnpm dev
+```
+
+Agentes **novos** no mesmo repo leem `.cursor/environment.json` no commit de origem e rodam `install`/`start` sozinhos. Depois: `pnpm db:seed` (idempotente) e `pnpm dev`.
+
+Não use `docker compose` neste VM. Homebrew (`brew services start postgresql@16`) é só Mac local.
 
 ## Bootstrap (sem Docker — Homebrew)
 
@@ -73,7 +103,10 @@ Serviço `postgres:16`; usuário/senha/db `eaimesa`; porta `5432`; volume nomead
 
 ## Sem Docker
 
-Use Postgres 16 via Homebrew (passos acima). Não use SQLite. `docker` no PATH **não** é obrigatório.
+- **Mac local:** Postgres 16 via Homebrew (passos acima).
+- **Cursor Cloud:** `scripts/cursor-cloud/` + `.cursor/environment.json` (não há Docker no VM).
+
+Não use SQLite. `docker` no PATH **não** é obrigatório.
 
 ## CI (futuro)
 

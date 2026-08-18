@@ -13,8 +13,9 @@ Um único frontend: landing, autenticação do estabelecimento e cardápio por s
 ```bash
 cp .env.example .env
 pnpm install
-# Postgres 16: Homebrew (sem Docker) — ver docs/ops/dev-setup.md
-# ou: docker compose up -d postgres
+# Postgres 16 — ver docs/ops/dev-setup.md
+# Cursor Cloud: bash scripts/cursor-cloud/install.sh && bash scripts/cursor-cloud/start.sh
+# Mac: Homebrew  |  ou: docker compose up -d postgres
 pnpm db:migrate && pnpm db:seed
 pnpm dev
 ```

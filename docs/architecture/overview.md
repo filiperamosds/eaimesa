@@ -63,9 +63,12 @@ Não existem `apps/guest` nem `apps/staff`.
 
 | Env | Uso |
 |-----|-----|
-| `local` | Docker Postgres + api + web |
+| `local` | Postgres 16 (Homebrew **ou** Docker Compose) + api + web |
+| `cursor-cloud` | Postgres 16 nativo (apt) via `.cursor/environment.json`; sem Docker |
 | `staging` | Piloto 1 bar |
 | `prod` | SaaS |
+
+Setup: [docs/ops/dev-setup.md](../ops/dev-setup.md).
 
 ## Observabilidade (MVP mínimo)
 
