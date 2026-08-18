@@ -7,6 +7,12 @@ import { api } from "../lib/api";
 import type { Session } from "../lib/types";
 import { Logo } from "./site-chrome";
 
+const LINKS = [
+  { href: "/painel/pedidos", label: "Pedidos" },
+  { href: "/painel/cardapio", label: "Cardápio" },
+  { href: "/painel/bar", label: "Meu bar" },
+] as const;
+
 export function PainelShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const path = usePathname();
@@ -36,30 +42,11 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const links = [
-    { href: "/painel/pedidos", label: "Pedidos" },
-    { href: "/painel/cardapio", label: "Cardápio" },
-    { href: "/painel/bar", label: "Meu bar" },
-  ];
-
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen bg-paper pb-16 sm:pb-0">
       <header className="border-b border-line bg-card">
         <div className="mx-auto flex max-w-[88rem] items-center justify-between px-5 py-3">
-          <div className="flex items-center gap-6">
-            <Logo />
-            <nav className="flex gap-4 text-sm">
-              {links.map((l) => (
-                <Link
-                  key={l.href}
-                  href={l.href}
-                  className={path.startsWith(l.href) ? "font-medium text-chili" : "text-ink-soft hover:text-ink"}
-                >
-                  {l.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+          <Logo />
           <div className="flex items-center gap-3 text-sm">
             <Link href={`/${me.venue.slug}`} className="hidden text-ink-soft hover:text-ink sm:inline">
               Ver cardápio
@@ -69,8 +56,34 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </div>
+        <div className="mx-auto max-w-[88rem] px-5 pb-3">
+          <PainelNav path={path} />
+        </div>
       </header>
       <div className="mx-auto max-w-[88rem] px-5 py-6">{children}</div>
     </div>
+  );
+}
+
+function PainelNav({ path }: { path: string }) {
+  return (
+    <nav aria-label="Painel" className="flex rounded-2xl bg-paper-2 p-1">
+      {LINKS.map((l) => {
+        const active = path.startsWith(l.href);
+        return (
+          <Link
+            key={l.href}
+            href={l.href}
+            className={
+              active
+                ? "flex-1 rounded-xl bg-card px-3 py-2.5 text-center text-sm font-medium text-chili shadow-sm"
+                : "flex-1 rounded-xl px-3 py-2.5 text-center text-sm text-ink-soft hover:text-ink"
+            }
+          >
+            {l.label}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

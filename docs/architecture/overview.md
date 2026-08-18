@@ -46,8 +46,10 @@ Não existem `apps/guest` nem `apps/staff`.
 |------|-----|
 | `/` | Landing SaaS |
 | `/cadastro`, `/login` | Auth estabelecimento |
-| `/painel`, `/painel/cardapio`, `/painel/bar`, `/painel/pedidos` | Dono autenticado |
-| `/{slug}` | Cardápio público |
+| `/painel` | Redirect para `/painel/pedidos` |
+| `/painel/pedidos` | Kanban do dono |
+| `/painel/cardapio`, `/painel/bar` | Cardápio e dados do bar |
+| `/{slug}` | Cardápio público (sem pedidos) |
 
 ## Integrações futuras
 

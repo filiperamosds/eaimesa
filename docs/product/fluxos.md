@@ -14,7 +14,9 @@ sequenceDiagram
   D->>W: /cadastro (e-mail, senha, nome, slug)
   W->>API: POST /v1/auth/register
   API-->>W: Set-Cookie eaimesa_owner
-  D->>W: /painel — categorias e itens
+  D->>W: /painel — Kanban de pedidos (abas: Pedidos, Cardápio, Meu bar)
+  W->>API: GET /v1/owner/orders
+  D->>W: /painel/cardapio — categorias e itens
   W->>API: CRUD /v1/owner/catalog/**
   C->>W: GET /bar-do-tiao
   W->>API: GET /v1/public/venues/bar-do-tiao
@@ -40,7 +42,7 @@ sequenceDiagram
   S->>API: PATCH status accepted / preparing / delivered
 ```
 
-1. Staff abre `/painel/pedidos`.
+1. Staff entra (`/login`) e cai em `/painel/pedidos` (ou clica a aba **Pedidos**).
 2. Lança pedido de balcão ou vê os do seed.
 3. Avança o card nas colunas até **Entregues**.
 

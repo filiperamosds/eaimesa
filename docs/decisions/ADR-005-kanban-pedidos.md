@@ -25,6 +25,8 @@ Board **Kanban** em `/painel/pedidos`, uma coluna por status ativo (`pending`, `
 
 ## Consequências
 
-- Layout do painel nesta rota precisa ser largo (scroll horizontal no mobile).
+- Login do dono abre `/painel/pedidos`.
+- `/painel` redireciona para o Kanban (não mais para o cardápio).
+- Abas no topo do painel: Pedidos | Cardápio | Meu bar.
 - Polling curto até existir SSE.
 - Pedido do cliente no slug público continua **fora** desta fatia.
