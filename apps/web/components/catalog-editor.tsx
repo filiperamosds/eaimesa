@@ -47,10 +47,10 @@ export function CatalogEditor() {
           value={newCat}
           onChange={(e) => setNewCat(e.target.value)}
           placeholder="Nova categoria (ex. Petiscos)"
-          className="min-w-56 flex-1 rounded-xl border border-line bg-card px-3 py-2"
+          className="field min-w-56 flex-1"
           required
         />
-        <button type="submit" className="rounded-full bg-sage px-5 py-2 text-sm font-medium text-white">
+        <button type="submit" className="btn-primary !bg-sage !py-2 text-sm shadow-none">
           Adicionar categoria
         </button>
       </form>
@@ -155,7 +155,7 @@ function CategoryBlock({
   }
 
   return (
-    <section className="rounded-2xl border border-line bg-card p-5">
+    <section className="surface p-5">
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={name}
@@ -183,14 +183,14 @@ function CategoryBlock({
           value={itemName}
           onChange={(e) => setItemName(e.target.value)}
           placeholder="Item"
-          className="rounded-xl border border-line px-3 py-2"
+          className="field"
           required
         />
         <input
           value={itemPrice}
           onChange={(e) => setItemPrice(e.target.value)}
           placeholder="12,50"
-          className="rounded-xl border border-line px-3 py-2"
+          className="field"
           required
         />
         <textarea
@@ -199,15 +199,15 @@ function CategoryBlock({
           placeholder="Descrição (opcional)"
           rows={3}
           maxLength={280}
-          className="rounded-xl border border-line px-3 py-2 sm:col-span-2"
+          className="field sm:col-span-2"
         />
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
           onChange={(e) => setItemPhoto(e.target.files?.[0] ?? null)}
-          className="rounded-xl border border-line px-3 py-2 text-sm file:mr-2 file:rounded-full file:border-0 file:bg-paper-2 file:px-3 file:py-1 sm:col-span-2"
+          className="field text-sm file:mr-2 file:rounded-full file:border-0 file:bg-paper-2 file:px-3 file:py-1 sm:col-span-2"
         />
-        <button type="submit" className="rounded-full border border-ink/15 py-2 text-sm font-medium sm:col-span-2">
+        <button type="submit" className="btn-secondary py-2 text-sm sm:col-span-2">
           Adicionar item
         </button>
       </form>
@@ -290,7 +290,7 @@ function ItemRow({
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded-xl border border-line px-3 py-2"
+          className="field"
         />
         <textarea
           value={description}
@@ -298,12 +298,12 @@ function ItemRow({
           placeholder="Descrição"
           rows={4}
           maxLength={280}
-          className="rounded-xl border border-line px-3 py-2"
+          className="field"
         />
         <input
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="rounded-xl border border-line px-3 py-2"
+          className="field"
         />
         <div className="flex gap-2">
           <button type="button" onClick={save} className="text-sm font-medium text-sage">

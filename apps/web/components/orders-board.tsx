@@ -10,7 +10,7 @@ import {
 } from "@eaimesa/shared";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { CatalogCategory, StaffOrder } from "../lib/types";
+import type { CatalogCategory, StaffOrder, VenueTable } from "../lib/types";
 
 function timeAgo(iso: string) {
   const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60_000));
@@ -19,6 +19,13 @@ function timeAgo(iso: string) {
   const h = Math.floor(mins / 60);
   return `${h} h ${mins % 60} min`;
 }
+
+const COLUMN_DOT: Record<(typeof KANBAN_COLUMNS)[number], string> = {
+  pending: "bg-chili",
+  accepted: "bg-amber",
+  preparing: "bg-sage",
+  delivered: "bg-ink/30",
+};
 
 export function OrdersBoard() {
   const [orders, setOrders] = useState<StaffOrder[]>([]);
@@ -68,28 +75,25 @@ export function OrdersBoard() {
     <div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-serif text-3xl">Pedidos</h1>
+          <p className="eyebrow">Turno</p>
+          <h1 className="mt-2 font-serif text-3xl">Pedidos</h1>
           <p className="mt-1 text-sm text-ink-soft">
             Kanban do turno. O cliente ainda não pede pelo cardápio público — use pedido de balcão.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setCreating(true)}
-          className="rounded-full bg-chili px-5 py-2 text-sm font-medium text-white hover:bg-chili-dark"
-        >
+        <button type="button" onClick={() => setCreating(true)} className="btn-primary !py-2 text-sm">
           Novo pedido
         </button>
       </div>
       {error ? <p className="mb-3 text-sm text-chili">{error}</p> : null}
       <div className="flex gap-3 overflow-x-auto pb-4">
         {KANBAN_COLUMNS.map((col) => (
-          <section
-            key={col}
-            className="flex w-[min(100%,18rem)] shrink-0 flex-col rounded-2xl border border-line bg-paper-2/60"
-          >
+          <section key={col} className="flex w-[min(100%,18rem)] shrink-0 flex-col rounded-2xl bg-paper-2/70">
             <header className="flex items-center justify-between px-3 py-3">
-              <h2 className="font-serif text-lg">{ORDER_STATUS_LABEL[col]}</h2>
+              <h2 className="flex items-center gap-2 font-serif text-lg">
+                <span className={`h-2 w-2 rounded-full ${COLUMN_DOT[col]}`} aria-hidden />
+                {ORDER_STATUS_LABEL[col]}
+              </h2>
               <span className="rounded-full bg-card px-2 py-0.5 text-xs text-ink-soft">
                 {byStatus[col]?.length ?? 0}
               </span>
@@ -141,7 +145,7 @@ function OrderCard({
 }) {
   const nextLabel = ORDER_NEXT_LABEL[order.status];
   return (
-    <li className="rounded-xl border border-line bg-card p-3 shadow-sm">
+    <li className="surface p-3 shadow-none">
       <button type="button" onClick={onToggle} className="w-full text-left">
         <div className="flex items-baseline justify-between gap-2">
           <span className="font-medium">{order.tableLabel}</span>
@@ -175,7 +179,7 @@ function OrderCard({
           <button
             type="button"
             onClick={onAdvance}
-            className="rounded-full bg-sage px-3 py-1 text-xs font-medium text-white"
+            className="rounded-full bg-sage px-3 py-1.5 text-xs font-medium text-white"
           >
             {nextLabel}
           </button>
@@ -200,7 +204,9 @@ function NewOrderModal({
   onError: (m: string | null) => void;
 }) {
   const [catalog, setCatalog] = useState<CatalogCategory[]>([]);
-  const [tableLabel, setTableLabel] = useState("Mesa ");
+  const [tables, setTables] = useState<VenueTable[]>([]);
+  const [tableId, setTableId] = useState<string>("");
+  const [tableLabel, setTableLabel] = useState("");
   const [note, setNote] = useState("");
   const [qty, setQty] = useState<Record<string, number>>({});
   const [pending, setPending] = useState(false);
@@ -209,6 +215,13 @@ function NewOrderModal({
     api<{ categories: CatalogCategory[] }>("/v1/owner/catalog")
       .then((d) => setCatalog(d.categories.filter((c) => c.active)))
       .catch(() => onError("Não foi possível carregar o cardápio."));
+    api<{ tables: VenueTable[] }>("/v1/owner/tables")
+      .then((d) => {
+        const active = d.tables.filter((t) => t.active);
+        setTables(active);
+        if (active[0]) setTableId(active[0].id);
+      })
+      .catch(() => undefined);
   }, [onError]);
 
   async function submit(e: React.FormEvent) {
@@ -220,12 +233,25 @@ function NewOrderModal({
       onError("Escolha pelo menos um item.");
       return;
     }
+    if (tables.length > 0 && !tableId) {
+      onError("Escolha a mesa.");
+      return;
+    }
+    if (tables.length === 0 && !tableLabel.trim()) {
+      onError("Informe a mesa ou cadastre o salão.");
+      return;
+    }
     setPending(true);
     onError(null);
     try {
       const order = await api<StaffOrder>("/v1/owner/orders", {
         method: "POST",
-        body: JSON.stringify({ tableLabel, note: note || null, items }),
+        body: JSON.stringify({
+          tableId: tables.length > 0 ? tableId : undefined,
+          tableLabel: tables.length > 0 ? undefined : tableLabel,
+          note: note || null,
+          items,
+        }),
       });
       onCreated(order);
     } catch (err) {
@@ -236,21 +262,48 @@ function NewOrderModal({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/40 p-4 sm:items-center">
-      <form
-        onSubmit={submit}
-        className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-line bg-card p-5"
-      >
+    <div className="fixed inset-0 z-40 flex items-end justify-center bg-ink/50 p-4 backdrop-blur-sm sm:items-center">
+      <form onSubmit={submit} className="surface max-h-[90vh] w-full max-w-lg overflow-y-auto p-5">
         <h2 className="font-serif text-2xl">Pedido de balcão</h2>
-        <label className="mt-4 block text-sm">
-          <span className="mb-1 block font-medium">Mesa / origem</span>
-          <input
-            value={tableLabel}
-            onChange={(e) => setTableLabel(e.target.value)}
-            className="w-full rounded-xl border border-line px-3 py-2"
-            required
-          />
-        </label>
+        {tables.length > 0 ? (
+          <fieldset className="mt-4">
+            <legend className="mb-2 block text-sm font-medium">Mesa</legend>
+            <div className="flex flex-wrap gap-2">
+              {tables.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTableId(t.id)}
+                  className={
+                    tableId === t.id
+                      ? "rounded-full bg-chili px-3 py-1.5 text-sm font-medium text-white"
+                      : "rounded-full border border-line bg-card px-3 py-1.5 text-sm hover:border-ink/30"
+                  }
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+        ) : (
+          <label className="mt-4 block text-sm">
+            <span className="mb-1 block font-medium">Mesa / origem</span>
+            <input
+              value={tableLabel}
+              onChange={(e) => setTableLabel(e.target.value)}
+              className="field"
+              placeholder="Mesa 4"
+              required
+            />
+            <p className="mt-1 text-xs text-ink-soft">
+              Cadastre o salão em{" "}
+              <a href="/painel/mesas" className="font-medium text-chili">
+                Mesas
+              </a>{" "}
+              para escolher na grade.
+            </p>
+          </label>
+        )}
         <label className="mt-3 block text-sm">
           <span className="mb-1 block font-medium">Nota</span>
           <textarea
@@ -258,7 +311,7 @@ function NewOrderModal({
             onChange={(e) => setNote(e.target.value)}
             rows={2}
             maxLength={280}
-            className="w-full rounded-xl border border-line px-3 py-2"
+            className="field"
           />
         </label>
         <div className="mt-4 space-y-4">
@@ -282,7 +335,7 @@ function NewOrderModal({
                         onChange={(e) =>
                           setQty((cur) => ({ ...cur, [item.id]: Number(e.target.value) || 0 }))
                         }
-                        className="w-16 rounded-lg border border-line px-2 py-1 text-center"
+                        className="field w-16 text-center"
                       />
                     </li>
                   ))}
@@ -291,14 +344,10 @@ function NewOrderModal({
           ))}
         </div>
         <div className="mt-5 flex justify-end gap-2">
-          <button type="button" onClick={onClose} className="rounded-full px-4 py-2 text-sm text-ink-soft">
+          <button type="button" onClick={onClose} className="btn-ghost">
             Cancelar
           </button>
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-full bg-chili px-5 py-2 text-sm font-medium text-white disabled:opacity-60"
-          >
+          <button type="submit" disabled={pending} className="btn-primary !py-2 text-sm">
             {pending ? "Lançando…" : "Lançar pedido"}
           </button>
         </div>

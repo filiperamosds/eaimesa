@@ -5,6 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireOwner } from "../lib/auth-guard";
 import { parseBody } from "../lib/http";
+import { resolveOrderTable } from "./owner-tables";
 
 function serializeOrder(
   order: typeof orders.$inferSelect,
@@ -15,6 +16,7 @@ function serializeOrder(
     id: order.id,
     status: order.status,
     source: order.source,
+    tableId: order.tableId,
     tableLabel: order.tableLabel,
     note: order.note,
     createdAt: order.createdAt.toISOString(),
@@ -75,6 +77,7 @@ export async function ownerOrderRoutes(app: FastifyInstance) {
     }
 
     const byId = new Map(catalog.map((c) => [c.id, c]));
+    const table = await resolveOrderTable(venueId, body.tableId, body.tableLabel);
 
     const created = await db.transaction(async (tx) => {
       const [order] = await tx
@@ -83,7 +86,8 @@ export async function ownerOrderRoutes(app: FastifyInstance) {
           venueId,
           status: "pending",
           source: "counter",
-          tableLabel: body.tableLabel,
+          tableId: table.tableId,
+          tableLabel: table.tableLabel,
           note: body.note ?? null,
         })
         .returning();

@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, sql } from "./client";
-import { accounts, catalogCategories, catalogItems, orderItems, orders, venues } from "./schema";
+import { accounts, catalogCategories, catalogItems, orderItems, orders, venues, venueTables } from "./schema";
 
 const DEMO_EMAIL = "dono@bardotiao.local";
 const DEMO_PASSWORD = "demo1234";
@@ -133,6 +133,7 @@ async function seed() {
     if (!venue) throw new Error("Falha ao criar venue demo");
 
     await tx.delete(orders).where(eq(orders.venueId, venue.id));
+    await tx.delete(venueTables).where(eq(venueTables.venueId, venue.id));
     await tx.delete(catalogItems).where(eq(catalogItems.venueId, venue.id));
     await tx.delete(catalogCategories).where(eq(catalogCategories.venueId, venue.id));
 
@@ -162,6 +163,21 @@ async function seed() {
     }
 
     const venueId = venue.id;
+
+    const tableLabels = ["Balcão", ...Array.from({ length: 10 }, (_, i) => `Mesa ${i + 1}`)];
+    const seededTables = await tx
+      .insert(venueTables)
+      .values(
+        tableLabels.map((label, i) => ({
+          venueId,
+          label,
+          sortOrder: i,
+          active: true,
+        })),
+      )
+      .returning();
+    const tableByLabel = new Map(seededTables.map((t) => [t.label, t]));
+
     const demoItems = await tx.select().from(catalogItems).where(eq(catalogItems.venueId, venueId));
     const byName = new Map(demoItems.map((i) => [i.name, i]));
     const pick = (name: string) => byName.get(name);
@@ -173,12 +189,14 @@ async function seed() {
       minutesAgo: number,
       lines: { name: string; qty: number }[],
     ) {
+      const table = tableByLabel.get(tableLabel);
       const [order] = await tx
         .insert(orders)
         .values({
           venueId,
           status,
           source: "counter",
+          tableId: table?.id ?? null,
           tableLabel,
           createdAt: new Date(now - minutesAgo * 60_000),
           updatedAt: new Date(now - minutesAgo * 60_000),

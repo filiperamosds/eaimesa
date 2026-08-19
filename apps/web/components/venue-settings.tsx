@@ -48,7 +48,7 @@ export function VenueSettings() {
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full rounded-xl border border-line bg-card px-3 py-2"
+          className="field"
           required
         />
       </label>
@@ -57,7 +57,7 @@ export function VenueSettings() {
         <input
           value={slug}
           onChange={(e) => setSlug(e.target.value)}
-          className="w-full rounded-xl border border-line bg-card px-3 py-2"
+          className="field"
           required
         />
         <p className="mt-1 text-xs text-ink-soft">
@@ -66,11 +66,7 @@ export function VenueSettings() {
       </label>
       {error ? <p className="text-sm text-chili">{error}</p> : null}
       {msg ? <p className="text-sm text-sage">{msg}</p> : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-full bg-chili px-5 py-2 font-medium text-white hover:bg-chili-dark disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className="btn-primary !py-2">
         {pending ? "Salvando…" : "Salvar"}
       </button>
     </form>

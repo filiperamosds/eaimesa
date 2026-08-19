@@ -27,6 +27,6 @@ Board **Kanban** em `/painel/pedidos`, uma coluna por status ativo (`pending`, `
 
 - Login do dono abre `/painel/pedidos`.
 - `/painel` redireciona para o Kanban (não mais para o cardápio).
-- Abas no topo do painel: Pedidos | Cardápio | Meu bar.
+- Abas no topo do painel: Pedidos | Cardápio | Mesas | Meu bar (Mesas: [ADR-006](ADR-006-mesas.md)).
 - Polling curto até existir SSE.
 - Pedido do cliente no slug público continua **fora** desta fatia.

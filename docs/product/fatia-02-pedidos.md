@@ -5,7 +5,7 @@ Fila do bar na tela. O dono (depois o garçom) vê os pedidos em colunas de stat
 ## Inclui
 
 - Board Kanban em `/painel/pedidos` — **entrada padrão do painel** após o login (`/painel` redireciona para cá)
-- Abas visíveis no topo: Pedidos | Cardápio | Meu bar
+- Abas visíveis no topo: Pedidos | Cardápio | Mesas | Meu bar
 - Pedido de **balcão** (mesa/rótulo + itens do cardápio; preço snapshot no servidor)
 - Mudança de status: `pending` → `accepted` → `preparing` → `delivered` (e `cancelled`)
 - API `GET/POST /v1/owner/orders` e `PATCH /v1/owner/orders/{id}`
@@ -17,6 +17,7 @@ O cardápio público `/{slug}` **não** tem pedidos — só o painel autenticado
 
 - Pedido pelo QR / slug público (continua read-only)
 - Claim do garçom, PIN, cookie guest
+- Mesas como entidade (fatia 3)
 - SSE / som de novo pedido (poll curto no board)
 - Impressora térmica
 
@@ -48,4 +49,4 @@ Toque no card expande os itens. Botões avançam o status (mais confiável no ce
 
 ## Pedido de balcão
 
-Enquanto o cliente não pede pelo celular, o staff lança o pedido no board: escolhe itens ativos do catálogo e um rótulo de mesa. `source = counter`.
+Enquanto o cliente não pede pelo celular, o staff lança o pedido no board: escolhe itens ativos do catálogo e uma **mesa cadastrada** (fatia 3). `source = counter`. Sem mesas, ainda aceita rótulo livre.

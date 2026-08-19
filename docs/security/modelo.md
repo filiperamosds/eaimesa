@@ -10,10 +10,10 @@
 
 ## Papéis
 
-| Papel | Auth | Escopo | Fatia 2 |
+| Papel | Auth | Escopo | Fatia 3 |
 |-------|------|--------|---------|
 | Público | — | Ler cardápio por slug | Sim |
-| Owner | Cookie `eaimesa_owner` | Cardápio, venue, **fila Kanban** | Sim |
+| Owner | Cookie `eaimesa_owner` | Cardápio, venue, fila Kanban, **mesas** | Sim |
 | Guest | Cookie `eaimesa_guest` | Uma tab, um venue | Não |
 | Staff | Cookie/JWT staff | Fila, claims, mesas | Ainda o dono no mesmo cookie |
 | Platform | SSO interno + 2FA | Tenants, suspensão | Não |

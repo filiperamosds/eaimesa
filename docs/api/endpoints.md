@@ -15,7 +15,7 @@ Formato: JSON. Erros:
 
 CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 
-## Implementado (fatia 1 — cardápio)
+## Implementado (fatia 1 — cardápio; fatia 2 — pedidos; fatia 3 — mesas)
 
 ### Saúde
 
@@ -109,6 +109,7 @@ Auth: cookie `eaimesa_owner`. `venue_id` da sessão.
 
 ```json
 {
+  "tableId": "uuid",
   "tableLabel": "Mesa 4",
   "note": "sem gelo",
   "items": [
@@ -117,7 +118,26 @@ Auth: cookie `eaimesa_owner`. `venue_id` da sessão.
 }
 ```
 
-`source` gravado como `counter`. Status inicial `pending`.
+`source` gravado como `counter`. Status inicial `pending`. `tableId` (fatia 3) resolve o rótulo da mesa ativa; `tableLabel` continua aceito se o bar ainda não cadastrou mesas. Um dos dois é obrigatório.
+
+### Owner — mesas (fatia 3)
+
+Auth: cookie `eaimesa_owner`. `venue_id` da sessão. Limite: 15 mesas **ativas**.
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | `/v1/owner/tables` | Todas as mesas (inclui inativas) |
+| POST | `/v1/owner/tables` | `{ label, sortOrder? }` |
+| PATCH | `/v1/owner/tables/{id}` | `{ label?, sortOrder?, active? }` |
+| DELETE | `/v1/owner/tables/{id}` | Remove; pedidos ficam com snapshot do rótulo |
+
+#### POST /v1/owner/tables (body)
+
+```json
+{ "label": "Mesa 4", "sortOrder": 4 }
+```
+
+Rótulo único por venue. `TABLE_LIMIT` se já houver 15 ativas. `TABLE_LABEL_TAKEN` se o nome já existir.
 
 #### PATCH /v1/owner/orders/{id}
 
@@ -129,7 +149,7 @@ Valores: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`.
 
 ## Planejado (fatias seguintes)
 
-Não implementar na fatia 1. Mantido para não perder o contrato do MVP.
+Não implementar agora. Mantido para não perder o contrato do MVP.
 
 ### Guest / comanda
 
@@ -160,7 +180,6 @@ Auth futura: cookie `eaimesa_staff` ou Bearer. Rotas no **mesmo** `apps/web` (`/
 
 | Método | Path | Descrição |
 |--------|------|-----------|
-| CRUD | `/v1/owner/tables/**` | Mesas |
 | POST | `/v1/owner/staff/invites` | Convite staff |
 
 ### Platform (futuro)
@@ -185,6 +204,9 @@ Auth futura: cookie `eaimesa_staff` ou Bearer. Rotas no **mesmo** `apps/web` (`/
 | `SLUG_RESERVED` | 400 |
 | `CATEGORY_NOT_EMPTY` | 409 |
 | `ORDER_NOT_FOUND` | 404 |
+| `TABLE_NOT_FOUND` | 404 |
+| `TABLE_LIMIT` | 409 |
+| `TABLE_LABEL_TAKEN` | 409 |
 | `EMAIL_TAKEN` | 409 |
 | `VENUE_SUSPENDED` | 403 |
 | `CLAIM_EXPIRED` | 410 |

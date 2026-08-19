@@ -75,6 +75,7 @@ URLs:
 | Web (landing, painel, cardápio) | http://localhost:3000 |
 | Cardápio seed | http://localhost:3000/bar-do-tiao |
 | Pedidos (Kanban) | http://localhost:3000/painel/pedidos |
+| Mesas | http://localhost:3000/painel/mesas |
 
 Login demo abre direto o Kanban. O cardápio público (`/bar-do-tiao`) **não** tem fila de pedidos.
 
