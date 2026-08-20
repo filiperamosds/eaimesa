@@ -1,5 +1,6 @@
 "use client";
 
+import { formatBrlFromCents, PLANS } from "@eaimesa/shared";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
@@ -123,27 +124,27 @@ export function RegisterForm() {
       <fieldset>
         <legend className="mb-2 text-sm font-medium">Plano (trial de 7 dias)</legend>
         <div className="grid gap-2 sm:grid-cols-2">
-          {(
-            [
-              ["cardapio", "Cardápio"],
-              ["auto_atendimento", "Auto atendimento"],
-            ] as const
-          ).map(([id, label]) => (
+          {Object.values(PLANS).map((p) => (
             <label
-              key={id}
+              key={p.id}
               className={`cursor-pointer rounded-2xl border px-3 py-3 text-sm ${
-                plan === id ? "border-chili bg-chili/5" : "border-line"
+                plan === p.id ? "border-chili bg-chili/5" : "border-line"
               }`}
             >
               <input
                 type="radio"
                 name="plan"
-                value={id}
-                checked={plan === id}
-                onChange={() => setPlan(id)}
+                value={p.id}
+                checked={plan === p.id}
+                onChange={() => setPlan(p.id)}
                 className="sr-only"
               />
-              {label}
+              <span className="block font-medium">{p.name}</span>
+              <span className="mt-1 block text-chili">
+                {formatBrlFromCents(p.priceCents)}
+                <span className="font-normal text-ink-soft">/mês</span>
+              </span>
+              <span className="mt-1 block text-xs text-ink-soft">{p.blurb}</span>
             </label>
           ))}
         </div>

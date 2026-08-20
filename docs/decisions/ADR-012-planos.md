@@ -11,7 +11,8 @@ Um único “Plano Bar” misturava cardápio QR com comanda self-service. Há q
 
 - Planos: `cardapio` e `auto_atendimento` (vendáveis). `equipamento` só no spec.
 - Trial de **7 dias** no plano escolhido no cadastro; cobrança depois.
-- `POST /v1/billing/checkout` **stub**: sem gateway; resposta `status: success` e vigência de 30 dias.
+- `POST /v1/billing/checkout` **stub**: sem gateway; espera **2s** e responde `status: success` (vigência 30 dias). Front tem UI de cartão/PIX; **não** envia PAN.
+- Landing e `/preco` com **dois cards** (nome, valor, features).
 - Upgrade imediato; downgrade só após `current_period_ends_at` (vigência paga). No trial, pode descer.
 - Enforcement no servidor (`PLAN_FEATURE`, `BILLING_INACTIVE`). UI esconde o que o plano não tem.
 

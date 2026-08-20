@@ -62,13 +62,13 @@ Itens inativos e categorias inativas **não** entram na resposta pública. Venue
 
 ### Billing (fatia 10)
 
-Checkout **stub**: sem Asaas. Resposta de sucesso para o front.
+Checkout **stub**: sem Asaas. Espera ~2s e devolve sucesso para o front testar o loading. O body pode trazer `method: card | pix` (não processa). Cartão **não** vai para a API.
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| GET | `/v1/billing/plans` | — | Catálogo dos planos vendáveis + futuro |
+| GET | `/v1/billing/plans` | — | Catálogo + `stubDelayMs` |
 | GET | `/v1/billing/me` | Owner | Plano atual, trial/vigência, `canUpgrade` / `canDowngrade` |
-| POST | `/v1/billing/checkout` | Owner | `{ plan }` → `status: success`, `active` 30 dias |
+| POST | `/v1/billing/checkout` | Owner | `{ plan, method? }` → espera 2s → `status: success`, `active` 30 dias |
 
 Downgrade com vigência paga em aberto → 409 `PLAN_DOWNGRADE_LOCKED`. Recurso de Auto atendimento no plano Cardápio → 403 `PLAN_FEATURE`. Trial/vigência vencidos → 403 `BILLING_INACTIVE`.
 

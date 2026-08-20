@@ -8,8 +8,8 @@ export default function PagamentoPage() {
       <p className="eyebrow">Assinatura</p>
       <h1 className="mt-2 font-serif text-3xl">Pagamento</h1>
       <p className="mt-2 mb-8 text-ink-soft">
-        Sem gateway nesta fatia: a API aprova a compra e devolve um recibo de sucesso. Trial de 7 dias;
-        a cobrança vale 30 dias.
+        Escolha o plano, veja o valor e pague com cartão ou PIX. Sem gateway: a API espera ~2s e
+        devolve sucesso. Trial de 7 dias; a cobrança vale 30 dias.
       </p>
       <BillingPanel />
     </div>

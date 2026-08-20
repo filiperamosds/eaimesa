@@ -6,8 +6,10 @@ O produto deixa de ser um único “Plano Bar”. O estabelecimento escolhe o qu
 
 - Planos vendáveis: **Cardápio** (R$ 49/mês) e **Auto atendimento** (R$ 149/mês)
 - Cadastro escolhe o plano; **trial de 7 dias**; cobrança depois
-- `POST /v1/billing/checkout` — stub: aceita a compra e devolve **sucesso** (sem Asaas/Pix)
-- Landing e `/preco`: CTA para adquirir os **dois** planos
+- Landing e `/preco`: **dois cards** com nome, valor, o que inclui e CTA
+- Cadastro mostra o **preço** do plano escolhido
+- Painel `/painel/pagamento`: formulário de **cartão ou PIX** (só UI; não envia PAN)
+- `POST /v1/billing/checkout` — stub: espera **2s** e devolve `status: success` (sem Asaas/Pix)
 - Upgrade Cardápio → Auto atendimento a qualquer momento (checkout)
 - Downgrade Auto atendimento → Cardápio **só depois do fim da vigência paga**
 - Gates na API e no painel: Cardápio não acessa mesas, equipe, garçom, pedido, Kanban
@@ -34,7 +36,7 @@ O produto deixa de ser um único “Plano Bar”. O estabelecimento escolhe o qu
 
 1. Landing → Adquirir Cardápio ou Auto atendimento → `/cadastro?plano=…`
 2. Cria a conta em `trial` (7 dias) naquele plano.
-3. Depois do trial (ou antes, se quiser pagar): `/painel/pagamento` ou Meu bar → checkout stub → `active` por 30 dias.
+3. Depois do trial (ou antes, se quiser pagar): `/painel/pagamento` — vê o valor, escolhe cartão ou PIX (UI) → checkout stub (~2s) → `active` por 30 dias.
 4. Sem pagar após o trial: recursos do plano ficam bloqueados (`BILLING_INACTIVE`); o cardápio público continua leitura.
 
 Ver [pricing](pricing.md) e [ADR-012](../decisions/ADR-012-planos.md).

@@ -1,6 +1,6 @@
 # Pricing
 
-Mensalidade fixa; **sem comissão** sobre consumo. Trial de **7 dias** no plano escolhido; a cobrança começa depois. Nesta fatia o checkout é **stub** (sucesso sem gateway).
+Mensalidade fixa; **sem comissão** sobre consumo. Trial de **7 dias** no plano escolhido; a cobrança começa depois. Nesta fatia o checkout é **stub**: o front mostra cartão/PIX e o valor; a API espera ~2s e devolve sucesso, sem gateway.
 
 ## Planos vendáveis
 
@@ -38,7 +38,7 @@ Fora desta fatia (o “Plano Bar” único e o desconto de R$ 119 saem).
 
 - Percentual sobre consumo
 - Taxa por pedido
-- Gateway nesta fatia (checkout devolve sucesso)
+- Gateway nesta fatia (checkout devolve sucesso após ~2s; UI de cartão/PIX não processa)
 
 ## Referência de mercado (2026)
 
