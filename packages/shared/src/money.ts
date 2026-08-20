@@ -30,30 +30,28 @@ export function reaisToCents(raw: string): number | null {
   return cents;
 }
 
-/** Máscara de digitação BRL: milhar com ponto, centavos após a vírgula. */
+/** Dígitos da direita para a esquerda = centavos. `1250` → 1250 cents. */
+export function parseDigitsAsCents(raw: string): number | null {
+  const digits = raw.replace(/\D/g, "").slice(0, String(PRICE_CENTS_MAX).length);
+  if (!digits) return null;
+  const n = Number(digits);
+  if (!Number.isFinite(n) || n < 0) return null;
+  return Math.min(n, PRICE_CENTS_MAX);
+}
+
+/** Máscara de digitação BRL com 2 casas: `1` → `R$ 0,01`, `1250` → `R$ 12,50`. */
 export function formatBrlTyping(raw: string): string {
-  const stripped = raw.replace(/R\$/gi, "");
-  const hasComma = stripped.includes(",");
-  const only = stripped.replace(/[^\d,]/g, "");
-  if (!only) return "";
+  const cents = parseDigitsAsCents(raw);
+  if (cents === null) return "";
+  return formatBrlMasked(cents);
+}
 
-  const [intPart = "", ...fracParts] = only.split(",");
-  let intDigits = intPart.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-  let frac = fracParts.join("").replace(/\D/g, "").slice(0, 2);
-
-  const parsed = reaisToCents(
-    hasComma || fracParts.length > 0 ? `${intDigits || "0"},${frac}` : intDigits,
-  );
-  if (parsed != null && parsed >= PRICE_CENTS_MAX) {
-    return formatBrlMasked(PRICE_CENTS_MAX);
+export function shiftMoneyCents(cents: number | null, inputType: string, rawValue: string): number | null {
+  if (inputType.startsWith("delete")) {
+    if (cents == null || cents < 10) return null;
+    return Math.floor(cents / 10);
   }
-
-  if (!intDigits && !hasComma && fracParts.length === 0) return "";
-  const grouped = Number(intDigits || "0").toLocaleString("pt-BR");
-  if (hasComma || fracParts.length > 0) {
-    return `R$ ${grouped},${frac}`;
-  }
-  return `R$ ${grouped}`;
+  return parseDigitsAsCents(rawValue);
 }
 
 export function centsToInput(cents: number): string {
