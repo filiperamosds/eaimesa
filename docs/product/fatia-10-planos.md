@@ -11,6 +11,8 @@ O produto deixa de ser um único “Plano Bar”. O estabelecimento escolhe o qu
 - Upgrade Cardápio → Auto atendimento a qualquer momento (checkout)
 - Downgrade Auto atendimento → Cardápio **só depois do fim da vigência paga**
 - Gates na API e no painel: Cardápio não acessa mesas, equipe, garçom, pedido, Kanban
+- `/{slug}` no plano Cardápio: só leitura — sem “Entrar para pedir”, faixa de PIN ou carrinho
+- `/{slug}/entrar`, `/comanda`, `/bem-vindo` e claim redirecionam ao cardápio se o plano não tem pedido
 - Seed: Bar do Tião (Auto atendimento) + Café da Lina (Cardápio)
 
 ## Não inclui

@@ -58,7 +58,7 @@ Cookie: `eaimesa_owner` (httpOnly, SameSite=Lax, Path=/). JWT inclui `role: owne
 |--------|------|------|-----------|
 | GET | `/v1/public/venues/{slug}` | — | Venue + categorias ativas + itens ativos |
 
-Itens inativos e categorias inativas **não** entram na resposta pública. Venue `suspended`: ainda retorna o cardápio com `subscriptionStatus` para o front avisar. `plan` entra no payload (`cardapio` não oferece PIN/pedido).
+Itens inativos e categorias inativas **não** entram na resposta pública. Venue `suspended`: ainda retorna o cardápio com `subscriptionStatus` para o front avisar. `plan` entra no payload (`cardapio` não oferece PIN/pedido). No front, plano Cardápio esconde “Entrar para pedir” e a faixa de PIN; `/{slug}/entrar` redireciona ao cardápio.
 
 ### Billing (fatia 10)
 

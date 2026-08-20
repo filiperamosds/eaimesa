@@ -50,10 +50,10 @@ Não existem `apps/guest` nem `apps/staff`.
 | `/painel/pedidos` | Kanban do dono (Auto atendimento) |
 | `/painel/cardapio`, `/painel/mesas`, `/painel/bar` | Cardápio, salão e dados do bar |
 | `/painel/pagamento` | Checkout stub |
-| `/{slug}` | Cardápio público (+ carrinho e parcial se Auto atendimento) |
-| `/{slug}/c/{token}` | Redeem do claim |
+| `/{slug}` | Cardápio público (pedido/PIN só no Auto atendimento) |
+| `/{slug}/c/{token}` | Redeem do claim (redirect se plano Cardápio) |
 | `/{slug}/bem-vindo` | PIN no primeiro aparelho |
-| `/{slug}/entrar` | PIN join (outros aparelhos) |
+| `/{slug}/entrar` | PIN join (redirect se plano Cardápio) |
 | `/{slug}/comanda` | Nome + telefone **ou** parcial da comanda |
 | `/garcom` | Mesas do garçom |
 | `/garcom/pedidos` | Kanban do garçom |
