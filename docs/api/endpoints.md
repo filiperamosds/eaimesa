@@ -170,7 +170,7 @@ Resposta do claim:
   "claimId": "uuid",
   "tableId": "uuid",
   "tableLabel": "Mesa 4",
-  "claimUrl": "http://localhost:3000/bar-do-tiao/c/{token}",
+  "claimUrl": "http://mac-filipe.local:3000/bar-do-tiao/c/{token}",
   "expiresAt": "2026-…",
   "expiresInSeconds": 180
 }
