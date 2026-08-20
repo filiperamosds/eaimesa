@@ -11,6 +11,8 @@ O código ativo não fica mais só neste monorepo. Clone e rode **cada um num te
 
 3. Backend Laravel + MySQL (pasta `eaimesa-laravel/`, [ADR-016](../decisions/ADR-016-laravel-mysql.md)): `php artisan migrate --seed && php artisan serve --port=8000`. No front, `API_URL=http://localhost:8000`.
 
+Os passos abaixo ainda valem se você estiver neste monorepo (`filiperamosds/eaimesa`).
+
 ## Pré-requisitos
 
 - Node.js **20+** (recomendado 22; `.nvmrc` na raiz)

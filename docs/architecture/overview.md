@@ -8,7 +8,7 @@
 | Workspaces | **pnpm** em cada repo | API: `apps/api` + `packages/*`; front: Next + cópia de `shared` |
 | API | **Node.js + Fastify** *ou* **Laravel 13** ([ADR-016](../decisions/ADR-016-laravel-mysql.md)) | REST, cookies |
 | DB | **PostgreSQL 16** (Fastify) ou **MySQL 8** (Laravel) | Transações |
-| ORM | **Drizzle** | Migrations SQL, types |
+| ORM | **Drizzle** (Fastify) / Eloquent (Laravel) | Migrations SQL, types |
 | UI | **Next.js** (um app) | Landing + painel + cardápio |
 | Auth dono | Cookie **httpOnly** `eaimesa_owner` | JWT assinado |
 | Auth guest | Cookie `eaimesa_guest` | Redeem (fatia 4) e PIN join (fatia 5) |
@@ -31,13 +31,14 @@ eaimesa-frontend/         # https://github.com/filiperamosds/eaimesa-frontend
 ├── app/                  # Next.js único (:3000)
 ├── packages/shared/      # cópia — sincronizar com o backend
 └── next.config.ts        # rewrite /v1 → API_URL
+
+eaimesa-laravel/          # Laravel + MySQL (ADR-016) — :8000; neste monorepo
+├── app/                  # controllers, models, JWT cookies
+├── database/migrations/  # schema MySQL
+└── docs/                 # cópia do contrato /v1
 ```
 
-eaimesa-laravel/            # Laravel + MySQL (ADR-016) — :8000
-├── app/                    # controllers, models, JWT cookies
-├── database/migrations/    # schema MySQL
-└── docs/                   # cópia do contrato /v1
-
+Não existem `apps/guest` nem `apps/staff`. Este monorepo (`filiperamosds/eaimesa`) espelha o conjunto; o dia a dia é nos dois repos GitHub. Laravel fica nesta pasta até o cutover.
 
 ## Multi-tenant
 

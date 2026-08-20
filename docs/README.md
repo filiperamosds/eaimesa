@@ -16,7 +16,7 @@
 2. [Visão do produto](product/visao.md) — o quê, para quem, o que fica de fora
 3. [Fluxos](product/fluxos.md) — publicar cardápio; guest pede na mesa
 4. [Pricing](product/pricing.md) — Cardápio e Auto atendimento
-5. [Arquitetura](architecture/overview.md) — dois repos (API + Next), um front, Fastify
+5. [Arquitetura](architecture/overview.md) — dois repos (API + Next), um front, Fastify ou Laravel
 6. [Sessão claim + PIN](architecture/sessao-claim-pin.md) — claim, PIN join, cookie guest
 7. [Segurança](security/modelo.md) — tenancy, cookies, ameaças
 8. [Modelo de dados](data/schema.md) — entidades fatia 1–11 + planejadas
