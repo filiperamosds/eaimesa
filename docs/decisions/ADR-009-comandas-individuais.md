@@ -29,4 +29,4 @@ A fatia 4–5 abria **uma** tab por mesa (PIN compartilhado = mesma conta). No s
 - Guest preenche nome + telefone depois do claim/PIN
 - Garçom: cartões do salão com nomes; dialog da mesa → lista de contas → parcial
 - Telefone é PII: gravar dígitos, mascarar na UI staff, não logar
-- Pedido guest (fatia seguinte) grava `order.tab_id`
+- Pedido guest (fatia 7) grava `order.tab_id`

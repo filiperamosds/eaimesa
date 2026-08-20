@@ -53,6 +53,7 @@ export type PublicMenu = {
       description: string | null;
       imageUrl: string | null;
       priceCents: number;
+      maxNoteLength: number;
     }[];
   }[];
 };
@@ -152,6 +153,8 @@ export type StaffOrder = {
   source: "counter" | "guest";
   tableId: string | null;
   tableLabel: string;
+  tabId: string | null;
+  guestName: string | null;
   note: string | null;
   createdAt: string;
   updatedAt: string;
@@ -165,3 +168,5 @@ export type StaffOrder = {
     note: string | null;
   }[];
 };
+
+export type GuestOrder = StaffOrder;

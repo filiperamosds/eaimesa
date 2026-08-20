@@ -1,37 +1,12 @@
-import { catalogItems, db, orderItems, orders } from "@eaimesa/db";
+import { catalogItems, db, orderItems, orders, tabs } from "@eaimesa/db";
 import { createOrderSchema, ERROR_CODES, KANBAN_COLUMNS, patchOrderSchema } from "@eaimesa/shared";
 import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireOwner } from "../lib/auth-guard";
 import { parseBody } from "../lib/http";
+import { serializeOrder } from "../lib/orders";
 import { resolveOrderTable } from "./owner-tables";
-
-function serializeOrder(
-  order: typeof orders.$inferSelect,
-  items: (typeof orderItems.$inferSelect)[],
-) {
-  const totalCents = items.reduce((sum, i) => sum + i.unitPriceCentsSnapshot * i.qty, 0);
-  return {
-    id: order.id,
-    status: order.status,
-    source: order.source,
-    tableId: order.tableId,
-    tableLabel: order.tableLabel,
-    note: order.note,
-    createdAt: order.createdAt.toISOString(),
-    updatedAt: order.updatedAt.toISOString(),
-    totalCents,
-    items: items.map((i) => ({
-      id: i.id,
-      catalogItemId: i.catalogItemId,
-      name: i.nameSnapshot,
-      unitPriceCents: i.unitPriceCentsSnapshot,
-      qty: i.qty,
-      note: i.note,
-    })),
-  };
-}
 
 export async function ownerOrderRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireOwner);
@@ -40,8 +15,9 @@ export async function ownerOrderRoutes(app: FastifyInstance) {
     const venueId = req.owner!.venueId;
     const since = new Date(Date.now() - 48 * 60 * 60 * 1000);
     const rows = await db
-      .select()
+      .select({ order: orders, guestName: tabs.guestName })
       .from(orders)
+      .leftJoin(tabs, eq(orders.tabId, tabs.id))
       .where(
         and(
           eq(orders.venueId, venueId),
@@ -51,14 +27,20 @@ export async function ownerOrderRoutes(app: FastifyInstance) {
       )
       .orderBy(desc(orders.createdAt));
 
-    const ids = rows.map((r) => r.id);
+    const ids = rows.map((r) => r.order.id);
     const items =
       ids.length === 0
         ? []
         : await db.select().from(orderItems).where(inArray(orderItems.orderId, ids));
 
     return {
-      orders: rows.map((o) => serializeOrder(o, items.filter((i) => i.orderId === o.id))),
+      orders: rows.map((r) =>
+        serializeOrder(
+          r.order,
+          items.filter((i) => i.orderId === r.order.id),
+          { guestName: r.guestName },
+        ),
+      ),
     };
   });
 
@@ -137,6 +119,12 @@ export async function ownerOrderRoutes(app: FastifyInstance) {
 
     if (!order) throw new AppError(404, ERROR_CODES.ORDER_NOT_FOUND, "Pedido não encontrado.");
     const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
-    return serializeOrder(order, items);
+    const guestName =
+      order.tabId == null
+        ? null
+        : (
+            await db.select({ guestName: tabs.guestName }).from(tabs).where(eq(tabs.id, order.tabId)).limit(1)
+          )[0]?.guestName ?? null;
+    return serializeOrder(order, items, { guestName });
   });
 }

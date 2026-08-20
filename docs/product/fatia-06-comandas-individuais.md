@@ -2,7 +2,7 @@
 
 Cada pessoa na mesa tem **a sua** comanda. O QR/PIN continua provando presença na mesa; nome + telefone abrem a conta da pessoa. O garçom vê a parcial por comanda e só encerra a mesa quando **todas** estão fechadas.
 
-Pedido pelo cardápio (carrinho) continua **fora** — a estrutura já agrupa o que vier.
+Pedido pelo cardápio (carrinho) está na [fatia 7](fatia-07-pedido-guest.md).
 
 ## Inclui
 
@@ -18,7 +18,6 @@ Pedido pelo cardápio (carrinho) continua **fora** — a estrutura já agrupa o 
 
 ## Não inclui
 
-- Pedido guest (`POST /guest/orders`)
 - Pagamento / split
 - Travamento (`locked`) além do close
 

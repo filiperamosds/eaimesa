@@ -52,7 +52,7 @@ export async function authRoutes(app: FastifyInstance) {
           slug: body.slug,
           publicId: newPublicId(),
           subscriptionStatus: "trial",
-          acceptsOrders: false,
+          acceptsOrders: true,
         })
         .returning();
       if (!venue) throw new AppError(500, "INTERNAL", "Falha ao criar o bar.");

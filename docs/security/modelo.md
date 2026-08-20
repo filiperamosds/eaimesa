@@ -5,7 +5,7 @@
 1. **Tenancy:** `venue_id` sempre do token/sessão, nunca do body confiável.
 2. **QR público ≠ auth:** slug da casa / QR fixo na mesa não abre comanda. Modo comanda **só** com QR do garçom (claim).
 3. **Presença (MVP):** claim do garçom (TTL, uso único) + PIN para o grupo. Export do claim não vira adesivo permanente.
-4. **Preço no servidor:** painel envia `priceCents` no cardápio; pedido de balcão manda só `catalogItemId` + qtd.
+4. **Preço no servidor:** painel envia `priceCents` no cardápio; pedido (balcão ou guest) manda só `catalogItemId` + qtd.
 5. **Separação de auth:** cookie dono ≠ cookie guest ≠ platform admin.
 
 ## Papéis
@@ -14,7 +14,7 @@
 |-------|------|--------|---------|
 | Público | — | Ler cardápio por slug | Sim |
 | Owner | Cookie `eaimesa_owner` | Cardápio, venue, fila, mesas, equipe | Sim |
-| Guest | Cookie `eaimesa_guest` | Mesa + comanda pessoal | Sim |
+| Guest | Cookie `eaimesa_guest` | Mesa + comanda + pedidos da tab | Sim |
 | Staff | Cookie `eaimesa_owner` (`role: staff`) | Claims, mesas | Sim |
 | Platform | SSO interno + 2FA | Tenants, suspensão | Não |
 
@@ -23,7 +23,7 @@
 | Ameaça | Controle |
 |--------|----------|
 | IDOR entre bares | Filtro `venue_id` da sessão; testes depois; RLS |
-| Pedido remoto | Claim + PIN (quando houver pedido); slug é read-only |
+| Pedido remoto | Claim + PIN + comanda pessoal; slug sozinho não cria pedido |
 | Preço adulterado no pedido | Recalcular no servidor |
 | XSS no cardápio | Texto; escape no React; CSP depois |
 | Guest → admin | Cookies distintos; RBAC server-side |
@@ -45,6 +45,7 @@
 | Login / register | 10/min/IP |
 | Redeem claim | 20/min/IP |
 | PIN join | 5 falhas / 15 min / IP+venue |
+| Pedido guest | 20/min/IP |
 
 Na fatia 1 o limiter de login pode ser in-memory (um processo).
 

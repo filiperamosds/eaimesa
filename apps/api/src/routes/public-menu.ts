@@ -42,6 +42,7 @@ export async function publicMenuRoutes(app: FastifyInstance) {
             description: i.description,
             imageUrl: i.imageUrl,
             priceCents: i.priceCents,
+            maxNoteLength: i.maxNoteLength,
           })),
       })),
     };

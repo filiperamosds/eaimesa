@@ -15,7 +15,7 @@ Login do dono.
 - `id`, `owner_account_id` → Account
 - `name`, `slug` UNIQUE, `public_id` UNIQUE
 - `subscription_status`: `trial` | `active` | `past_due` | `suspended`
-- `accepts_orders`: bool (**false** enquanto o cliente não pede pelo slug)
+- `accepts_orders`: bool (seed demo = true na fatia 7)
 - `created_at`, `updated_at`
 
 Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando houver staff.
@@ -33,9 +33,11 @@ Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando ho
 
 - `id`, `venue_id`
 - `status`: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`
-- `source`: `counter` | `guest` (`guest` reservado; fatia 2 só `counter`)
-- `table_id` (nullable → VenueTable; fatia 3)
-- `table_label` (snapshot, ex. "Mesa 4", "Balcão")
+- `source`: `counter` | `guest`
+- `table_id` (nullable → VenueTable)
+- `table_label` (snapshot)
+- `tab_id` nullable → Tab (obrigatório quando `source = guest`)
+- `idempotency_key` (nullable; único por venue quando preenchido)
 - `note`
 - timestamps
 
@@ -101,7 +103,7 @@ Como na fatia 4; `table_session_id` preenchido no redeem. **Não** cria a tab pe
 
 ### Order
 
-- `tab_id` nullable → Tab (parcial da pessoa; `guest` na fatia seguinte; balcão pode ficar só na mesa)
+- `tab_id` nullable → Tab (parcial da pessoa; pedido `guest` na fatia 7)
 
 ## Entidades — planejadas
 
@@ -122,7 +124,7 @@ Como na fatia 4; `table_session_id` preenchido no redeem. **Não** cria a tab pe
 - `venue_members(venue_id, account_id)` UNIQUE
 - `table_sessions(table_id) WHERE status = open` UNIQUE
 - `tabs(table_session_id, guest_phone) WHERE status = open` UNIQUE
-- `guest_sessions(table_session_id, tab_id)`
+- `orders(venue_id, idempotency_key) WHERE idempotency_key IS NOT NULL` UNIQUE
 
 ## Regras de negócio
 
@@ -130,11 +132,12 @@ Como na fatia 4; `table_session_id` preenchido no redeem. **Não** cria a tab pe
 2. Menu público: `active = true` em categoria e item.
 3. DELETE categoria com itens → `CATEGORY_NOT_EMPTY`.
 4. `OrderItem` sempre grava snapshot de preço/nome; o cliente **não** envia preço.
-5. Pedido público pelo slug ainda não existe (carrinho = fatia seguinte).
+5. Pedido público pelo slug **exige** comanda pessoal `open` (fatia 7). Slug sozinho não autoriza.
 6. Pedido de balcão com `table_id` só aceita mesa **ativa** do mesmo venue; grava snapshot do rótulo.
 7. PIN join casa o PIN com uma **TableSession** `open`.
 8. Nome+telefone abre ou retoma comanda pessoal na sessão.
 9. Encerrar mesa só se todas as comandas da sessão estão `closed`. Revoga sessões da comanda ao fechá-la.
+10. `Idempotency-Key` repetida no mesmo venue devolve o mesmo pedido guest.
 
 ## Diagrama ER
 

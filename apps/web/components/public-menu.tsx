@@ -3,14 +3,43 @@
 import { formatBrlFromCents } from "@eaimesa/shared";
 import Link from "next/link";
 import { useState } from "react";
+import { GuestCart, type CartLine } from "./guest-cart";
 import { GuestTabBar } from "./guest-tab-bar";
 import { mediaSrc } from "../lib/media";
+import { useGuestTab } from "../lib/use-guest-tab";
 import type { PublicMenu } from "../lib/types";
 
 export function PublicMenuView({ menu }: { menu: PublicMenu }) {
   const groups = menu.categories.filter((c) => c.items.length > 0);
   const [openId, setOpenId] = useState<string | null>(null);
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const tab = useGuestTab(menu.venue.slug);
   const suspended = menu.venue.subscriptionStatus === "suspended";
+  const canOrder = Boolean(tab && !tab.needsProfile && !suspended && menu.venue.acceptsOrders);
+
+  function addItem(item: PublicMenu["categories"][number]["items"][number]) {
+    setCart((cur) => {
+      const existing = cur.find((l) => l.catalogItemId === item.id);
+      if (existing) {
+        return cur.map((l) =>
+          l.catalogItemId === item.id ? { ...l, qty: Math.min(99, l.qty + 1) } : l,
+        );
+      }
+      return [
+        ...cur,
+        {
+          catalogItemId: item.id,
+          name: item.name,
+          priceCents: item.priceCents,
+          qty: 1,
+          note: "",
+          maxNoteLength: item.maxNoteLength ?? 80,
+        },
+      ];
+    });
+  }
+
+  const qtyOf = (id: string) => cart.find((l) => l.catalogItemId === id)?.qty ?? 0;
 
   return (
     <div className="min-h-screen">
@@ -21,14 +50,16 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
           <h1 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">{menu.venue.name}</h1>
           {suspended ? (
             <p className="mt-4 text-sm text-amber">Assinatura inativa — só leitura.</p>
+          ) : canOrder ? (
+            <p className="mt-4 text-sm text-white/65">Toque em adicionar e envie o pedido pela cesta.</p>
           ) : (
             <p className="mt-4 text-sm text-white/65">
-              Cardápio só leitura. Para pedir, peça o QR do garçom na mesa.
+              Cardápio só leitura até entrar na mesa. Peça o QR do garçom ou use o PIN.
             </p>
           )}
         </div>
       </header>
-      <GuestTabBar slug={menu.venue.slug} />
+      <GuestTabBar slug={menu.venue.slug} tab={tab} />
 
       {groups.length > 0 ? (
         <nav
@@ -50,7 +81,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
         </nav>
       ) : null}
 
-      <main className="mx-auto max-w-lg px-5 pb-16 pt-8">
+      <main className={`mx-auto max-w-lg px-5 pb-16 pt-8 ${cart.length > 0 ? "pb-28" : ""}`}>
         {groups.length === 0 ? (
           <p className="py-16 text-center text-ink-soft">Cardápio em montagem.</p>
         ) : (
@@ -68,6 +99,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
                   const photo = mediaSrc(item.imageUrl);
                   const expandable = Boolean(item.description || photo);
                   const open = openId === item.id;
+                  const qty = qtyOf(item.id);
                   return (
                     <li key={item.id} className="surface overflow-hidden">
                       <button
@@ -104,7 +136,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
                         </span>
                       </button>
                       {expandable && open ? (
-                        <div className="space-y-3 px-3 pb-4">
+                        <div className="space-y-3 px-3 pb-2">
                           {photo ? (
                             <img
                               src={photo}
@@ -117,6 +149,25 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
                           ) : null}
                         </div>
                       ) : null}
+                      <div className="flex justify-end px-3 pb-3">
+                        {suspended ? null : canOrder ? (
+                          <button
+                            type="button"
+                            onClick={() => addItem(item)}
+                            className="btn-secondary !px-3 !py-1.5 text-sm"
+                          >
+                            {qty > 0 ? `Adicionar · ${qty}` : "Adicionar"}
+                          </button>
+                        ) : tab?.needsProfile ? (
+                          <Link href={`/${menu.venue.slug}/comanda`} className="btn-secondary !px-3 !py-1.5 text-sm">
+                            Abrir comanda
+                          </Link>
+                        ) : (
+                          <Link href={`/${menu.venue.slug}/entrar`} className="btn-secondary !px-3 !py-1.5 text-sm">
+                            Entrar para pedir
+                          </Link>
+                        )}
+                      </div>
                     </li>
                   );
                 })}
@@ -125,6 +176,8 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
           ))
         )}
       </main>
+
+      <GuestCart cart={cart} onChange={setCart} canOrder={canOrder} />
 
       <footer className="pb-10 text-center text-xs text-ink-soft">
         Cardápio por{" "}

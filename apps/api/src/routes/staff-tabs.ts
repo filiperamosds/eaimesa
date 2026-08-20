@@ -13,29 +13,7 @@ import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireVenueActor } from "../lib/auth-guard";
-
-function serializeOrder(order: typeof orders.$inferSelect, items: (typeof orderItems.$inferSelect)[]) {
-  const totalCents = items.reduce((sum, i) => sum + i.unitPriceCentsSnapshot * i.qty, 0);
-  return {
-    id: order.id,
-    status: order.status,
-    source: order.source,
-    tableId: order.tableId,
-    tableLabel: order.tableLabel,
-    note: order.note,
-    createdAt: order.createdAt.toISOString(),
-    updatedAt: order.updatedAt.toISOString(),
-    totalCents,
-    items: items.map((i) => ({
-      id: i.id,
-      catalogItemId: i.catalogItemId,
-      name: i.nameSnapshot,
-      unitPriceCents: i.unitPriceCentsSnapshot,
-      qty: i.qty,
-      note: i.note,
-    })),
-  };
-}
+import { serializeOrder } from "../lib/orders";
 
 export async function staffTabRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireVenueActor);
@@ -106,6 +84,7 @@ export async function staffTabRoutes(app: FastifyInstance) {
           serializeOrder(
             o,
             items.filter((i) => i.orderId === o.id),
+            { guestName: t.guestName },
           ),
         );
         const totalCents = serialized.reduce((s, o) => s + o.totalCents, 0);

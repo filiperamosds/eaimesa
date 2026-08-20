@@ -8,7 +8,7 @@ Um único frontend: landing, autenticação do estabelecimento e cardápio por s
 
 ## Fatia atual
 
-[Cardápio](docs/product/fatia-01-cardapio.md) … [PIN join](docs/product/fatia-05-pin-join.md) e [comandas individuais](docs/product/fatia-06-comandas-individuais.md).
+[Cardápio](docs/product/fatia-01-cardapio.md) … [comandas](docs/product/fatia-06-comandas-individuais.md) e [pedido pelo cardápio](docs/product/fatia-07-pedido-guest.md).
 
 ```bash
 cp .env.example .env
@@ -45,6 +45,7 @@ Setup completo: [docs/ops/dev-setup.md](docs/ops/dev-setup.md).
 | Fatia 4 | [docs/product/fatia-04-claim-garcom.md](docs/product/fatia-04-claim-garcom.md) |
 | Fatia 5 | [docs/product/fatia-05-pin-join.md](docs/product/fatia-05-pin-join.md) |
 | Fatia 6 | [docs/product/fatia-06-comandas-individuais.md](docs/product/fatia-06-comandas-individuais.md) |
+| Fatia 7 | [docs/product/fatia-07-pedido-guest.md](docs/product/fatia-07-pedido-guest.md) |
 | Produto | [docs/product/visao.md](docs/product/visao.md) |
 | Fluxos | [docs/product/fluxos.md](docs/product/fluxos.md) |
 | Preço | [docs/product/pricing.md](docs/product/pricing.md) |

@@ -98,7 +98,7 @@ sequenceDiagram
 2. Garçom entra em `/login` → `/garcom`, escolhe mesa, mostra QR (countdown ~3 min).
 3. Cliente escaneia → redeem → PIN da mesa + **nome e telefone** (comanda pessoal).
 4. O quadro do garçom lista os nomes na mesa e, ao toque, abre a parcial. Não gera outro QR se a mesa já está ocupada.
-5. Pedido pelo cardápio exige comanda pessoal aberta (fatia seguinte).
+5. Pedido pelo cardápio grava `tab_id` da comanda pessoal (fatia 7).
 
 ## 3. Outros celulares na mesa (fatia 5)
 
@@ -121,9 +121,26 @@ sequenceDiagram
 3. Nome + telefone → comanda pessoal na mesma ocupação.
 4. Garçom **não** precisa voltar.
 
-## 4. Pedido
+## 4. Pedido (fatia 7)
 
-*Fatia futura (carrinho guest).* Pedidos que existirem gravam `tab_id` da comanda pessoal.
+Detalhe em [fatia-07-pedido-guest.md](fatia-07-pedido-guest.md).
+
+```mermaid
+sequenceDiagram
+  participant C as Cliente
+  participant API as API
+  participant K as Kanban
+
+  C->>API: POST /v1/guest/orders (cookie + Idempotency-Key)
+  API->>API: tab open, preço do catálogo, source guest
+  API-->>C: pedido pending
+  K->>API: GET /v1/owner/orders
+```
+
+1. Comanda pessoal aberta no `/{slug}`.
+2. Carrinho: itens + qty + nota opcional. Preço **não** vai no body.
+3. Envia → `pending` no Kanban (nome da pessoa + mesa) e na parcial do garçom.
+4. Sem comanda: slug continua só leitura (401/403).
 
 ## 5. Fechamento (fatia 6)
 

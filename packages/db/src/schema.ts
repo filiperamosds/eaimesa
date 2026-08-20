@@ -140,6 +140,7 @@ export const orders = pgTable(
     tableId: uuid("table_id").references(() => venueTables.id, { onDelete: "set null" }),
     tableLabel: text("table_label").notNull(),
     tabId: uuid("tab_id").references(() => tabs.id, { onDelete: "set null" }),
+    idempotencyKey: text("idempotency_key"),
     note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
