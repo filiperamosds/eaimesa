@@ -8,6 +8,7 @@ export const PLAN_FUTURE_ID = "equipamento" as const;
 export const PLAN_CATALOG_MAX = 12;
 export const PLAN_ID_MIN = 3;
 export const PLAN_ID_MAX = 48;
+export const PLAN_ID_REGEX = /^[a-z0-9]+(?:[_-][a-z0-9]+)*$/;
 
 export const TRIAL_DAYS = 7;
 export const PAID_PERIOD_DAYS = 30;

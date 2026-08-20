@@ -12,7 +12,7 @@ Também precisa de um preço promocional opcional: se preenchido, landing e chec
 
 ## Decisão
 
-- `plan_catalog.id` é o SKU (slug 3–48). Sem CHECK nos dois ids seed.
+- `plan_catalog.id` é o SKU (slug 3–48; letras, números, hífen ou underscore — o seed `auto_atendimento` permanece).
 - `plan_catalog.kind` é `cardapio` | `auto_atendimento` — o que o estabelecimento libera.
 - `venues.plan` guarda o **id do catálogo**.
 - API serializa `planKind` a partir do catálogo; gates usam `planKind` (fallback: id seed).

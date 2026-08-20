@@ -6,6 +6,7 @@ import {
   PAYMENT_METHODS,
   PLAN_ID_MAX,
   PLAN_ID_MIN,
+  PLAN_ID_REGEX,
   PLAN_KINDS,
 } from "./plans";
 import { TABLE_LABEL_MAX } from "./tables";
@@ -33,7 +34,7 @@ export const registerSchema = z.object({
     .trim()
     .min(PLAN_ID_MIN, "Escolha um plano.")
     .max(PLAN_ID_MAX)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Plano inválido."),
+    .regex(PLAN_ID_REGEX, "Plano inválido."),
 });
 
 export const checkoutSchema = z.object({
@@ -42,7 +43,7 @@ export const checkoutSchema = z.object({
     .trim()
     .min(PLAN_ID_MIN, "Escolha um plano.")
     .max(PLAN_ID_MAX)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Plano inválido."),
+    .regex(PLAN_ID_REGEX, "Plano inválido."),
   method: z
     .enum(PAYMENT_METHODS, { errorMap: () => ({ message: "Escolha cartão ou PIX." }) })
     .optional()

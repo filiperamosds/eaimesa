@@ -122,7 +122,7 @@ Uma linha `id=default`: `trial_days`, `paid_period_days`.
 
 ### PlanCatalog
 
-Catálogo vendável. `id` = slug do SKU (3–48, kebab). Não está mais limitado aos dois ids seed.
+Catálogo vendável. `id` = slug do SKU (3–48; kebab ou underscore, para o seed `auto_atendimento`). Não está mais limitado aos dois ids seed.
 
 - `kind`: `cardapio` | `auto_atendimento` — feature gate (pedido/garçom só no auto)
 - `name`, `price_cents`, `promo_price_cents` (nullable; se preenchido e menor que o cheio, vitrine e checkout usam a promo)

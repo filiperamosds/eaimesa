@@ -15,7 +15,7 @@ ALTER TABLE plan_catalog
 ALTER TABLE plan_catalog DROP CONSTRAINT IF EXISTS plan_catalog_id_format_chk;
 ALTER TABLE plan_catalog
   ADD CONSTRAINT plan_catalog_id_format_chk CHECK (
-    id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'
+    id ~ '^[a-z0-9]+([_-][a-z0-9]+)*$'
     AND char_length(id) BETWEEN 3 AND 48
   );
 
