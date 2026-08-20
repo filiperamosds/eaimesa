@@ -1,17 +1,29 @@
 "use client";
 
-import { formatBrlFromCents, PLAN_FUTURE, type PaymentMethod, type PlanId } from "@eaimesa/shared";
+import { formatBrlFromCents, PLAN_FUTURE, planRank, type PaymentMethod } from "@eaimesa/shared";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
 import type { Venue } from "../lib/types";
 import { PaymentForm } from "./payment-form";
+import { PlanPrice, planCtaPrice } from "./plan-price";
+
+type BillingPlanRow = {
+  id: string;
+  name: string;
+  kind?: string;
+  priceCents: number;
+  promoPriceCents?: number | null;
+  effectivePriceCents?: number;
+  blurb: string;
+  features: string[];
+};
 
 type BillingMe = {
   venue: Venue;
   entitlement: { ok: boolean; message?: string };
   canUpgrade: boolean;
   canDowngrade: boolean;
-  plans: { id: PlanId; name: string; priceCents: number; blurb: string; features: string[] }[];
+  plans: BillingPlanRow[];
 };
 
 type CheckoutResult = {
@@ -31,7 +43,7 @@ export function BillingPanel() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<CheckoutResult | null>(null);
   const [pending, setPending] = useState(false);
-  const [checkoutPlan, setCheckoutPlan] = useState<PlanId | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
 
   async function load() {
     const me = await api<BillingMe>("/v1/billing/me");
@@ -42,7 +54,7 @@ export function BillingPanel() {
     load().catch((err) => setError(err instanceof ApiError ? err.message : "Falha ao carregar o plano."));
   }, []);
 
-  async function pay(plan: PlanId, method: PaymentMethod) {
+  async function pay(plan: string, method: PaymentMethod) {
     setError(null);
     setSuccess(null);
     setPending(true);
@@ -65,8 +77,10 @@ export function BillingPanel() {
     return <p className="text-ink-soft">{error ?? "Carregando plano…"}</p>;
   }
 
-  const current = data.venue.plan as PlanId;
+  const current = data.venue.plan;
+  const currentKind = data.venue.planKind ?? data.venue.plan;
   const selected = data.plans.find((p) => p.id === checkoutPlan);
+  const cols = data.plans.length >= 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2";
 
   return (
     <section className="space-y-4">
@@ -105,7 +119,9 @@ export function BillingPanel() {
         <PaymentForm
           planId={selected.id}
           planName={selected.name}
-          amountCents={selected.priceCents}
+          amountCents={selected.effectivePriceCents ?? selected.priceCents}
+          listPriceCents={selected.priceCents}
+          promoPriceCents={selected.promoPriceCents}
           pending={pending}
           onCancel={() => {
             if (!pending) setCheckoutPlan(null);
@@ -113,19 +129,26 @@ export function BillingPanel() {
           onPay={(method) => void pay(selected.id, method)}
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={`grid gap-3 ${cols}`}>
           {data.plans.map((p) => {
             const isCurrent = p.id === current;
-            const upgrade = p.id === "auto_atendimento" && data.canUpgrade;
-            const downgrade = p.id === "cardapio" && data.canDowngrade;
-            const renew = isCurrent;
-            const enabled = upgrade || downgrade || renew;
+            const rank = planRank(p.kind ?? p.id);
+            const currentRank = planRank(currentKind);
+            const upgrade = !isCurrent && rank > currentRank;
+            const downgrade = !isCurrent && rank < currentRank;
+            const lateral = !isCurrent && rank === currentRank;
+            const locked = downgrade && !data.canDowngrade;
+            const enabled = isCurrent || upgrade || lateral || (downgrade && data.canDowngrade);
             return (
               <div key={p.id} className="surface p-5">
                 <p className="font-serif text-xl">{p.name}</p>
                 <p className="mt-1 font-medium text-chili">
-                  {formatBrlFromCents(p.priceCents)}
-                  <span className="text-sm font-normal text-ink-soft">/mês</span>
+                  <PlanPrice
+                    priceCents={p.priceCents}
+                    promoPriceCents={p.promoPriceCents}
+                    suffix="/mês"
+                    className="text-lg"
+                  />
                 </p>
                 <p className="mt-2 text-sm text-ink-soft">{p.blurb}</p>
                 <ul className="mt-3 space-y-1 text-sm text-ink-soft">
@@ -144,12 +167,14 @@ export function BillingPanel() {
                   className="btn-primary mt-4 !py-2 text-sm disabled:opacity-50"
                 >
                   {isCurrent
-                    ? `Pagar ${formatBrlFromCents(p.priceCents)}`
+                    ? `Pagar ${planCtaPrice(p)}`
                     : upgrade
-                      ? `Subir · ${formatBrlFromCents(p.priceCents)}/mês`
-                      : downgrade
-                        ? `Descer · ${formatBrlFromCents(p.priceCents)}/mês`
-                        : "Disponível no fim da vigência"}
+                      ? `Subir · ${planCtaPrice(p)}`
+                      : lateral
+                        ? `Trocar · ${planCtaPrice(p)}`
+                        : locked
+                          ? "Disponível no fim da vigência"
+                          : `Descer · ${planCtaPrice(p)}`}
                 </button>
               </div>
             );

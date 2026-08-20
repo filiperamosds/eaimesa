@@ -11,7 +11,7 @@ export default function PainelIndex() {
   useEffect(() => {
     api<Session>("/v1/auth/me")
       .then((session) => {
-        router.replace(planAllowsService(session.venue.plan) ? "/painel/pedidos" : "/painel/cardapio");
+        router.replace(planAllowsService(session.venue.planKind ?? session.venue.plan) ? "/painel/pedidos" : "/painel/cardapio");
       })
       .catch(() => router.replace("/login"));
   }, [router]);

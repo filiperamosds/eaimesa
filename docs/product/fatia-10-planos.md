@@ -2,6 +2,8 @@
 
 O produto deixa de ser um único “Plano Bar”. O estabelecimento escolhe o que compra. **Equipamento na mesa** fica documentado, sem venda.
 
+SKUs extras, `kind` e preço promocional: [fatia 11](fatia-11-console-saas.md) e [ADR-014](../decisions/ADR-014-plan-kind-promo.md).
+
 ## Inclui
 
 - Planos vendáveis: **Cardápio** (R$ 49/mês) e **Auto atendimento** (R$ 149/mês)

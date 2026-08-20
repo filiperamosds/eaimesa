@@ -19,7 +19,7 @@ export async function guestTabRoutes(app: FastifyInstance) {
     if (!venue) {
       throw new AppError(404, ERROR_CODES.VENUE_NOT_FOUND, "Este cardápio não existe.");
     }
-    assertServicePlan(venue);
+    await assertServicePlan(venue);
 
     const lock = pinJoinLock(
       `pinjoin:${clientIp(req)}:${venue.id}`,

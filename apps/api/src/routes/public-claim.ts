@@ -20,7 +20,7 @@ export async function publicClaimRoutes(app: FastifyInstance) {
     if (!venue) {
       throw new AppError(404, ERROR_CODES.VENUE_NOT_FOUND, "Este cardápio não existe.");
     }
-    assertServicePlan(venue);
+    await assertServicePlan(venue);
 
     const [claim] = await db
       .select()

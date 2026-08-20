@@ -4,7 +4,6 @@ import { formatBrlFromCents } from "@eaimesa/shared";
 import { useEffect, useState } from "react";
 import {
   PLAN_ID_LABEL,
-  PLAN_ID_ORDER,
   SUBSCRIPTION_STATUS_HINT,
   SUBSCRIPTION_STATUS_LABEL,
   SUBSCRIPTION_STATUS_ORDER,
@@ -16,7 +15,7 @@ type Dash = {
   venues: {
     total: number;
     byStatus: Record<string, number>;
-    byPlan: Record<string, number>;
+    byPlan: { id: string; name: string; count: number }[];
     trialExpired: number;
   };
   mrrCents: number;
@@ -116,11 +115,11 @@ export function AdminDashboard() {
     };
   });
 
-  const planRows = PLAN_ID_ORDER.map((id) => ({
-    id,
-    label: PLAN_ID_LABEL[id] ?? id,
-    n: data.venues.byPlan[id] ?? 0,
-    bar: id === "auto_atendimento" ? "bg-chili" : "bg-white/50",
+  const planRows = data.venues.byPlan.map((row) => ({
+    id: row.id,
+    label: row.name || PLAN_ID_LABEL[row.id] || row.id,
+    n: row.count,
+    bar: row.id === "auto_atendimento" ? "bg-chili" : "bg-white/50",
   }));
 
   return (

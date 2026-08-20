@@ -5,7 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { AppError } from "../errors";
 import { serializeVenue, trialEndsAtFrom } from "../lib/billing";
-import { loadPlanCatalog } from "../lib/plan-catalog";
+import { loadPlanCatalog, planKindSync } from "../lib/plan-catalog";
 import { clearOwnerCookie, clientIp, OWNER_COOKIE, parseBody, rateLimit, setOwnerCookie } from "../lib/http";
 import { signVenueToken, verifyVenueToken } from "../lib/jwt";
 import { hashPassword, verifyPassword } from "../lib/password";
@@ -13,7 +13,7 @@ import { newPublicId } from "../lib/public-id";
 
 function defaultRedirect(role: "owner" | "staff", plan?: string) {
   if (role === "staff") return "/garcom";
-  return planAllowsService(plan ?? "") ? "/painel/pedidos" : "/painel/cardapio";
+  return planAllowsService(planKindSync(plan ?? "")) ? "/painel/pedidos" : "/painel/cardapio";
 }
 
 export async function authRoutes(app: FastifyInstance) {
@@ -49,9 +49,9 @@ export async function authRoutes(app: FastifyInstance) {
           name: body.venueName,
           slug: body.slug,
           publicId: newPublicId(),
-          plan: body.plan,
+          plan: chosen.id,
           subscriptionStatus: "trial",
-          acceptsOrders: planAllowsService(body.plan),
+          acceptsOrders: planAllowsService(chosen.kind),
           trialEndsAt: trialEndsAtFrom(new Date(), catalog.trialDays),
         })
         .returning();

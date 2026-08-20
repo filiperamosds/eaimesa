@@ -2,7 +2,12 @@ import { z } from "zod";
 import { ORDER_STATUSES } from "./orders";
 import { normalizePhone } from "./phone";
 import { isReservedSlug, normalizeSlug, SLUG_MAX, SLUG_MIN, SLUG_REGEX } from "./slug";
-import { PAYMENT_METHODS, PLAN_IDS } from "./plans";
+import {
+  PAYMENT_METHODS,
+  PLAN_ID_MAX,
+  PLAN_ID_MIN,
+  PLAN_KINDS,
+} from "./plans";
 import { TABLE_LABEL_MAX } from "./tables";
 
 export const slugSchema = z
@@ -23,11 +28,21 @@ export const registerSchema = z.object({
   password: z.string().min(8, "Senha: mínimo 8 caracteres."),
   venueName: z.string().trim().min(2, "Nome do bar: mínimo 2 caracteres.").max(80),
   slug: slugSchema,
-  plan: z.enum(PLAN_IDS, { errorMap: () => ({ message: "Escolha o plano Cardápio ou Auto atendimento." }) }),
+  plan: z
+    .string()
+    .trim()
+    .min(PLAN_ID_MIN, "Escolha um plano.")
+    .max(PLAN_ID_MAX)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Plano inválido."),
 });
 
 export const checkoutSchema = z.object({
-  plan: z.enum(PLAN_IDS, { errorMap: () => ({ message: "Escolha o plano Cardápio ou Auto atendimento." }) }),
+  plan: z
+    .string()
+    .trim()
+    .min(PLAN_ID_MIN, "Escolha um plano.")
+    .max(PLAN_ID_MAX)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Plano inválido."),
   method: z
     .enum(PAYMENT_METHODS, { errorMap: () => ({ message: "Escolha cartão ou PIX." }) })
     .optional()
@@ -180,17 +195,55 @@ export const idempotencyKeySchema = z
   .trim()
   .uuid("Idempotency-Key: informe um UUID.");
 
+function refinePromoVsPrice(
+  priceCents: number | undefined,
+  promoPriceCents: number | null | undefined,
+  ctx: z.RefinementCtx,
+) {
+  if (promoPriceCents == null || priceCents === undefined) return;
+  if (promoPriceCents >= priceCents) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "O preço promocional deve ser menor que o preço cheio.",
+      path: ["promoPriceCents"],
+    });
+  }
+}
+
+export const createPlanCatalogSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80),
+    kind: z.enum(PLAN_KINDS),
+    priceCents: z.number().int().min(0).max(10_000_000),
+    promoPriceCents: z.number().int().min(0).max(10_000_000).nullable().optional(),
+    blurb: z.string().trim().min(1).max(280),
+    features: z.array(z.string().trim().min(1).max(120)).max(12).optional(),
+    listed: z.boolean().optional(),
+  })
+  .superRefine((b, ctx) => refinePromoVsPrice(b.priceCents, b.promoPriceCents, ctx));
+
 export const patchPlanCatalogSchema = z
   .object({
     name: z.string().trim().min(2).max(80).optional(),
+    kind: z.enum(PLAN_KINDS).optional(),
     priceCents: z.number().int().min(0).max(10_000_000).optional(),
+    promoPriceCents: z.number().int().min(0).max(10_000_000).nullable().optional(),
     blurb: z.string().trim().min(1).max(280).optional(),
     features: z.array(z.string().trim().min(1).max(120)).min(1).max(12).optional(),
     listed: z.boolean().optional(),
   })
-  .refine((b) => Object.values(b).some((v) => v !== undefined), {
-    message: "Envie ao menos um campo do plano.",
-  });
+  .refine(
+    (b) =>
+      b.name !== undefined ||
+      b.kind !== undefined ||
+      b.priceCents !== undefined ||
+      b.promoPriceCents !== undefined ||
+      b.blurb !== undefined ||
+      b.features !== undefined ||
+      b.listed !== undefined,
+    { message: "Envie ao menos um campo do plano." },
+  )
+  .superRefine((b, ctx) => refinePromoVsPrice(b.priceCents, b.promoPriceCents, ctx));
 
 export const patchPlatformSettingsSchema = z
   .object({

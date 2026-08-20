@@ -4,6 +4,7 @@ export type Venue = {
   slug: string;
   publicId: string;
   plan: string;
+  planKind?: string;
   planName?: string;
   subscriptionStatus: string;
   acceptsOrders: boolean;
@@ -47,6 +48,7 @@ export type PublicMenu = {
     slug: string;
     subscriptionStatus: string;
     plan?: string;
+    planKind?: string;
     acceptsOrders: boolean;
   };
   categories: {

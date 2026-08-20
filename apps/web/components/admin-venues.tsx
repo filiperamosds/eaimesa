@@ -17,11 +17,14 @@ type VenueRow = {
   createdAt: string;
 };
 
+type CatalogPlan = { id: string; name: string };
+
 export function AdminVenues() {
   const [q, setQ] = useState("");
   const [plan, setPlan] = useState("");
   const [status, setStatus] = useState("");
   const [rows, setRows] = useState<VenueRow[]>([]);
+  const [plans, setPlans] = useState<CatalogPlan[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<string | null>(null);
 
@@ -31,8 +34,12 @@ export function AdminVenues() {
     if (plan) params.set("plan", plan);
     if (status) params.set("status", status);
     const qs = params.toString();
-    const data = await api<{ venues: VenueRow[] }>(`/v1/platform/venues${qs ? `?${qs}` : ""}`);
+    const [data, catalog] = await Promise.all([
+      api<{ venues: VenueRow[] }>(`/v1/platform/venues${qs ? `?${qs}` : ""}`),
+      api<{ plans: CatalogPlan[] }>("/v1/platform/plans"),
+    ]);
     setRows(data.venues);
+    setPlans(catalog.plans);
   }
 
   useEffect(() => {
@@ -74,8 +81,11 @@ export function AdminVenues() {
         />
         <select className="field-night max-w-[12rem]" value={plan} onChange={(e) => setPlan(e.target.value)}>
           <option value="">Todos os planos</option>
-          <option value="cardapio">Cardápio</option>
-          <option value="auto_atendimento">Auto atendimento</option>
+          {plans.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
         </select>
         <select className="field-night max-w-[12rem]" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">Todos os status</option>
