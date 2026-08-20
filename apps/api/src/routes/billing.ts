@@ -42,6 +42,7 @@ export async function billingRoutes(app: FastifyInstance) {
       throw new AppError(400, ERROR_CODES.PLAN_NOT_LISTED, "Este plano não está à venda.");
     }
 
+    const method = body.method ?? "card";
     const now = new Date();
     const periodEnd = paidPeriodEndsAtFrom(now, catalog.paidPeriodDays);
     await new Promise((resolve) => setTimeout(resolve, CHECKOUT_STUB_DELAY_MS));
@@ -62,7 +63,7 @@ export async function billingRoutes(app: FastifyInstance) {
       venueId: venue.id,
       plan: plan.id,
       planName: plan.name,
-      method: body.method,
+      method,
       amountCents: plan.priceCents,
       provider: "stub",
       status: "success",
@@ -71,7 +72,7 @@ export async function billingRoutes(app: FastifyInstance) {
     return {
       status: "success",
       provider: "stub",
-      method: body.method,
+      method,
       plan: plan.id,
       planName: plan.name,
       amountCents: plan.priceCents,

@@ -1,4 +1,4 @@
-import { AdminVenues } from "../../../components/admin-venues";
+import { AdminVenues } from "../../../../components/admin-venues";
 
 export const metadata = { title: "Bares" };
 

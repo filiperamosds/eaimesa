@@ -1,4 +1,4 @@
-import { AdminPlans } from "../../../components/admin-plans";
+import { AdminPlans } from "../../../../components/admin-plans";
 
 export const metadata = { title: "Planos" };
 
