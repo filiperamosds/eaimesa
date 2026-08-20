@@ -1,14 +1,17 @@
 import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db, sql } from "./client";
 import {
   accounts,
   catalogCategories,
   catalogItems,
+  guestSessions,
   orderItems,
   orders,
-  staffAccounts,
+  tableClaims,
+  tabs,
+  venueMembers,
   venues,
   venueTables,
 } from "./schema";
@@ -143,6 +146,9 @@ async function seed() {
     if (!venue) throw new Error("Falha ao criar venue demo");
 
     await tx.delete(orders).where(eq(orders.venueId, venue.id));
+    await tx.delete(guestSessions).where(eq(guestSessions.venueId, venue.id));
+    await tx.delete(tableClaims).where(eq(tableClaims.venueId, venue.id));
+    await tx.delete(tabs).where(eq(tabs.venueId, venue.id));
     await tx.delete(venueTables).where(eq(venueTables.venueId, venue.id));
     await tx.delete(catalogItems).where(eq(catalogItems.venueId, venue.id));
     await tx.delete(catalogCategories).where(eq(catalogCategories.venueId, venue.id));
@@ -246,32 +252,52 @@ async function seed() {
     ]);
     await demoOrder("Mesa 2", "delivered", 40, [{ name: "Negroni", qty: 2 }]);
 
-    let [staff] = await tx
+    let [staffAccount] = await tx
       .select()
-      .from(staffAccounts)
-      .where(eq(staffAccounts.email, DEMO_STAFF_EMAIL))
+      .from(accounts)
+      .where(eq(accounts.email, DEMO_STAFF_EMAIL))
       .limit(1);
-    if (!staff) {
-      [staff] = await tx
-        .insert(staffAccounts)
-        .values({
-          venueId: venue.id,
-          name: "João Garçom",
-          email: DEMO_STAFF_EMAIL,
-          passwordHash,
-          active: true,
-        })
+    if (!staffAccount) {
+      [staffAccount] = await tx
+        .insert(accounts)
+        .values({ email: DEMO_STAFF_EMAIL, passwordHash })
         .returning();
-    } else {
+    }
+
+    if (staffAccount) {
+      let [member] = await tx
+        .select()
+        .from(venueMembers)
+        .where(
+          and(eq(venueMembers.venueId, venue.id), eq(venueMembers.accountId, staffAccount.id)),
+        )
+        .limit(1);
+      if (!member) {
+        [member] = await tx
+          .insert(venueMembers)
+          .values({
+            venueId: venue.id,
+            accountId: staffAccount.id,
+            role: "staff",
+            name: "João Garçom",
+            active: true,
+          })
+          .returning();
+      } else {
+        await tx
+          .update(venueMembers)
+          .set({ name: "João Garçom", active: true, updatedAt: new Date() })
+          .where(eq(venueMembers.id, member.id));
+      }
       await tx
-        .update(staffAccounts)
-        .set({ name: "João Garçom", active: true, passwordHash, updatedAt: new Date() })
-        .where(eq(staffAccounts.id, staff.id));
+        .update(accounts)
+        .set({ passwordHash })
+        .where(eq(accounts.id, staffAccount.id));
     }
   });
 
   console.log("Seed ok: /bar-do-tiao — dono@bardotiao.local / demo1234");
-  console.log("Garçom demo: garcom@bardotiao.local / demo1234 — /garcom");
+  console.log("Garçom demo: garcom@bardotiao.local / demo1234 — login em /login → /garcom");
   await sql.end();
 }
 

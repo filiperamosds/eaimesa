@@ -1,18 +1,20 @@
-import { db, staffAccounts } from "@eaimesa/db";
+import { db, accounts, venueMembers, venues } from "@eaimesa/db";
 import {
   createStaffSchema,
   ERROR_CODES,
   patchStaffSchema,
   PLAN_BAR_MAX_STAFF,
 } from "@eaimesa/shared";
-import { and, asc, count, eq, ne, sql } from "drizzle-orm";
+import { and, asc, count, eq, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireOwner } from "../lib/auth-guard";
 import { parseBody } from "../lib/http";
 import { hashPassword } from "../lib/password";
 
-function serialize(row: typeof staffAccounts.$inferSelect) {
+type MemberRow = typeof venueMembers.$inferSelect & { email: string };
+
+function serialize(row: MemberRow) {
   return {
     id: row.id,
     name: row.name,
@@ -26,9 +28,22 @@ function serialize(row: typeof staffAccounts.$inferSelect) {
 async function activeCount(venueId: string) {
   const [row] = await db
     .select({ n: count() })
-    .from(staffAccounts)
-    .where(and(eq(staffAccounts.venueId, venueId), eq(staffAccounts.active, true)));
+    .from(venueMembers)
+    .where(and(eq(venueMembers.venueId, venueId), eq(venueMembers.active, true)));
   return Number(row?.n ?? 0);
+}
+
+async function listMembers(venueId: string) {
+  const rows = await db
+    .select({
+      member: venueMembers,
+      email: accounts.email,
+    })
+    .from(venueMembers)
+    .innerJoin(accounts, eq(venueMembers.accountId, accounts.id))
+    .where(eq(venueMembers.venueId, venueId))
+    .orderBy(asc(venueMembers.name));
+  return rows.map((r) => serialize({ ...r.member, email: r.email }));
 }
 
 export async function ownerStaffRoutes(app: FastifyInstance) {
@@ -36,15 +51,11 @@ export async function ownerStaffRoutes(app: FastifyInstance) {
 
   app.get("/v1/owner/staff", async (req) => {
     const venueId = req.owner!.venueId;
-    const rows = await db
-      .select()
-      .from(staffAccounts)
-      .where(eq(staffAccounts.venueId, venueId))
-      .orderBy(asc(staffAccounts.name));
+    const staff = await listMembers(venueId);
     return {
-      staff: rows.map(serialize),
+      staff,
       maxActive: PLAN_BAR_MAX_STAFF,
-      activeCount: rows.filter((s) => s.active).length,
+      activeCount: staff.filter((s) => s.active).length,
     };
   });
 
@@ -53,9 +64,9 @@ export async function ownerStaffRoutes(app: FastifyInstance) {
     const body = parseBody(createStaffSchema, req.body);
 
     const [emailTaken] = await db
-      .select({ id: staffAccounts.id })
-      .from(staffAccounts)
-      .where(sql`lower(${staffAccounts.email}) = ${body.email}`)
+      .select({ id: accounts.id })
+      .from(accounts)
+      .where(sql`lower(${accounts.email}) = ${body.email}`)
       .limit(1);
     if (emailTaken) {
       throw new AppError(409, ERROR_CODES.EMAIL_TAKEN, "Este e-mail já está em uso.");
@@ -70,18 +81,28 @@ export async function ownerStaffRoutes(app: FastifyInstance) {
     }
 
     const passwordHash = await hashPassword(body.password);
-    const [row] = await db
-      .insert(staffAccounts)
-      .values({
-        venueId,
-        name: body.name,
-        email: body.email,
-        passwordHash,
-        active: true,
-      })
-      .returning();
-    if (!row) throw new AppError(500, "INTERNAL", "Falha ao criar garçom.");
-    return serialize(row);
+    const created = await db.transaction(async (tx) => {
+      const [account] = await tx
+        .insert(accounts)
+        .values({ email: body.email, passwordHash })
+        .returning();
+      if (!account) throw new AppError(500, "INTERNAL", "Falha ao criar conta.");
+
+      const [member] = await tx
+        .insert(venueMembers)
+        .values({
+          venueId,
+          accountId: account.id,
+          role: "staff",
+          name: body.name,
+          active: true,
+        })
+        .returning();
+      if (!member) throw new AppError(500, "INTERNAL", "Falha ao cadastrar garçom.");
+      return { member, email: account.email };
+    });
+
+    return serialize({ ...created.member, email: created.email });
   });
 
   app.patch("/v1/owner/staff/:id", async (req) => {
@@ -90,13 +111,14 @@ export async function ownerStaffRoutes(app: FastifyInstance) {
     const body = parseBody(patchStaffSchema, req.body);
 
     const [existing] = await db
-      .select()
-      .from(staffAccounts)
-      .where(and(eq(staffAccounts.id, id), eq(staffAccounts.venueId, venueId)))
+      .select({ member: venueMembers, email: accounts.email })
+      .from(venueMembers)
+      .innerJoin(accounts, eq(venueMembers.accountId, accounts.id))
+      .where(and(eq(venueMembers.id, id), eq(venueMembers.venueId, venueId)))
       .limit(1);
     if (!existing) throw new AppError(404, ERROR_CODES.STAFF_NOT_FOUND, "Garçom não encontrado.");
 
-    if (body.active === true && !existing.active) {
+    if (body.active === true && !existing.member.active) {
       if ((await activeCount(venueId)) >= PLAN_BAR_MAX_STAFF) {
         throw new AppError(
           409,
@@ -107,29 +129,49 @@ export async function ownerStaffRoutes(app: FastifyInstance) {
     }
 
     const passwordHash = body.password ? await hashPassword(body.password) : undefined;
+    if (passwordHash) {
+      await db
+        .update(accounts)
+        .set({ passwordHash })
+        .where(eq(accounts.id, existing.member.accountId));
+    }
 
     const [row] = await db
-      .update(staffAccounts)
+      .update(venueMembers)
       .set({
         ...(body.name !== undefined ? { name: body.name } : {}),
         ...(body.active !== undefined ? { active: body.active } : {}),
-        ...(passwordHash ? { passwordHash } : {}),
         updatedAt: new Date(),
       })
-      .where(and(eq(staffAccounts.id, id), eq(staffAccounts.venueId, venueId)))
+      .where(and(eq(venueMembers.id, id), eq(venueMembers.venueId, venueId)))
       .returning();
     if (!row) throw new AppError(404, ERROR_CODES.STAFF_NOT_FOUND, "Garçom não encontrado.");
-    return serialize(row);
+    return serialize({ ...row, email: existing.email });
   });
 
   app.delete("/v1/owner/staff/:id", async (req, reply) => {
     const venueId = req.owner!.venueId;
     const { id } = req.params as { id: string };
-    const deleted = await db
-      .delete(staffAccounts)
-      .where(and(eq(staffAccounts.id, id), eq(staffAccounts.venueId, venueId)))
-      .returning({ id: staffAccounts.id });
-    if (!deleted[0]) throw new AppError(404, ERROR_CODES.STAFF_NOT_FOUND, "Garçom não encontrado.");
+
+    const deleted = await db.transaction(async (tx) => {
+      const [member] = await tx
+        .delete(venueMembers)
+        .where(and(eq(venueMembers.id, id), eq(venueMembers.venueId, venueId)))
+        .returning({ id: venueMembers.id, accountId: venueMembers.accountId });
+      if (!member) return null;
+
+      const [ownedVenue] = await tx
+        .select({ id: venues.id })
+        .from(venues)
+        .where(eq(venues.ownerAccountId, member.accountId))
+        .limit(1);
+      if (!ownedVenue) {
+        await tx.delete(accounts).where(eq(accounts.id, member.accountId));
+      }
+      return member;
+    });
+
+    if (!deleted) throw new AppError(404, ERROR_CODES.STAFF_NOT_FOUND, "Garçom não encontrado.");
     return reply.status(204).send();
   });
 }

@@ -4,26 +4,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "../lib/api";
-import type { StaffSession } from "../lib/types";
+import type { Session } from "../lib/types";
 import { Logo } from "./site-chrome";
 
 export function StaffShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [me, setMe] = useState<StaffSession | null>(null);
+  const [me, setMe] = useState<Session | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    api<StaffSession>("/v1/staff/auth/me")
-      .then(setMe)
+    api<Session>("/v1/auth/me")
+      .then((session) => {
+        if (session.role === "staff" || session.role === "owner") {
+          setMe(session);
+          return;
+        }
+        setErr("Sem permissão");
+        router.replace("/login?next=/garcom");
+      })
       .catch(() => {
         setErr("Sessão inválida");
-        router.replace("/garcom/login");
+        router.replace("/login?next=/garcom");
       });
   }, [router]);
 
   async function logout() {
-    await api("/v1/staff/auth/logout", { method: "POST" });
-    router.push("/garcom/login");
+    await api("/v1/auth/logout", { method: "POST" });
+    router.push("/login");
     router.refresh();
   }
 
@@ -35,13 +42,21 @@ export function StaffShell({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const displayName =
+    me.role === "staff" ? (me.member?.name ?? me.account.email) : me.account.email;
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b border-line/80 bg-card/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-lg items-center justify-between px-5 py-3">
           <Logo />
           <div className="flex items-center gap-2 text-sm">
-            <span className="hidden text-ink-soft sm:inline">{me.staff.name}</span>
+            <span className="hidden text-ink-soft sm:inline">{displayName}</span>
+            {me.role === "owner" ? (
+              <Link href="/painel/pedidos" className="btn-ghost">
+                Painel
+              </Link>
+            ) : null}
             <button type="button" onClick={() => void logout()} className="btn-ghost">
               Sair
             </button>

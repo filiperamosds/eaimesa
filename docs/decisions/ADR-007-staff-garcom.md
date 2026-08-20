@@ -1,19 +1,19 @@
 # ADR-007: Usuário garçom + app `/garcom`
 
-**Status:** Aceito  
+**Status:** Supersedido (login/cookie) por [ADR-008](ADR-008-login-unificado-role.md)  
 **Data:** 2026-08-20
 
 ## Contexto
 
 A fatia 4 precisa gerar claim na mesa. O dono não é o operador do salão. Duas opções: dono gera tudo no painel, ou **garçom com login próprio** no celular.
 
-## Decisão
+## Decisão (histórico)
 
 - Entidade **StaffAccount** por venue (e-mail + senha, ativo/inativo)
-- Dono cadastra em `/painel/equipe` (até 5 ativos no plano Bar)
 - Cookie **`eaimesa_staff`** separado de `eaimesa_owner`
 - App mobile-first em **`/garcom`**: login → escolhe mesa → QR claim
-- Dono **também** pode chamar a API de claim (mesmo cookie owner) para testes / bar pequeno
+
+> **Atual:** login único + `venue_members` — ver ADR-008. App `/garcom` permanece.
 
 ## Alternativas
 

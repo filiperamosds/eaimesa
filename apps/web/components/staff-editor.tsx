@@ -80,7 +80,7 @@ export function StaffEditor() {
   return (
     <div>
       <div className="surface mb-6 border-sage/20 bg-sage-soft/40 p-4 text-sm text-ink-soft">
-        <p className="font-medium text-ink">Garçons entram em /garcom no celular.</p>
+        <p className="font-medium text-ink">Garçons entram em /login (mesmo acesso do painel).</p>
         <p className="mt-1">
           Cada garçom escolhe a mesa e gera o QR de comanda para o cliente. Máximo {maxActive} ativos no
           plano Bar.

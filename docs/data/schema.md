@@ -57,14 +57,15 @@ No máximo **15 mesas ativas** por venue (plano Bar). Pedido pode apontar `table
 
 ## Entidades — fatia 4 (equipe + comanda)
 
-### StaffAccount
+### VenueMember
 
-Garçom cadastrado pelo dono.
+Garçom vinculado ao venue (mesmo login do painel).
 
-- `id`, `venue_id` → Venue
-- `name`, `email` UNIQUE (global), `password_hash`, `active`, timestamps
+- `id`, `venue_id` → Venue, `account_id` → Account
+- `role`: `staff` (owner continua via `venues.owner_account_id`)
+- `name`, `active`, timestamps
 
-Máximo **5 ativos** por venue (plano Bar).
+Máximo **5 membros staff ativos** por venue (plano Bar).
 
 ### Tab
 
@@ -111,9 +112,8 @@ Cookie `eaimesa_guest` referencia a sessão (JWT assinado).
 - `order_items(order_id)`
 - `venue_tables(venue_id, sort_order)`
 - `venue_tables(venue_id, label)` UNIQUE
-- `staff_accounts(email)` UNIQUE
-- `staff_accounts(venue_id, active)`
-- `tabs(venue_id, table_id, status)`
+- `venue_members(venue_id, account_id)` UNIQUE
+- `venue_members(account_id)`
 - `table_claims(venue_id, table_id, token_hash)`
 - `guest_sessions(tab_id, expires_at)`
 

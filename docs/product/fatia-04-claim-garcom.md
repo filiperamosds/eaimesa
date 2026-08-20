@@ -4,8 +4,8 @@ O garçom abre a comanda na mesa. O dono cadastra usuários de **garçom** no pa
 
 ## Inclui
 
-- CRUD de garçons em `/painel/equipe` (dono)
-- Login garçom em `/garcom/login` — cookie `eaimesa_staff`
+- CRUD de garçons em `/painel/equipe` (dono) — cria `account` + `venue_member`
+- **Login único** em `/login` — cookie `eaimesa_owner` com `role: owner | staff`
 - App garçom em `/garcom` — grade de mesas, gera QR de comanda no celular
 - API `POST /v1/staff/tables/{id}/claims` (staff ou dono)
 - Redeem `POST /v1/public/venues/{slug}/c/{token}/redeem` → tab + PIN + cookie `eaimesa_guest`
@@ -32,7 +32,7 @@ Ver [ADR-002](../decisions/ADR-002-claim-garcom.md), [ADR-007](../decisions/ADR-
 ## Fluxo garçom
 
 1. Dono cadastra garçom (nome, e-mail, senha) em **Equipe**.
-2. Garçom entra em `/garcom/login` no celular.
+2. Garçom entra em **`/login`** (mesmo do painel) → redireciona para `/garcom`.
 3. Toca a mesa → QR grande + countdown (ex. 3 min).
 4. Cliente escaneia → vê PIN → cardápio com sessão (pedir na fatia 6).
 
