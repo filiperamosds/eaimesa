@@ -3,7 +3,7 @@
 ## Princípios
 
 1. **Tenancy:** `venue_id` sempre do token/sessão, nunca do body confiável.
-2. **QR público ≠ auth:** slug da casa não abre comanda. QR do cardápio e QR de claim são gerados/exportados **só no painel**.
+2. **QR público ≠ auth:** slug da casa / QR fixo na mesa não abre comanda. Modo comanda **só** com QR do garçom (claim).
 3. **Presença (MVP):** claim do garçom (TTL, uso único) + PIN para o grupo. Export do claim não vira adesivo permanente.
 4. **Preço no servidor:** painel envia `priceCents` no cardápio; pedido de balcão manda só `catalogItemId` + qtd.
 5. **Separação de auth:** cookie dono ≠ cookie guest (futuro) ≠ platform admin.

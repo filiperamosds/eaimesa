@@ -4,7 +4,8 @@ import { PLAN_BAR_MAX_TABLES } from "@eaimesa/shared";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { VenueTable } from "../lib/types";
+import type { Venue, VenueTable } from "../lib/types";
+import { MenuQrModal } from "./menu-qr-modal";
 
 type TablesPayload = {
   tables: VenueTable[];
@@ -14,17 +15,23 @@ type TablesPayload = {
 
 export function TablesEditor() {
   const [tables, setTables] = useState<VenueTable[]>([]);
+  const [venue, setVenue] = useState<Venue | null>(null);
   const [maxActive, setMaxActive] = useState(PLAN_BAR_MAX_TABLES);
   const [activeCount, setActiveCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [label, setLabel] = useState("");
+  const [qrTable, setQrTable] = useState<VenueTable | null>(null);
 
   async function load() {
-    const data = await api<TablesPayload>("/v1/owner/tables");
-    setTables(data.tables);
-    setMaxActive(data.maxActive);
-    setActiveCount(data.activeCount);
+    const [tablesData, venueData] = await Promise.all([
+      api<TablesPayload>("/v1/owner/tables"),
+      api<Venue>("/v1/owner/venue"),
+    ]);
+    setTables(tablesData.tables);
+    setMaxActive(tablesData.maxActive);
+    setActiveCount(tablesData.activeCount);
+    setVenue(venueData);
   }
 
   useEffect(() => {
@@ -49,6 +56,13 @@ export function TablesEditor() {
 
   return (
     <div>
+      <div className="surface mb-6 border-sage/20 bg-sage-soft/40 p-4 text-sm text-ink-soft">
+        <p className="font-medium text-ink">QR fixo = cardápio. QR do garçom = comanda.</p>
+        <p className="mt-1">
+          Exporte o QR de cada mesa e cole no salão. O cliente só lê o cardápio; pedir abre só com o
+          QR do garçom (em breve no painel).
+        </p>
+      </div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <p className="text-sm text-ink-soft">
           {activeCount}/{maxActive} mesas ativas no plano Bar. Pedido de balcão escolhe daqui.
@@ -81,10 +95,19 @@ export function TablesEditor() {
               table={table}
               onChange={load}
               onError={setError}
+              onQr={() => setQrTable(table)}
             />
           ))}
         </ul>
       )}
+      {qrTable && venue ? (
+        <MenuQrModal
+          slug={venue.slug}
+          venueName={venue.name}
+          tableLabel={qrTable.label}
+          onClose={() => setQrTable(null)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -93,10 +116,12 @@ function TableCard({
   table,
   onChange,
   onError,
+  onQr,
 }: {
   table: VenueTable;
   onChange: () => Promise<void>;
   onError: (m: string | null) => void;
+  onQr: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(table.label);
@@ -170,6 +195,9 @@ function TableCard({
         <p className="font-serif text-xl">{table.label}</p>
       )}
       <div className="mt-4 flex flex-wrap gap-3 text-sm">
+        <button type="button" onClick={onQr} className="font-medium text-chili hover:text-chili-dark">
+          QR cardápio
+        </button>
         <button type="button" onClick={() => setEditing(true)} className="text-ink-soft hover:text-ink">
           Renomear
         </button>

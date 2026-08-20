@@ -25,8 +25,8 @@ sequenceDiagram
 
 1. Dono cria conta + venue (nome + slug único).
 2. Monta categorias e itens (preço em centavos no servidor).
-3. Comparte `https://eaimesa.com.br/{slug}` (QR, Instagram, balcão).
-4. Cliente abre `/{slug}`: navega por **grupos**, toca o item para ver **foto** e descrição. **Não pede pelo link** (claim futuro). Pedidos de balcão: `/painel/pedidos`. Mesas: `/painel/mesas`.
+3. Comparte `https://eaimesa.com.br/{slug}` (QR fixo na mesa, Instagram, balcão) — **só cardápio**.
+4. Cliente abre `/{slug}`: navega por **grupos**, toca o item para ver **foto** e descrição. **Não pede pelo link** (comanda exige QR do garçom). Pedidos de balcão: `/painel/pedidos`. Mesas + export do QR fixo: `/painel/mesas`.
 
 ## 0b. Fatia 2 — fila Kanban (balcão)
 
@@ -62,8 +62,9 @@ sequenceDiagram
 ```
 
 1. Dono abre **Mesas** e cadastra até 15 ativas (ex. Balcão, Mesa 1…10).
-2. No Kanban, o pedido de balcão escolhe uma mesa ativa.
-3. QR/claim por mesa entra na fatia seguinte.
+2. Exporta o **QR fixo** de cada mesa (destino: cardápio `/{slug}`) e cola no salão.
+3. No Kanban, o pedido de balcão escolhe uma mesa ativa.
+4. QR/claim do **garçom** (abre comanda) entra na fatia seguinte — gerado só no painel.
 
 ## 1. Onboarding do bar (B2B)
 

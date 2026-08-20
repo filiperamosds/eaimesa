@@ -40,7 +40,7 @@ Um único frontend (`apps/web`) concentra marketing, autenticação B2B e cardá
 - Formato: kebab-case, 3–48 caracteres (`bar-do-tiao`).
 - Palavras reservadas (`login`, `painel`, `cadastro`, …) são rejeitadas.
 - `public_id` opaco continua no banco (estável se o slug mudar); a URL pública da fatia 1 é o **slug**.
-- QR do cardápio (apontando para `/{slug}`) mora no **painel** autenticado e pode ser **exportado** (PNG/PDF) para porta, Instagram, balcão. Não fica gerado em página pública do SaaS.
+- QR do cardápio (apontando para `/{slug}`) mora no **painel** autenticado e pode ser **exportado** (PNG) para mesa, porta, Instagram. Não autoriza pedir. Comanda só com QR do garçom (claim).
 
 Ver [ADR-004](../decisions/ADR-004-slug-publico.md).
 

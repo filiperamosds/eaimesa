@@ -21,7 +21,9 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
           {suspended ? (
             <p className="mt-4 text-sm text-amber">Assinatura inativa — só leitura.</p>
           ) : (
-            <p className="mt-4 text-sm text-white/65">Toque no item para ver foto e descrição.</p>
+            <p className="mt-4 text-sm text-white/65">
+              Cardápio só leitura. Para pedir, peça o QR do garçom na mesa.
+            </p>
           )}
         </div>
       </header>
