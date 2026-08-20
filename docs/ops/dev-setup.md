@@ -1,5 +1,16 @@
 # Setup de desenvolvimento
 
+## Dois repositórios (dia a dia)
+
+O código ativo não fica mais só neste monorepo. Clone e rode **cada um num terminal**:
+
+1. [eaimesa-backend](https://github.com/filiperamosds/eaimesa-backend) — `cp .env.example .env`, Postgres, `pnpm db:migrate && pnpm db:seed`, `pnpm dev` (`:4000`)
+2. [eaimesa-frontend](https://github.com/filiperamosds/eaimesa-frontend) — `cp .env.example .env`, `pnpm install && pnpm dev` (`:3000`)
+
+`APP_URL` no backend deve ser `http://localhost:3000`. O Next faz proxy de `/v1` para `API_URL`. Ver [ADR-015](../decisions/ADR-015-dois-repositorios.md).
+
+Os passos abaixo ainda valem se você estiver neste monorepo (`filiperamosds/eaimesa`).
+
 ## Pré-requisitos
 
 - Node.js **20+** (recomendado 22; `.nvmrc` na raiz)

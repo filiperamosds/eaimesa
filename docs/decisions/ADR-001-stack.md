@@ -1,6 +1,6 @@
 # ADR-001: Stack e monorepo
 
-**Status:** Aceito (frontends: ver [ADR-003](ADR-003-frontend-unico.md))  
+**Status:** Aceito (front único: [ADR-003](ADR-003-frontend-unico.md)). Um único git: **supersedido** por [ADR-015](ADR-015-dois-repositorios.md).  
 **Data:** 2026-08-17
 
 ## Contexto

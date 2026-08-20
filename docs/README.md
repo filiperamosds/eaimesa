@@ -16,13 +16,13 @@
 2. [Visão do produto](product/visao.md) — o quê, para quem, o que fica de fora
 3. [Fluxos](product/fluxos.md) — publicar cardápio; guest pede na mesa
 4. [Pricing](product/pricing.md) — Cardápio e Auto atendimento
-5. [Arquitetura](architecture/overview.md) — monorepo, um front, Fastify
+5. [Arquitetura](architecture/overview.md) — dois repos (API + Next), um front, Fastify
 6. [Sessão claim + PIN](architecture/sessao-claim-pin.md) — claim, PIN join, cookie guest
 7. [Segurança](security/modelo.md) — tenancy, cookies, ameaças
 8. [Modelo de dados](data/schema.md) — entidades fatia 1–11 + planejadas
 9. [API](api/endpoints.md) — REST fatia 1–11 + contrato futuro
 10. [Dev setup](ops/dev-setup.md) — pnpm, Postgres, seed `bar-do-tiao`, `cafe-da-lina` e console
-11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, mesas, comandas, pedido guest, fila garçom, planos, console SaaS, **SKU + promo**
+11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, mesas, comandas, pedido guest, fila garçom, planos, console SaaS, SKU + promo, **dois repositórios**
 
 ## Cursor
 

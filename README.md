@@ -2,9 +2,16 @@
 
 SaaS B2B para bares e restaurantes pequenos: cardápio no celular do cliente e, no MVP completo, comanda com QR do garçom.
 
-**URL pública (fatia 1):** `https://eaimesa.com.br/bar-do-tiao`
+O desenvolvimento ativo está em **dois repositórios** ([ADR-015](docs/decisions/ADR-015-dois-repositorios.md)):
 
-Um único frontend: landing, autenticação do estabelecimento e cardápio por slug. API Fastify à parte.
+| Repo | O que é | Terminal local |
+|------|---------|----------------|
+| [eaimesa-backend](https://github.com/filiperamosds/eaimesa-backend) | Fastify + Postgres + `packages/shared` | `pnpm dev` → http://localhost:4000 |
+| [eaimesa-frontend](https://github.com/filiperamosds/eaimesa-frontend) | Next.js (landing, painel, `/{slug}`, `/admin`) | `pnpm dev` → http://localhost:3000 |
+
+Este monorepo permanece como arquivo. Front único (um app Next) e contrato HTTP não mudam.
+
+**URL pública (fatia 1):** `https://eaimesa.com.br/bar-do-tiao`
 
 ## Fatia atual
 
