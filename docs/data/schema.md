@@ -14,7 +14,7 @@ Login do dono.
 
 - `id`, `owner_account_id` → Account
 - `name`, `slug` UNIQUE, `public_id` UNIQUE
-- `plan`: id do catálogo (`cardapio`, `auto_atendimento` ou SKU criado no console)
+- `plan`: id do catálogo (`cardapio`, `auto_atendimento` ou SKU criado no console). Sem CHECK nos dois ids seed.
 - `planKind` na API: `cardapio` | `auto_atendimento` (o que o bar pode fazer)
 - `subscription_status`: `trial` | `active` | `past_due` | `suspended`
 - `accepts_orders`: true só no Auto atendimento com assinatura válida
