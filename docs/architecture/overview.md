@@ -6,16 +6,16 @@
 |--------|------------|--------|
 | Git | **Dois repos** ([ADR-015](../decisions/ADR-015-dois-repositorios.md)) | API e Next sobem em processos/deploys separados |
 | Workspaces | **pnpm** em cada repo | API: `apps/api` + `packages/*`; front: Next + cópia de `shared` |
-| API | **Node.js + Fastify** | REST, cookies, plugins |
-| DB | **PostgreSQL 16** | Transações; RLS depois |
-| ORM | **Drizzle** | Migrations SQL, types |
+| API | **Node.js + Fastify** *ou* **Laravel 13** ([ADR-016](../decisions/ADR-016-laravel-mysql.md)) | REST, cookies |
+| DB | **PostgreSQL 16** (Fastify) ou **MySQL 8** (Laravel) | Transações |
+| ORM | **Drizzle** (Fastify) / Eloquent (Laravel) | Migrations SQL, types |
 | UI | **Next.js** (um app) | Landing + painel + cardápio |
 | Auth dono | Cookie **httpOnly** `eaimesa_owner` | JWT assinado |
 | Auth guest | Cookie `eaimesa_guest` | Redeem (fatia 4) e PIN join (fatia 5) |
 | Auth platform | Cookie **httpOnly** `eaimesa_platform` | JWT próprio (`PLATFORM_JWT_SECRET`) |
 | Cache/fila | Redis | Fase 2 |
 
-Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md), [ADR-006](../decisions/ADR-006-mesas.md), [ADR-014](../decisions/ADR-014-plan-kind-promo.md), [ADR-015](../decisions/ADR-015-dois-repositorios.md).
+Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md), [ADR-006](../decisions/ADR-006-mesas.md), [ADR-014](../decisions/ADR-014-plan-kind-promo.md), [ADR-015](../decisions/ADR-015-dois-repositorios.md), [ADR-016](../decisions/ADR-016-laravel-mysql.md).
 
 ## Repositórios
 
@@ -31,9 +31,14 @@ eaimesa-frontend/         # https://github.com/filiperamosds/eaimesa-frontend
 ├── app/                  # Next.js único (:3000)
 ├── packages/shared/      # cópia — sincronizar com o backend
 └── next.config.ts        # rewrite /v1 → API_URL
+
+eaimesa-laravel/          # Laravel + MySQL (ADR-016) — :8000; neste monorepo
+├── app/                  # controllers, models, JWT cookies
+├── database/migrations/  # schema MySQL
+└── docs/                 # cópia do contrato /v1
 ```
 
-Não existem `apps/guest` nem `apps/staff`. Este monorepo (`filiperamosds/eaimesa`) espelha o conjunto; o dia a dia é nos dois repos acima.
+Não existem `apps/guest` nem `apps/staff`. Este monorepo (`filiperamosds/eaimesa`) espelha o conjunto; o dia a dia é nos dois repos GitHub. Laravel fica nesta pasta até o cutover.
 
 ## Multi-tenant
 

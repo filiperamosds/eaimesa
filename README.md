@@ -11,6 +11,8 @@ O desenvolvimento ativo está em **dois repositórios** ([ADR-015](docs/decision
 
 Este monorepo permanece como arquivo. Front único (um app Next) e contrato HTTP não mudam.
 
+Backend Laravel + MySQL (em paralelo, neste monorepo): pasta [`eaimesa-laravel/`](eaimesa-laravel/README.md) ([ADR-016](docs/decisions/ADR-016-laravel-mysql.md)). `php artisan serve --port=8000`.
+
 **URL pública (fatia 1):** `https://eaimesa.com.br/bar-do-tiao`
 
 ## Fatia atual

@@ -144,6 +144,23 @@ Histórico do checkout stub.
 
 - `venues(slug)` UNIQUE
 - `venues(public_id)` UNIQUE
+- `accounts(email)` UNIQUE (collation ci no MySQL ≈ `lower(email)` no Postgres)
+- `catalog_categories(venue_id, sort_order)`
+- `catalog_items(venue_id, category_id)`
+- `orders(venue_id, status, created_at)`
+- `order_items(order_id)`
+- `venue_tables(venue_id, sort_order)`
+- `venue_tables(venue_id, label)` UNIQUE
+- `venue_members(venue_id, account_id)` UNIQUE
+- MySQL: `table_sessions.open_table_id` gerada (`IF status=open THEN table_id`) UNIQUE — equivale a `UNIQUE (table_id) WHERE status = open`
+- MySQL: `tabs.open_session_phone` gerada (`IF status=open THEN session_id:phone`) UNIQUE — equivale a `UNIQUE (table_session_id, guest_phone) WHERE status = open`
+- `orders(venue_id, idempotency_key)` UNIQUE (vários NULL permitidos no InnoDB)
+- `platform_users(email)` UNIQUE
+- `billing_events(created_at DESC)`
+- `billing_events(venue_id, created_at DESC)`
+
+- `venues(slug)` UNIQUE
+- `venues(public_id)` UNIQUE
 - `accounts(email)` UNIQUE
 - `catalog_categories(venue_id, sort_order)`
 - `catalog_items(venue_id, category_id)`
@@ -152,8 +169,6 @@ Histórico do checkout stub.
 - `venue_tables(venue_id, sort_order)`
 - `venue_tables(venue_id, label)` UNIQUE
 - `venue_members(venue_id, account_id)` UNIQUE
-Postgres (Fastify): `UNIQUE (table_id) WHERE status = open`. MySQL (Laravel, [ADR-016](../decisions/ADR-016-laravel-mysql.md)): coluna gerada `open_table_id` UNIQUE.
-
 - `table_sessions(table_id) WHERE status = open` UNIQUE
 - `tabs(table_session_id, guest_phone) WHERE status = open` UNIQUE
 - `orders(venue_id, idempotency_key) WHERE idempotency_key IS NOT NULL` UNIQUE
