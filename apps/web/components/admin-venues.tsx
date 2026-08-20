@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { planLabel, statusLabel } from "../lib/admin-copy";
 import { api, ApiError } from "../lib/api";
 
 type VenueRow = {
@@ -66,22 +67,22 @@ export function AdminVenues() {
         }}
       >
         <input
-          className="field max-w-xs bg-white/5 text-white"
+          className="field-night max-w-xs"
           placeholder="Nome ou slug"
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-        <select className="field max-w-[10rem] bg-white/5 text-white" value={plan} onChange={(e) => setPlan(e.target.value)}>
+        <select className="field-night max-w-[12rem]" value={plan} onChange={(e) => setPlan(e.target.value)}>
           <option value="">Todos os planos</option>
           <option value="cardapio">Cardápio</option>
           <option value="auto_atendimento">Auto atendimento</option>
         </select>
-        <select className="field max-w-[10rem] bg-white/5 text-white" value={status} onChange={(e) => setStatus(e.target.value)}>
+        <select className="field-night max-w-[12rem]" value={status} onChange={(e) => setStatus(e.target.value)}>
           <option value="">Todos os status</option>
-          <option value="trial">trial</option>
-          <option value="active">active</option>
-          <option value="suspended">suspended</option>
-          <option value="past_due">past_due</option>
+          <option value="trial">Em trial</option>
+          <option value="active">Ativo</option>
+          <option value="suspended">Suspenso</option>
+          <option value="past_due">Inadimplente</option>
         </select>
         <button type="submit" className="btn-secondary !bg-white/10 !text-white">
           Filtrar
@@ -96,7 +97,7 @@ export function AdminVenues() {
                 {v.name} <span className="text-white/40">/{v.slug}</span>
               </p>
               <p className="mt-1 text-sm text-white/55">
-                {v.planName} · {v.subscriptionStatus} · {v.ownerEmail}
+                {planLabel(v.plan, v.planName)} · {statusLabel(v.subscriptionStatus)} · {v.ownerEmail}
               </p>
             </div>
             {v.subscriptionStatus === "suspended" ? (

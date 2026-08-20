@@ -193,7 +193,7 @@ sequenceDiagram
 Detalhe em [fatia-11-console-saas.md](fatia-11-console-saas.md).
 
 1. Operador entra em `/admin/login` (cookie `eaimesa_platform`).
-2. Dashboard: bares, MRR estimado, checkouts stub.
+2. Dashboard: bares, MRR estimado, checkouts stub. Status/plano em português (Em trial, Ativo, Cardápio…).
 3. `/admin/bares`: suspender / reativar.
 4. `/admin/planos`: preço e copy; `GET /v1/billing/plans` alimenta landing e cadastro.
 
