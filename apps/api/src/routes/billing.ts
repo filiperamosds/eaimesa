@@ -1,28 +1,38 @@
 import { billingEvents, db, venues } from "@eaimesa/db";
-import { CHECKOUT_STUB_DELAY_MS, checkoutSchema, ERROR_CODES, planAllowsService, type PlanId } from "@eaimesa/shared";
+import {
+  CHECKOUT_STUB_DELAY_MS,
+  checkoutSchema,
+  effectivePriceCents,
+  ERROR_CODES,
+  planAllowsService,
+  planRank,
+} from "@eaimesa/shared";
 import { eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireOwner } from "../lib/auth-guard";
 import { canCheckoutPlan, loadVenue, paidPeriodEndsAtFrom, serializeVenue, subscriptionAllowsUse } from "../lib/billing";
 import { parseBody } from "../lib/http";
-import { getPlan, loadPlanCatalog, publicBillingPlans } from "../lib/plan-catalog";
+import { getPlan, loadPlanCatalog, planKindSync, publicBillingPlans, publicPlanPayload } from "../lib/plan-catalog";
 
 export async function billingRoutes(app: FastifyInstance) {
   app.get("/v1/billing/plans", async () => publicBillingPlans());
 
   app.get("/v1/billing/me", { preHandler: requireOwner }, async (req) => {
-    await loadPlanCatalog();
-    const venue = await loadVenue(req.owner!.venueId);
     const catalog = await loadPlanCatalog();
-    const targetUp: PlanId = "auto_atendimento";
-    const targetDown: PlanId = "cardapio";
+    const venue = await loadVenue(req.owner!.venueId);
+    const currentKind = planKindSync(venue.plan);
+    const listed = catalog.plans.filter((p) => p.listed);
     return {
       venue: serializeVenue(venue),
       entitlement: subscriptionAllowsUse(venue),
-      canUpgrade: venue.plan !== targetUp && canCheckoutPlan(venue, targetUp).ok,
-      canDowngrade: venue.plan !== targetDown && canCheckoutPlan(venue, targetDown).ok,
-      plans: catalog.plans.filter((p) => p.listed),
+      canUpgrade: listed.some(
+        (p) => p.id !== venue.plan && planRank(p.kind) > planRank(currentKind) && canCheckoutPlan(venue, p).ok,
+      ),
+      canDowngrade: listed.some(
+        (p) => p.id !== venue.plan && planRank(p.kind) < planRank(currentKind) && canCheckoutPlan(venue, p).ok,
+      ),
+      plans: listed.map((p) => ({ ...publicPlanPayload(p), listed: true })),
       trialDays: catalog.trialDays,
       paidPeriodDays: catalog.paidPeriodDays,
     };
@@ -31,13 +41,15 @@ export async function billingRoutes(app: FastifyInstance) {
   app.post("/v1/billing/checkout", { preHandler: requireOwner }, async (req) => {
     const body = parseBody(checkoutSchema, req.body);
     const venue = await loadVenue(req.owner!.venueId);
-    const gate = canCheckoutPlan(venue, body.plan);
+    const catalog = await loadPlanCatalog();
+    const plan = await getPlan(body.plan);
+    if (!plan) {
+      throw new AppError(400, ERROR_CODES.VALIDATION_ERROR, "Plano inválido.");
+    }
+    const gate = canCheckoutPlan(venue, plan);
     if (!gate.ok) {
       throw new AppError(409, gate.code, gate.message);
     }
-
-    const catalog = await loadPlanCatalog();
-    const plan = await getPlan(body.plan);
     if (!plan.listed && body.plan !== venue.plan) {
       throw new AppError(400, ERROR_CODES.PLAN_NOT_LISTED, "Este plano não está à venda.");
     }
@@ -45,13 +57,14 @@ export async function billingRoutes(app: FastifyInstance) {
     const method = body.method ?? "card";
     const now = new Date();
     const periodEnd = paidPeriodEndsAtFrom(now, catalog.paidPeriodDays);
+    const amountCents = effectivePriceCents(plan);
     await new Promise((resolve) => setTimeout(resolve, CHECKOUT_STUB_DELAY_MS));
     const [updated] = await db
       .update(venues)
       .set({
-        plan: body.plan,
+        plan: plan.id,
         subscriptionStatus: "active",
-        acceptsOrders: planAllowsService(body.plan),
+        acceptsOrders: planAllowsService(plan.kind),
         currentPeriodEndsAt: periodEnd,
         updatedAt: now,
       })
@@ -64,7 +77,7 @@ export async function billingRoutes(app: FastifyInstance) {
       plan: plan.id,
       planName: plan.name,
       method,
-      amountCents: plan.priceCents,
+      amountCents,
       provider: "stub",
       status: "success",
     });
@@ -75,7 +88,9 @@ export async function billingRoutes(app: FastifyInstance) {
       method,
       plan: plan.id,
       planName: plan.name,
-      amountCents: plan.priceCents,
+      amountCents,
+      listPriceCents: plan.priceCents,
+      promoPriceCents: plan.promoPriceCents,
       subscriptionStatus: "active",
       currentPeriodEndsAt: periodEnd.toISOString(),
       venue: serializeVenue(updated),

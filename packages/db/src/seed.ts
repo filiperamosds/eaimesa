@@ -421,6 +421,7 @@ async function seed() {
     {
       id: "cardapio",
       name: "Cardápio",
+      kind: "cardapio" as const,
       priceCents: 4900,
       blurb: "Cardápio público com a sua URL. Sem pedido no celular.",
       features: ["URL pública /seu-bar", "Categorias, itens e foto", "QR do cardápio", "1 estabelecimento"],
@@ -428,6 +429,7 @@ async function seed() {
     {
       id: "auto_atendimento",
       name: "Auto atendimento",
+      kind: "auto_atendimento" as const,
       priceCents: 14900,
       blurb: "O cliente pede no celular. O garçom opera a fila.",
       features: [
@@ -444,7 +446,9 @@ async function seed() {
       await db.insert(planCatalog).values({
         id: plan.id,
         name: plan.name,
+        kind: plan.kind,
         priceCents: plan.priceCents,
+        promoPriceCents: null,
         blurb: plan.blurb,
         features: plan.features,
         listed: true,

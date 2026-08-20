@@ -12,7 +12,7 @@
 1h. [Fatia 8 — Fila do garçom](product/fatia-08-fila-garcom.md) — Kanban em `/garcom/pedidos`
 1i. [Fatia 9 — Parcial do cliente](product/fatia-09-parcial-guest.md) — comanda no celular: itens, status, total
 1j. [Fatia 10 — Planos](product/fatia-10-planos.md) — Cardápio vs Auto atendimento, trial, checkout stub
-1k. [Fatia 11 — Console SaaS](product/fatia-11-console-saas.md) — login da plataforma, dashboard, bares, catálogo
+1k. [Fatia 11 — Console SaaS](product/fatia-11-console-saas.md) — login da plataforma, dashboard, bares, catálogo (criar plano + promo)
 2. [Visão do produto](product/visao.md) — o quê, para quem, o que fica de fora
 3. [Fluxos](product/fluxos.md) — publicar cardápio; guest pede na mesa
 4. [Pricing](product/pricing.md) — Cardápio e Auto atendimento
@@ -22,7 +22,7 @@
 8. [Modelo de dados](data/schema.md) — entidades fatia 1–11 + planejadas
 9. [API](api/endpoints.md) — REST fatia 1–11 + contrato futuro
 10. [Dev setup](ops/dev-setup.md) — pnpm, Postgres, seed `bar-do-tiao`, `cafe-da-lina` e console
-11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, mesas, comandas, pedido guest, fila garçom, planos, **console SaaS**
+11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, mesas, comandas, pedido guest, fila garçom, planos, console SaaS, **SKU + promo**
 
 ## Cursor
 

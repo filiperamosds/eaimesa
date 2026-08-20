@@ -24,7 +24,7 @@ Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-fron
 
 | Superfície | Rota | Usuário | Fatia 10 | MVP completo |
 |------------|------|---------|----------|--------------|
-| **Landing** | `/` | Visitante B2B | Dois cards (Cardápio + Auto atendimento) com valor | Sim |
+| **Landing** | `/` | Visitante B2B | Cards do catálogo (de/por se houver promo) | Sim |
 | **Auth estabelecimento** | `/cadastro`, `/login` | Dono / garçom | Trial 7 dias no plano escolhido | Sim |
 | **Painel** | `/painel/*` | Dono | Cardápio; resto só no Auto atendimento | — |
 | **Pagamento** | `/painel/pagamento` | Dono | Checkout stub (sucesso) | Gateway |
@@ -46,7 +46,7 @@ Implementação **agora**: [fatia 11 — console SaaS](fatia-11-console-saas.md)
 ### MVP (quando as fatias somarem)
 
 - Signup B2B: e-mail, senha; CNPJ/OTP entram depois
-- Planos **Cardápio** e **Auto atendimento**; trial 7 dias
+- Planos com `kind` Cardápio ou Auto atendimento (SKUs extras no console); trial 7 dias
 - Cardápio CRUD (texto, preço no servidor)
 - Auto atendimento: mesas + claim + PIN + pedido guest + fila staff
 - Multi-tenant com `venue_id` em toda query

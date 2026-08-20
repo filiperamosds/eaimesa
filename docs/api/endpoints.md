@@ -58,7 +58,7 @@ Cookie: `eaimesa_owner` (httpOnly, SameSite=Lax, Path=/). JWT inclui `role: owne
 |--------|------|------|-----------|
 | GET | `/v1/public/venues/{slug}` | — | Venue + categorias ativas + itens ativos |
 
-Itens inativos e categorias inativas **não** entram na resposta pública. Venue `suspended`: ainda retorna o cardápio com `subscriptionStatus` para o front avisar. `plan` entra no payload (`cardapio` não oferece PIN/pedido). No front, plano Cardápio esconde “Entrar para pedir” e a faixa de PIN; `/{slug}/entrar` redireciona ao cardápio.
+Itens inativos e categorias inativas **não** entram na resposta pública. Venue `suspended`: ainda retorna o cardápio com `subscriptionStatus` para o front avisar. `plan` e `planKind` entram no payload (`kind=cardapio` não oferece PIN/pedido). No front, plano Cardápio esconde “Entrar para pedir” e a faixa de PIN; `/{slug}/entrar` redireciona ao cardápio.
 
 ### Billing (fatia 10)
 
@@ -66,9 +66,9 @@ Checkout **stub**: sem Asaas. Espera ~2s e devolve sucesso para o front testar o
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| GET | `/v1/billing/plans` | — | Catálogo do banco (`plan_catalog` + settings) + `stubDelayMs` |
-| GET | `/v1/billing/me` | Owner | Plano atual, trial/vigência, `canUpgrade` / `canDowngrade` |
-| POST | `/v1/billing/checkout` | Owner | `{ plan, method? }` → espera 2s → `status: success`, `active` 30 dias |
+| GET | `/v1/billing/plans` | — | Catálogo do banco (`kind`, `priceCents`, `promoPriceCents`, `effectivePriceCents`) + `stubDelayMs` |
+| GET | `/v1/billing/me` | Owner | Plano atual (`planKind`), trial/vigência, `canUpgrade` / `canDowngrade` |
+| POST | `/v1/billing/checkout` | Owner | `{ plan, method? }` → espera 2s → `status: success`, cobra preço efetivo, `active` 30 dias |
 
 Downgrade com vigência paga em aberto → 409 `PLAN_DOWNGRADE_LOCKED`. Recurso de Auto atendimento no plano Cardápio → 403 `PLAN_FEATURE`. Trial/vigência vencidos → 403 `BILLING_INACTIVE`.
 
@@ -357,11 +357,12 @@ Cookie: `eaimesa_platform`. Não autoriza `/v1/owner/*`.
 | GET | `/v1/platform/venues` | Platform | Lista tenants (`q`, `plan`, `status`) |
 | POST | `/v1/platform/venues/{id}/suspend` | Platform | `suspended` |
 | POST | `/v1/platform/venues/{id}/unsuspend` | Platform | Volta a `trial`/`active`/`past_due` |
-| GET | `/v1/platform/plans` | Platform | Catálogo completo (inclui não listados) |
-| PATCH | `/v1/platform/plans/{id}` | Platform | Nome, preço, features, `listed` |
+| GET | `/v1/platform/plans` | Platform | Catálogo completo (inclui não listados; `kind`, `promoPriceCents`) |
+| POST | `/v1/platform/plans` | Platform | Cria SKU: `{ name, kind, priceCents, promoPriceCents?, blurb, features?, listed? }` |
+| PATCH | `/v1/platform/plans/{id}` | Platform | Nome, `kind`, preço, promo (`null` limpa), features, `listed` |
 | PATCH | `/v1/platform/settings` | Platform | `trialDays`, `paidPeriodDays` |
 
-`GET /v1/billing/plans` (público) lê `plan_catalog` + settings. Checkout stub grava `billing_events`.
+`GET /v1/billing/plans` (público) lê `plan_catalog` + settings. Promo preenchida entra como `promoPriceCents` / `effectivePriceCents`. Checkout stub grava `billing_events` com o valor efetivo.
 
 ### Webhooks (futuro)
 

@@ -1,12 +1,13 @@
 "use client";
 
-import { formatBrlFromCents, PLANS, type PlanId } from "@eaimesa/shared";
+import { PLANS } from "@eaimesa/shared";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
 import type { BillingPlan, BillingPlansPayload } from "../lib/load-billing-plans";
 import type { LoginResponse } from "../lib/types";
+import { PlanPrice } from "./plan-price";
 
 export function LoginForm() {
   const router = useRouter();
@@ -80,9 +81,7 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [venueName, setVenueName] = useState("");
   const [slug, setSlug] = useState("");
-  const [plan, setPlan] = useState<PlanId>(
-    requested === "auto_atendimento" ? "auto_atendimento" : "cardapio",
-  );
+  const [plan, setPlan] = useState(requested && requested.length >= 3 ? requested : "cardapio");
   const [plans, setPlans] = useState<BillingPlan[]>(Object.values(PLANS));
   const [trialDays, setTrialDays] = useState(7);
   const [error, setError] = useState<string | null>(null);
@@ -159,8 +158,12 @@ export function RegisterForm() {
               />
               <span className="block font-medium">{p.name}</span>
               <span className="mt-1 block text-chili">
-                {formatBrlFromCents(p.priceCents)}
-                <span className="font-normal text-ink-soft">/mês</span>
+                <PlanPrice
+                  priceCents={p.priceCents}
+                  promoPriceCents={p.promoPriceCents}
+                  suffix="/mês"
+                  className="text-base"
+                />
               </span>
               <span className="mt-1 block text-xs text-ink-soft">{p.blurb}</span>
             </label>

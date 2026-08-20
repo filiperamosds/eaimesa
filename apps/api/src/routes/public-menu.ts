@@ -4,6 +4,7 @@ import { and, asc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { subscriptionAllowsUse } from "../lib/billing";
+import { loadPlanCatalog, planKindSync } from "../lib/plan-catalog";
 
 export async function publicMenuRoutes(app: FastifyInstance) {
   app.get("/v1/public/venues/:slug", async (req) => {
@@ -12,6 +13,8 @@ export async function publicMenuRoutes(app: FastifyInstance) {
     if (!venue) {
       throw new AppError(404, ERROR_CODES.VENUE_NOT_FOUND, "Este cardápio não existe.");
     }
+
+    await loadPlanCatalog();
 
     const categories = await db
       .select()
@@ -31,8 +34,9 @@ export async function publicMenuRoutes(app: FastifyInstance) {
         slug: venue.slug,
         subscriptionStatus: venue.subscriptionStatus,
         plan: venue.plan,
+        planKind: planKindSync(venue.plan),
         acceptsOrders:
-          venue.acceptsOrders && planAllowsService(venue.plan) && subscriptionAllowsUse(venue).ok,
+          venue.acceptsOrders && planAllowsService(planKindSync(venue.plan)) && subscriptionAllowsUse(venue).ok,
       },
       categories: categories.map((c) => ({
         id: c.id,

@@ -14,7 +14,8 @@ Login do dono.
 
 - `id`, `owner_account_id` → Account
 - `name`, `slug` UNIQUE, `public_id` UNIQUE
-- `plan`: `cardapio` | `auto_atendimento`
+- `plan`: id do catálogo (`cardapio`, `auto_atendimento` ou SKU criado no console). Sem CHECK nos dois ids seed.
+- `planKind` na API: `cardapio` | `auto_atendimento` (o que o bar pode fazer)
 - `subscription_status`: `trial` | `active` | `past_due` | `suspended`
 - `accepts_orders`: true só no Auto atendimento com assinatura válida
 - `trial_ends_at`, `current_period_ends_at` (vigência paga)
@@ -121,11 +122,13 @@ Uma linha `id=default`: `trial_days`, `paid_period_days`.
 
 ### PlanCatalog
 
-Catálogo vendável. `id` = `cardapio` | `auto_atendimento`.
+Catálogo vendável. `id` = slug do SKU (3–48; kebab ou underscore, para o seed `auto_atendimento`). Não está mais limitado aos dois ids seed.
 
-- `name`, `price_cents`, `blurb`, `features` (json), `listed`, `sort_order`
+- `kind`: `cardapio` | `auto_atendimento` — feature gate (pedido/garçom só no auto)
+- `name`, `price_cents`, `promo_price_cents` (nullable; se preenchido e menor que o cheio, vitrine e checkout usam a promo)
+- `blurb`, `features` (json), `listed`, `sort_order`
 
-`GET /v1/billing/plans` lê daqui. Landing e cadastro não usam só a constante do código.
+`GET /v1/billing/plans` lê daqui. Landing, cadastro e checkout não usam só a constante do código. Sem DELETE: `listed=false` esconde. Máximo 12 linhas.
 
 ### BillingEvent
 

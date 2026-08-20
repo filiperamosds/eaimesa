@@ -13,8 +13,8 @@ export default function CadastroPage() {
           <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber">Começar</p>
           <h1 className="mt-3 font-serif text-4xl leading-tight">Seu slug, no ar em minutos.</h1>
           <p className="mt-4 max-w-sm text-white/65">
-            Escolha o plano Cardápio ou Auto atendimento — o preço aparece no cadastro. 7 dias de
-            trial; a cobrança entra depois.
+            Escolha o plano — o preço (e a promo, se houver) aparece no cadastro. 7 dias de trial; a
+            cobrança entra depois.
           </p>
         </div>
         <p className="text-sm text-white/40">eaimesa.com.br/seu-bar</p>

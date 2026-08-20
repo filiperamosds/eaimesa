@@ -13,8 +13,7 @@ export async function loadPublicMenu(slug: string): Promise<PublicMenu | null> {
 }
 
 export function venueAllowsGuestOrdering(menu: PublicMenu): boolean {
-  if (menu.venue.plan === "cardapio") return false;
-  if (menu.venue.plan && !planAllowsService(menu.venue.plan)) return false;
+  if (!planAllowsService(menu.venue.planKind ?? menu.venue.plan ?? "")) return false;
   return Boolean(menu.venue.acceptsOrders);
 }
 

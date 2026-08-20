@@ -396,7 +396,9 @@ export const platformSettings = pgTable("platform_settings", {
 export const planCatalog = pgTable("plan_catalog", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  kind: text("kind").notNull().default("cardapio"),
   priceCents: integer("price_cents").notNull(),
+  promoPriceCents: integer("promo_price_cents"),
   blurb: text("blurb").notNull(),
   features: jsonb("features").$type<string[]>().notNull().default([]),
   listed: boolean("listed").notNull().default(true),

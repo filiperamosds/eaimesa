@@ -30,7 +30,7 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
           return;
         }
         setMe(session);
-        const service = planAllowsService(session.venue.plan);
+        const service = planAllowsService(session.venue.planKind ?? session.venue.plan);
         if (!service && (path.startsWith("/painel/pedidos") || path.startsWith("/painel/mesas") || path.startsWith("/painel/equipe"))) {
           router.replace("/painel/cardapio");
         }
@@ -55,7 +55,7 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const links = ALL_LINKS.filter((l) => !l.service || planAllowsService(me.venue.plan));
+  const links = ALL_LINKS.filter((l) => !l.service || planAllowsService(me.venue.planKind ?? me.venue.plan));
 
   return (
     <div className="min-h-screen pb-24 sm:pb-0">

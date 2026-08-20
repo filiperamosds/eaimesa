@@ -1,12 +1,15 @@
 "use client";
 
-import { formatBrlFromCents, type PaymentMethod, type PlanId } from "@eaimesa/shared";
+import { formatBrlFromCents, hasPromoPrice, type PaymentMethod } from "@eaimesa/shared";
 import { useState } from "react";
+import { PlanPrice } from "./plan-price";
 
 type Props = {
-  planId: PlanId;
+  planId: string;
   planName: string;
   amountCents: number;
+  listPriceCents?: number;
+  promoPriceCents?: number | null;
   pending: boolean;
   onCancel: () => void;
   onPay: (method: PaymentMethod) => void;
@@ -16,7 +19,16 @@ function onlyDigits(value: string, max: number) {
   return value.replace(/\D/g, "").slice(0, max);
 }
 
-export function PaymentForm({ planId, planName, amountCents, pending, onCancel, onPay }: Props) {
+export function PaymentForm({
+  planId,
+  planName,
+  amountCents,
+  listPriceCents,
+  promoPriceCents,
+  pending,
+  onCancel,
+  onPay,
+}: Props) {
   const [method, setMethod] = useState<PaymentMethod>("card");
   const [holder, setHolder] = useState("");
   const [number, setNumber] = useState("");
@@ -68,8 +80,18 @@ export function PaymentForm({ planId, planName, amountCents, pending, onCancel, 
         <p className="eyebrow">Pagar agora</p>
         <h3 className="mt-2 font-serif text-2xl">{planName}</h3>
         <p className="mt-1 text-sm text-ink-soft">
-          Cobrança de <span className="font-medium text-ink">{amount}</span> (mensal). Sem gateway nesta
-          fatia — o formulário não envia dados do cartão.
+          Cobrança de{" "}
+          {hasPromoPrice({ priceCents: listPriceCents ?? amountCents, promoPriceCents }) ? (
+            <PlanPrice
+              priceCents={listPriceCents ?? amountCents}
+              promoPriceCents={promoPriceCents}
+              suffix=""
+              className="font-medium text-ink"
+            />
+          ) : (
+            <span className="font-medium text-ink">{amount}</span>
+          )}{" "}
+          (mensal). Sem gateway nesta fatia — o formulário não envia dados do cartão.
         </p>
       </div>
 

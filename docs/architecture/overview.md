@@ -14,7 +14,7 @@
 | Auth platform | Cookie **httpOnly** `eaimesa_platform` | JWT próprio (`PLATFORM_JWT_SECRET`) |
 | Cache/fila | Redis | Fase 2 |
 
-Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md), [ADR-006](../decisions/ADR-006-mesas.md).
+Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md), [ADR-006](../decisions/ADR-006-mesas.md), [ADR-014](../decisions/ADR-014-plan-kind-promo.md).
 
 ## Monorepo
 

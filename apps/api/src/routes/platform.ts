@@ -1,12 +1,16 @@
 import { accounts, billingEvents, db, planCatalog, platformSettings, platformUsers, venues } from "@eaimesa/db";
 import {
   CHECKOUT_STUB_DELAY_MS,
+  createPlanCatalogSchema,
+  effectivePriceCents,
   ERROR_CODES,
-  isPlanId,
   loginSchema,
   patchPlanCatalogSchema,
   patchPlatformSettingsSchema,
+  PLAN_CATALOG_MAX,
   PLAN_FUTURE,
+  slugifyPlanId,
+  type PlanKind,
 } from "@eaimesa/shared";
 import { and, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
@@ -44,17 +48,26 @@ async function requirePlatform(req: FastifyRequest, _reply: FastifyReply) {
 function serializeCatalogPlan(p: {
   id: string;
   name: string;
+  kind?: string | null;
   priceCents: number;
+  promoPriceCents?: number | null;
   blurb: string;
   features: string[];
   listed: boolean;
   sortOrder: number;
   updatedAt?: Date;
 }) {
+  const kind: PlanKind = p.kind === "auto_atendimento" ? "auto_atendimento" : "cardapio";
   return {
     id: p.id,
     name: p.name,
+    kind,
     priceCents: p.priceCents,
+    promoPriceCents: p.promoPriceCents ?? null,
+    effectivePriceCents: effectivePriceCents({
+      priceCents: p.priceCents,
+      promoPriceCents: p.promoPriceCents ?? null,
+    }),
     blurb: p.blurb,
     features: p.features,
     listed: p.listed,
@@ -96,7 +109,8 @@ export async function platformRoutes(app: FastifyInstance) {
     const now = new Date();
     const since = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const catalog = await loadPlanCatalog();
-    const priceByPlan = new Map(catalog.plans.map((p) => [p.id, p.priceCents]));
+    const priceByPlan = new Map(catalog.plans.map((p) => [p.id, effectivePriceCents(p)]));
+    const nameByPlan = new Map(catalog.plans.map((p) => [p.id, p.name]));
 
     const allVenues = await db
       .select({
@@ -109,13 +123,14 @@ export async function platformRoutes(app: FastifyInstance) {
       .from(venues);
 
     const byStatus: Record<string, number> = { trial: 0, active: 0, suspended: 0, past_due: 0 };
-    const byPlan: Record<string, number> = { cardapio: 0, auto_atendimento: 0 };
+    const byPlanCount: Record<string, number> = {};
+    for (const p of catalog.plans) byPlanCount[p.id] = 0;
     let trialExpired = 0;
     let mrrCents = 0;
 
     for (const v of allVenues) {
       byStatus[v.subscriptionStatus] = (byStatus[v.subscriptionStatus] ?? 0) + 1;
-      byPlan[v.plan] = (byPlan[v.plan] ?? 0) + 1;
+      byPlanCount[v.plan] = (byPlanCount[v.plan] ?? 0) + 1;
       if (v.subscriptionStatus === "trial" && v.trialEndsAt && v.trialEndsAt.getTime() < now.getTime()) {
         trialExpired += 1;
       }
@@ -123,9 +138,15 @@ export async function platformRoutes(app: FastifyInstance) {
         v.subscriptionStatus === "active" &&
         (!v.currentPeriodEndsAt || v.currentPeriodEndsAt.getTime() > now.getTime())
       ) {
-        mrrCents += priceByPlan.get(v.plan as "cardapio") ?? 0;
+        mrrCents += priceByPlan.get(v.plan) ?? 0;
       }
     }
+
+    const byPlan = Object.entries(byPlanCount).map(([id, count]) => ({
+      id,
+      name: nameByPlan.get(id) ?? id,
+      count,
+    }));
 
     const recent = await db
       .select({
@@ -183,7 +204,7 @@ export async function platformRoutes(app: FastifyInstance) {
       const like = `%${q}%`;
       filters.push(or(ilike(venues.name, like), ilike(venues.slug, like)));
     }
-    if (plan && isPlanId(plan)) filters.push(eq(venues.plan, plan));
+    if (plan && plan.trim()) filters.push(eq(venues.plan, plan.trim()));
     if (status) filters.push(eq(venues.subscriptionStatus, status));
 
     const rows = await db
@@ -211,7 +232,7 @@ export async function platformRoutes(app: FastifyInstance) {
     return {
       venues: rows.map((v) => ({
         ...v,
-        planName: names.get(v.plan as "cardapio") ?? v.plan,
+        planName: names.get(v.plan) ?? v.plan,
         trialEndsAt: v.trialEndsAt?.toISOString() ?? null,
         currentPeriodEndsAt: v.currentPeriodEndsAt?.toISOString() ?? null,
         createdAt: v.createdAt.toISOString(),
@@ -253,18 +274,64 @@ export async function platformRoutes(app: FastifyInstance) {
       trialDays: catalog.trialDays,
       paidPeriodDays: catalog.paidPeriodDays,
       stubDelayMs: CHECKOUT_STUB_DELAY_MS,
-      plans: catalog.plans,
+      plans: catalog.plans.map((p) => serializeCatalogPlan(p)),
       future: PLAN_FUTURE,
     };
   });
 
+  app.post("/v1/platform/plans", { preHandler: requirePlatform }, async (req) => {
+    const body = parseBody(createPlanCatalogSchema, req.body);
+    const existing = await db.select({ id: planCatalog.id, sortOrder: planCatalog.sortOrder }).from(planCatalog);
+    if (existing.length >= PLAN_CATALOG_MAX) {
+      throw new AppError(409, ERROR_CODES.VALIDATION_ERROR, `Máximo de ${PLAN_CATALOG_MAX} planos no catálogo.`);
+    }
+    const taken = new Set(existing.map((r) => r.id));
+    let id = slugifyPlanId(body.name);
+    if (taken.has(id)) {
+      let n = 2;
+      while (taken.has(`${id}-${n}`.slice(0, 48))) n += 1;
+      id = `${id}-${n}`.slice(0, 48);
+    }
+    const nextOrder = existing.reduce((max, r) => Math.max(max, r.sortOrder), -1) + 1;
+    const features = (body.features ?? []).filter((f) => f.trim());
+    const [created] = await db
+      .insert(planCatalog)
+      .values({
+        id,
+        name: body.name,
+        kind: body.kind,
+        priceCents: body.priceCents,
+        promoPriceCents: body.promoPriceCents ?? null,
+        blurb: body.blurb,
+        features,
+        listed: body.listed ?? true,
+        sortOrder: nextOrder,
+      })
+      .returning();
+    if (!created) throw new AppError(500, "INTERNAL", "Falha ao criar o plano.");
+    invalidatePlanCatalog();
+    return serializeCatalogPlan({
+      ...created,
+      features: Array.isArray(created.features) ? created.features : [],
+    });
+  });
+
   app.patch("/v1/platform/plans/:id", { preHandler: requirePlatform }, async (req) => {
     const { id } = req.params as { id: string };
-    if (!isPlanId(id)) throw new AppError(404, "NOT_FOUND", "Plano inexistente.");
+    const [current] = await db.select().from(planCatalog).where(eq(planCatalog.id, id)).limit(1);
+    if (!current) throw new AppError(404, "NOT_FOUND", "Plano inexistente.");
     const body = parseBody(patchPlanCatalogSchema, req.body);
+    const nextPrice = body.priceCents ?? current.priceCents;
+    const nextPromo =
+      body.promoPriceCents === undefined ? current.promoPriceCents : body.promoPriceCents;
+    if (nextPromo != null && nextPromo >= nextPrice) {
+      throw new AppError(400, ERROR_CODES.VALIDATION_ERROR, "O preço promocional deve ser menor que o preço cheio.");
+    }
     const patch: Record<string, unknown> = { updatedAt: new Date() };
     if (body.name !== undefined) patch.name = body.name;
+    if (body.kind !== undefined) patch.kind = body.kind;
     if (body.priceCents !== undefined) patch.priceCents = body.priceCents;
+    if (body.promoPriceCents !== undefined) patch.promoPriceCents = body.promoPriceCents;
     if (body.blurb !== undefined) patch.blurb = body.blurb;
     if (body.features !== undefined) patch.features = body.features;
     if (body.listed !== undefined) patch.listed = body.listed;

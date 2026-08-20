@@ -5,25 +5,27 @@ import {
   PAID_PERIOD_DAYS,
   planAllowsService,
   planRank,
-  type PlanId,
+  type PlanCatalogItem,
 } from "@eaimesa/shared";
 import { eq } from "drizzle-orm";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { AppError } from "../errors";
-import { planNameSync } from "./plan-catalog";
+import { loadPlanCatalog, planKindSync, planNameSync } from "./plan-catalog";
 
 export type VenueRow = typeof venues.$inferSelect;
 
 export function serializeVenue(v: VenueRow) {
+  const planKind = planKindSync(v.plan);
   return {
     id: v.id,
     name: v.name,
     slug: v.slug,
     publicId: v.publicId,
     plan: v.plan,
+    planKind,
     planName: planNameSync(v.plan),
     subscriptionStatus: v.subscriptionStatus,
-    acceptsOrders: v.acceptsOrders && planAllowsService(v.plan) && subscriptionAllowsUse(v).ok,
+    acceptsOrders: v.acceptsOrders && planAllowsService(planKind) && subscriptionAllowsUse(v).ok,
     trialEndsAt: v.trialEndsAt?.toISOString() ?? null,
     currentPeriodEndsAt: v.currentPeriodEndsAt?.toISOString() ?? null,
   };
@@ -67,10 +69,11 @@ export function subscriptionAllowsUse(venue: VenueRow): { ok: boolean; code?: st
 
 export function canCheckoutPlan(
   venue: VenueRow,
-  target: PlanId,
+  target: Pick<PlanCatalogItem, "id" | "kind">,
 ): { ok: true } | { ok: false; code: string; message: string } {
-  if (target === venue.plan) return { ok: true };
-  if (planRank(target) > planRank(venue.plan)) return { ok: true };
+  if (target.id === venue.plan) return { ok: true };
+  const fromKind = planKindSync(venue.plan);
+  if (planRank(target.kind) >= planRank(fromKind)) return { ok: true };
 
   const now = Date.now();
   const periodEndsAt = venue.currentPeriodEndsAt;
@@ -94,8 +97,9 @@ export async function loadVenue(venueId: string): Promise<VenueRow> {
   return venue;
 }
 
-export function assertServicePlan(venue: VenueRow) {
-  if (!planAllowsService(venue.plan)) {
+export async function assertServicePlan(venue: VenueRow) {
+  await loadPlanCatalog();
+  if (!planAllowsService(planKindSync(venue.plan))) {
     throw new AppError(
       403,
       ERROR_CODES.PLAN_FEATURE,
@@ -114,7 +118,7 @@ export async function requireServicePlan(req: FastifyRequest, _reply: FastifyRep
     throw new AppError(401, ERROR_CODES.UNAUTHORIZED, "Faça login para continuar.");
   }
   const venue = await loadVenue(venueId);
-  assertServicePlan(venue);
+  await assertServicePlan(venue);
 }
 
 export function trialEndsAtFrom(now = new Date(), days = 7): Date {

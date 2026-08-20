@@ -1,6 +1,6 @@
 "use client";
 
-import { formatBrlFromCents } from "@eaimesa/shared";
+import { formatBrlFromCents, planAllowsService } from "@eaimesa/shared";
 import Link from "next/link";
 import { useState } from "react";
 import { GuestCart, type CartLine } from "./guest-cart";
@@ -14,7 +14,8 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
   const groups = menu.categories.filter((c) => c.items.length > 0);
   const [openId, setOpenId] = useState<string | null>(null);
   const [cart, setCart] = useState<CartLine[]>([]);
-  const ordering = menu.venue.plan === "cardapio" ? false : Boolean(menu.venue.acceptsOrders);
+  const ordering =
+    planAllowsService(menu.venue.planKind ?? menu.venue.plan ?? "") && Boolean(menu.venue.acceptsOrders);
   const tab = useGuestTab(menu.venue.slug, ordering);
   const suspended = menu.venue.subscriptionStatus === "suspended";
   const canOrder = Boolean(ordering && tab && !tab.needsProfile && !suspended);

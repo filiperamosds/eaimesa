@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { formatBrlFromCents, PLAN_FUTURE, type PlanId } from "@eaimesa/shared";
+import { PLAN_FUTURE } from "@eaimesa/shared";
 import type { BillingPlan } from "../lib/load-billing-plans";
+import { PlanPrice, planCtaPrice } from "./plan-price";
 
-const DEMOS: Record<PlanId, { href: string; label: string }> = {
+const DEMOS: Record<string, { href: string; label: string }> = {
   cardapio: { href: "/cafe-da-lina", label: "Ver demo Café da Lina" },
   auto_atendimento: { href: "/bar-do-tiao", label: "Ver demo Bar do Tião" },
 };
@@ -15,11 +16,12 @@ export function PlanMarketingCards({
   trialDays: number;
 }) {
   const listed = plans.filter((p) => p.listed !== false);
+  const cols = listed.length >= 3 ? "md:grid-cols-2 xl:grid-cols-3" : "md:grid-cols-2";
   return (
     <div>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className={`grid gap-6 ${cols}`}>
         {listed.map((plan) => {
-          const featured = plan.id === "auto_atendimento";
+          const featured = plan.kind === "auto_atendimento";
           const demo = DEMOS[plan.id];
           return (
             <article
@@ -33,8 +35,7 @@ export function PlanMarketingCards({
               )}
               <h3 className="mt-3 font-serif text-3xl">{plan.name}</h3>
               <p className="mt-3 font-serif text-4xl tabular-nums">
-                {formatBrlFromCents(plan.priceCents)}
-                <span className="text-xl font-sans text-ink-soft">/mês</span>
+                <PlanPrice priceCents={plan.priceCents} promoPriceCents={plan.promoPriceCents} size="lg" />
               </p>
               <p className="mt-3 text-sm text-ink-soft">{plan.blurb}</p>
               <ul className="mt-5 flex-1 space-y-2 text-sm text-ink-soft">
@@ -43,7 +44,7 @@ export function PlanMarketingCards({
                 ))}
               </ul>
               <Link href={`/cadastro?plano=${plan.id}`} className="btn-primary mt-8 w-full">
-                Adquirir {plan.name} · {formatBrlFromCents(plan.priceCents)}/mês
+                Adquirir {plan.name} · {planCtaPrice(plan)}
               </Link>
               {demo ? (
                 <Link href={demo.href} className="mt-3 block text-center text-sm text-ink-soft underline">
