@@ -99,7 +99,7 @@ export default function HomePage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-5 py-20">
-          <div className="surface overflow-hidden bg-night p-8 text-white sm:p-12">
+          <div className="overflow-hidden rounded-[1.35rem] bg-night p-8 text-white sm:p-12">
             <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber">Plano Bar</p>
             <h2 className="mt-3 font-serif text-4xl">Feito para o bar de 10 mesas</h2>
             <p className="mt-4 max-w-xl text-white/70">

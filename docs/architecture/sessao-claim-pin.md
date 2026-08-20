@@ -23,6 +23,13 @@ Gerado pelo staff autenticado para uma mesa.
 | Invalidação | Novo claim na mesma mesa invalida anterior não usado |
 | URL | `/{slug}/c/{token}` |
 
+### Onde o QR vive (UI)
+
+- **Só na área autenticada** (`/painel/*` — dono agora; staff depois). O cardápio público e a landing **não** geram claim.
+- Staff abre a mesa → painel mostra QR **grande** + countdown do TTL.
+- **Exportar** é permitido (PNG/PDF daquele claim) para mostrar noutro aparelho ou imprimir na hora. Export **não** vira adesivo permanente: o token continua TTL curto e uso único; novo claim na mesa invalida o anterior.
+- QR da **casa** (`/{slug}`, só cardápio) também fica no painel (ex. Meu bar / Mesas) e é exportável para porta, Instagram, balcão — esse **nunca** autoriza pedir.
+
 ### Redeem
 
 ```

@@ -23,5 +23,7 @@ QR fixo por mesa permite pedido remoto (foto, stories). CPF do consumidor adicio
 ## Consequências
 
 - Fluxo staff obrigatório no MVP
-- UI staff precisa gerar QR grande + countdown
-- Sem claim impresso em adesivo permanente
+- UI do claim **só no painel autenticado** (`/painel/*`): QR grande + countdown
+- Exportar (PNG/PDF) o claim da vez é ok — para outro celular do staff ou impressão pontual; **não** substitui adesivo fixo na mesa
+- QR do slug público (`/{slug}`) também mora no painel e é exportável; continua só cardápio
+- Sem claim impresso em adesivo permanente que autorize pedir

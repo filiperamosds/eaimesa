@@ -36,3 +36,7 @@ Ver [ADR-006](../decisions/ADR-006-mesas.md).
 Staff toca a mesa e os itens. A API grava `table_id` (quando informado) e **sempre** `table_label` no momento do pedido. Renomear a mesa não reescreve o histórico.
 
 Se o bar ainda não cadastrou mesas, o lançamento aceita rótulo livre (mesmo contrato da fatia 2) e o painel aponta para `/painel/mesas`.
+
+## QR (fatia claim)
+
+Quando o claim entrar: geração, exibição e **exportação** (PNG/PDF) do QR ficam em `/painel/*`. O `/{slug}` público não gera claim. Ver [sessão claim + PIN](../architecture/sessao-claim-pin.md) e [ADR-002](../decisions/ADR-002-claim-garcom.md).

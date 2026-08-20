@@ -85,8 +85,9 @@ sequenceDiagram
   participant C as Cliente (PWA)
 
   G->>API: POST /staff/tables/{id}/claims
-  API-->>G: QR URL + countdown TTL
-  G->>C: Mostra QR na mesa
+  API-->>G: QR URL + countdown TTL (só no /painel)
+  G->>G: Mostra no painel ou exporta PNG/PDF
+  G->>C: Cliente escaneia o claim
   C->>API: GET /v/{slug}/c/{claim} (redeem)
   API->>API: Valida hash, TTL, uso único
   API->>API: Cria Tab + PIN, GuestSession
