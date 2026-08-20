@@ -133,13 +133,13 @@ async function seed() {
           slug: "bar-do-tiao",
           publicId: randomBytes(6).toString("hex"),
           subscriptionStatus: "trial",
-          acceptsOrders: false,
+          acceptsOrders: true,
         })
         .returning();
     } else {
       [venue] = await tx
         .update(venues)
-        .set({ name: "Bar do Tião", slug: "bar-do-tiao", updatedAt: new Date() })
+        .set({ name: "Bar do Tião", slug: "bar-do-tiao", acceptsOrders: true, updatedAt: new Date() })
         .where(eq(venues.id, venue.id))
         .returning();
     }

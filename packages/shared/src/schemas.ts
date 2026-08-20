@@ -153,3 +153,19 @@ export const openComandaSchema = z.object({
       message: "Telefone: DDD + número (10 ou 11 dígitos).",
     }),
 });
+
+const orderItemLineSchema = z.object({
+  catalogItemId: z.string().uuid(),
+  qty: z.number().int().min(1).max(99),
+  note: z.string().trim().max(80).optional().nullable(),
+});
+
+export const createGuestOrderSchema = z.object({
+  note: z.string().trim().max(280).optional().nullable(),
+  items: z.array(orderItemLineSchema).min(1, "Inclua pelo menos um item."),
+});
+
+export const idempotencyKeySchema = z
+  .string()
+  .trim()
+  .uuid("Idempotency-Key: informe um UUID.");

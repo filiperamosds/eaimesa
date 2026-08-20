@@ -78,7 +78,7 @@ export function OrdersBoard() {
           <p className="eyebrow">Turno</p>
           <h1 className="mt-2 font-serif text-3xl">Pedidos</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Kanban do turno. O cliente ainda não pede pelo cardápio público — use pedido de balcão.
+            Kanban do turno. Pedidos do cardápio e de balcão.
           </p>
         </div>
         <button type="button" onClick={() => setCreating(true)} className="btn-primary !py-2 text-sm">
@@ -148,9 +148,15 @@ function OrderCard({
     <li className="surface p-3 shadow-none">
       <button type="button" onClick={onToggle} className="w-full text-left">
         <div className="flex items-baseline justify-between gap-2">
-          <span className="font-medium">{order.tableLabel}</span>
+          <span className="font-medium">
+            {order.tableLabel}
+            {order.guestName ? ` · ${order.guestName}` : ""}
+          </span>
           <span className="text-xs text-ink-soft">{timeAgo(order.createdAt)}</span>
         </div>
+        <p className="mt-0.5 text-[11px] uppercase tracking-wide text-ink-soft">
+          {order.source === "guest" ? "Cardápio" : "Balcão"}
+        </p>
         <p className="mt-1 line-clamp-2 text-sm text-ink-soft">
           {order.items.map((i) => `${i.qty}× ${i.name}`).join(" · ")}
         </p>

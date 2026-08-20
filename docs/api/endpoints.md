@@ -15,7 +15,7 @@ Formato: JSON. Erros:
 
 CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 
-## Implementado (fatias 1–6)
+## Implementado (fatias 1–7)
 
 ### Saúde
 
@@ -248,7 +248,30 @@ PIN casa com **TableSession** `open`. Resposta: `tableLabel`, `slug`, `needsProf
 
 Telefone: 10–13 dígitos. Mesmo telefone na sessão retoma a comanda. Resposta inclui `guestName`, `tableLabel`, `redirectPath`.
 
-Erros: `PIN_INVALID`, `PIN_LOCKED`, `TAB_CLOSED`, `TABS_STILL_OPEN` (ao encerrar mesa), `SESSION_REQUIRED`.
+### Guest — pedidos (fatia 7)
+
+Cookie `eaimesa_guest` com **tab** `open`. Preço **não** vai no body.
+
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/v1/guest/orders` | Cookie guest | Carrinho → pedido `pending`, `source=guest` |
+| GET | `/v1/guest/orders` | Cookie guest | Pedidos da comanda (48h) |
+| GET | `/v1/guest/orders/{id}` | Cookie guest | Um pedido da comanda |
+
+Header obrigatório no POST: `Idempotency-Key` (UUID). Mesma chave no venue devolve o mesmo pedido.
+
+#### POST /v1/guest/orders (body)
+
+```json
+{
+  "note": "sem gelo",
+  "items": [
+    { "catalogItemId": "uuid", "qty": 2, "note": "mal passado" }
+  ]
+}
+```
+
+Erros: `PIN_INVALID`, `PIN_LOCKED`, `TAB_CLOSED`, `TAB_REQUIRED`, `TABS_STILL_OPEN`, `SESSION_REQUIRED`, `VENUE_SUSPENDED`, `ITEM_NOT_FOUND`.
 
 #### PATCH /v1/owner/orders/{id}
 
@@ -262,14 +285,9 @@ Valores: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`.
 
 Não implementar agora. Mantido para não perder o contrato do MVP.
 
-### Guest / pedidos (fatia seguinte)
+### Guest / pedidos
 
-| Método | Path | Auth | Descrição |
-|--------|------|------|-----------|
-| POST | `/v1/guest/orders` | Cookie guest | Header `Idempotency-Key` |
-| GET | `/v1/guest/orders/{id}` | Cookie guest | Status |
-
-Preço **não** enviado pelo cliente no pedido.
+Implementado na fatia 7 (`POST/GET /v1/guest/orders`).
 
 ### Staff (além do claim — fatia 4)
 
@@ -314,6 +332,7 @@ Auth: cookie `eaimesa_staff`.
 | `TABLE_LIMIT` | 409 |
 | `TABLE_LABEL_TAKEN` | 409 |
 | `EMAIL_TAKEN` | 409 |
+| `TAB_REQUIRED` | 403 |
 | `VENUE_SUSPENDED` | 403 |
 | `CLAIM_EXPIRED` | 410 |
 | `CLAIM_ALREADY_USED` | 409 |

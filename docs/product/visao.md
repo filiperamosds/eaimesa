@@ -21,24 +21,24 @@ Plataforma **SaaS multi-tenant**: cada estabelecimento paga aluguel mensal; o co
 
 Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-frontend-unico.md), [fatia 1](fatia-01-cardapio.md) e [fatia 2](fatia-02-pedidos.md).
 
-| Superfície | Rota | Usuário | Fatia 6 | MVP completo |
+| Superfície | Rota | Usuário | Fatia 7 | MVP completo |
 |------------|------|---------|---------|--------------|
 | **Landing** | `/` | Visitante B2B | Sim | Sim |
 | **Auth estabelecimento** | `/cadastro`, `/login` | Dono / garçom | Sim | Sim |
-| **Painel** | `/painel/*` | Dono | Cardápio, Kanban, mesas, equipe | — |
-| **Garçom** | `/garcom` | Staff | QR + dialog das comandas | Fila |
-| **Cardápio público** | `/{slug}` | Cliente | PIN + comanda pessoal | + carrinho |
+| **Painel** | `/painel/*` | Dono | Cardápio, Kanban (guest + balcão), mesas, equipe | — |
+| **Garçom** | `/garcom` | Staff | QR + dialog das comandas (parcial) | Fila própria |
+| **Cardápio público** | `/{slug}` | Cliente | PIN + comanda + **carrinho** | — |
 | **Platform** | futuro | Operador EaiMesa | Não | Onboarding, billing, suspender |
 
 ## Personas
 
 - **Dono** — 1 bar, ~10 mesas, quer menos hardware e pedido confiável. Publica o cardápio, vê a fila, cadastra o salão e a equipe.
 - **Garçom** — gera QR na mesa; vê parciais por pessoa; encerra a mesa quando todas as comandas fecham.
-- **Cliente** — lê o cardápio; entra na mesa com QR/PIN; abre **comanda pessoal** (nome + telefone). Pedido pelo slug: fatia seguinte.
+- **Cliente** — lê o cardápio; entra na mesa com QR/PIN; abre **comanda pessoal**; pede pelo celular.
 
 ## Fatia atual vs MVP
 
-Implementação **agora**: [fatia 6 — comandas individuais](fatia-06-comandas-individuais.md).
+Implementação **agora**: [fatia 7 — pedido pelo cardápio](fatia-07-pedido-guest.md).
 
 ### MVP (quando as fatias somarem)
 
