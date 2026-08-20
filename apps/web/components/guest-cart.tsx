@@ -1,6 +1,6 @@
 "use client";
 
-import { formatBrlFromCents } from "@eaimesa/shared";
+import { formatBrlFromCents, newUuid } from "@eaimesa/shared";
 import { useRef, useState } from "react";
 import { api, ApiError } from "../lib/api";
 import type { GuestOrder } from "../lib/types";
@@ -45,7 +45,7 @@ export function GuestCart({ cart, onChange, canOrder }: Props) {
     sending.current = true;
     setPending(true);
     setError(null);
-    const key = crypto.randomUUID();
+    const key = newUuid();
     try {
       const order = await api<GuestOrder>("/v1/guest/orders", {
         method: "POST",
