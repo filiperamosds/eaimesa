@@ -76,7 +76,7 @@ done
 if command -v psql >/dev/null && grep -q "^DATABASE_URL=" .env; then
   # shellcheck disable=SC1091
   set -a && source .env && set +a
-  if psql "$DATABASE_URL" -tAc "SELECT 1 FROM schema_migrations WHERE name='0006_venue_members.sql'" 2>/dev/null | grep -q 1; then
+  if psql "$DATABASE_URL" -tAc "SELECT 1 FROM schema_migrations WHERE id='0006_venue_members.sql'" 2>/dev/null | grep -q 1; then
     ok "Migration 0006 (venue_members) aplicada"
   else
     warn "Migration 0006 não aplicada. Rode: pnpm db:migrate"
