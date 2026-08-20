@@ -156,6 +156,45 @@ O script `pnpm dev` já sobe o Next em `0.0.0.0:3000` e a API em `0.0.0.0:4000`.
 
 Garçom demo: `garcom@bardotiao.local` / `demo1234`.
 
+## Página em branco / não carrega (fora do Cursor)
+
+Sintoma: navegador fica carregando ou tela branca, terminal sem erro claro.
+
+### Checklist (na raiz do repo, não dentro de `apps/web`)
+
+```bash
+cp .env.example .env    # se ainda não tiver
+pnpm install
+pnpm dev:check          # diagnóstico
+pnpm db:migrate
+pnpm db:seed
+pnpm dev
+```
+
+Aguarde no terminal aparecer **`✓ Ready`** do Next (primeira carga pode levar 10–30s).
+
+### Causas frequentes
+
+| Problema | Como ver | Correção |
+|----------|----------|----------|
+| Sem `.env` | API cai com `OWNER_JWT_SECRET ausente` | `cp .env.example .env` |
+| Postgres parado | API não sobe / cardápio trava | `brew services start postgresql@16` ou `docker compose up -d postgres` |
+| Migration 0006 faltando | Erro SQL ao logar/cadastrar garçom | `pnpm db:migrate` |
+| Porta 3000 ocupada | Next não mostra Ready | `lsof -iTCP:3000 -sTCP:LISTEN` e encerre o processo |
+| Rodou fora da raiz | `pnpm dev` não acha workspaces | `cd` até a pasta que tem `pnpm-workspace.yaml` |
+| Só testar UI | API/DB ainda não prontos | `pnpm dev:web` → http://localhost:3000 |
+
+### Teste mínimo
+
+```bash
+curl -I http://localhost:3000/
+# esperado: HTTP/1.1 200
+curl http://localhost:4000/health
+# esperado: {"ok":true,"service":"eaimesa-api"}
+```
+
+Se `curl :3000` não responder, o Next não subiu — veja a saída completa do terminal (procure `EADDRINUSE` ou erro de compilação).
+
 ## Sem Docker
 
 - **Mac local:** Postgres 16 via Homebrew (passos acima).
