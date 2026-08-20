@@ -11,7 +11,7 @@ Pedido pelo cardápio (carrinho) continua **fora** — a estrutura já agrupa o 
 - Várias comandas `open` na mesma mesa
 - Guest: após claim ou PIN, formulário nome + telefone (`/{slug}/comanda`)
 - Mesmo telefone na mesma sessão retoma a comanda (outro aparelho)
-- Garçom `/garcom`: mesa ocupada abre **dialog** com as contas; seleciona uma e vê os pedidos (parcial)
+- Garçom `/garcom`: o salão mostra os **nomes** nas mesas ocupadas e atualiza sozinho; toque abre **dialog** com as contas e a parcial
 - `POST /v1/staff/tabs/{id}/close` — fecha uma comanda
 - `POST /v1/staff/tables/{id}/close` — encerra a mesa; **409** se ainda houver comanda aberta
 - Telefone mascarado no painel do garçom (últimos 4 dígitos)
@@ -31,10 +31,11 @@ Pedido pelo cardápio (carrinho) continua **fora** — a estrutura já agrupa o 
 
 ## Fluxo garçom
 
-1. Mesa livre: toque gera QR.
-2. Mesa ocupada: toque abre as comandas (nome, telefone mascarado, total).
-3. Seleciona uma → itens/pedidos daquela conta.
-4. Fecha comanda por pessoa. **Encerrar mesa** só com zero comandas abertas.
+1. Mesa livre: toque gera QR. Cartão fica “QR ativo” até o primeiro redeem.
+2. Quando há comandas, o cartão lista os **nomes** (Maria · João). O quadro recarrega a cada poucos segundos.
+3. Toque numa mesa ocupada consulta o estado atual (não reusa o snapshot antigo) e abre as contas.
+4. Seleciona uma → itens/pedidos daquela conta.
+5. Fecha comanda por pessoa. **Encerrar mesa** só com zero comandas abertas.
 
 ## Por que não uma comanda só
 

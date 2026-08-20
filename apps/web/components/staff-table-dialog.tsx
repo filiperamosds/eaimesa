@@ -20,9 +20,11 @@ export function StaffTableDialog({ tableId, tableLabel, onClose, onGenerateQr, o
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function load() {
-    setLoading(true);
-    setError(null);
+  async function load(opts?: { silent?: boolean }) {
+    if (!opts?.silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const payload = await api<StaffTableTabsPayload>(`/v1/staff/tables/${tableId}/tabs`);
       setData(payload);
@@ -30,16 +32,22 @@ export function StaffTableDialog({ tableId, tableLabel, onClose, onGenerateQr, o
         if (cur && payload.tabs.some((t) => t.id === cur)) return cur;
         return payload.tabs[0]?.id ?? null;
       });
+      setError(null);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Não foi possível carregar as comandas.");
+      if (!opts?.silent) {
+        setError(err instanceof ApiError ? err.message : "Não foi possível carregar as comandas.");
+      }
     } finally {
-      setLoading(false);
+      if (!opts?.silent) setLoading(false);
     }
   }
 
   useEffect(() => {
     void load();
-    // load on mount only
+    const id = window.setInterval(() => {
+      void load({ silent: true });
+    }, 4000);
+    return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tableId]);
 

@@ -77,12 +77,20 @@ export type StaffMember = {
 
 export type StaffSession = Session;
 
+export type StaffTableOpenTab = {
+  id: string;
+  guestName: string;
+  guestPhoneMasked: string;
+};
+
 export type StaffTable = {
   id: string;
   label: string;
   sortOrder: number;
   sessionOpen: boolean;
+  claimPending: boolean;
   openTabCount: number;
+  openTabs: StaffTableOpenTab[];
 };
 
 export type ClaimResponse = {

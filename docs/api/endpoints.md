@@ -160,11 +160,32 @@ Auth: cookie com `role: owner | staff`.
 
 | Método | Path | Descrição |
 |--------|------|-----------|
-| GET | `/v1/staff/tables` | Mesas ativas + `openTabCount` / `sessionOpen` |
+| GET | `/v1/staff/tables` | Mesas ativas + `sessionOpen`, `claimPending`, `openTabCount`, `openTabs` (nome + telefone mascarado) |
 | POST | `/v1/staff/tables/{tableId}/claims` | Gera claim (TTL, uso único). Permitido com mesa ocupada |
 | GET | `/v1/staff/tables/{tableId}/tabs` | Comandas da mesa + parcial de pedidos |
 | POST | `/v1/staff/tabs/{tabId}/close` | Fecha uma comanda |
 | POST | `/v1/staff/tables/{tableId}/close` | Encerra a mesa (409 se ainda houver comanda aberta) |
+
+Resposta de `GET /v1/staff/tables` (recorte):
+
+```json
+{
+  "tables": [
+    {
+      "id": "uuid",
+      "label": "Mesa 4",
+      "sortOrder": 4,
+      "sessionOpen": true,
+      "claimPending": false,
+      "openTabCount": 2,
+      "openTabs": [
+        { "id": "uuid", "guestName": "Maria", "guestPhoneMasked": "•••• 7777" },
+        { "id": "uuid", "guestName": "João", "guestPhoneMasked": "•••• 6666" }
+      ]
+    }
+  ]
+}
+```
 
 Resposta do claim:
 
