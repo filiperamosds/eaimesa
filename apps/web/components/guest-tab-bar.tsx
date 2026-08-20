@@ -15,7 +15,7 @@ export function GuestTabBar({
   partialCents?: number;
   showJoin?: boolean;
 }) {
-  if (!showJoin && (tab === undefined || tab === null)) {
+  if (!showJoin) {
     return null;
   }
 

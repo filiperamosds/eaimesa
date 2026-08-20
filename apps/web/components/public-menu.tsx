@@ -14,10 +14,11 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
   const groups = menu.categories.filter((c) => c.items.length > 0);
   const [openId, setOpenId] = useState<string | null>(null);
   const [cart, setCart] = useState<CartLine[]>([]);
-  const tab = useGuestTab(menu.venue.slug);
+  const ordering = menu.venue.plan === "cardapio" ? false : Boolean(menu.venue.acceptsOrders);
+  const tab = useGuestTab(menu.venue.slug, ordering);
   const suspended = menu.venue.subscriptionStatus === "suspended";
-  const canOrder = Boolean(tab && !tab.needsProfile && !suspended && menu.venue.acceptsOrders);
-  const hasTab = Boolean(tab && !tab.needsProfile);
+  const canOrder = Boolean(ordering && tab && !tab.needsProfile && !suspended);
+  const hasTab = Boolean(ordering && tab && !tab.needsProfile);
   const { orders, totalCents, reload } = useGuestOrders(hasTab);
 
   function addItem(item: PublicMenu["categories"][number]["items"][number]) {
@@ -55,14 +56,16 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
             <p className="mt-4 text-sm text-amber">Assinatura inativa — só leitura.</p>
           ) : canOrder ? (
             <p className="mt-4 text-sm text-white/65">Toque em adicionar e envie o pedido pela cesta.</p>
-          ) : (
+          ) : ordering ? (
             <p className="mt-4 text-sm text-white/65">
               Cardápio só leitura até entrar na mesa. Peça o QR do garçom ou use o PIN.
             </p>
-          )}
+          ) : null}
         </div>
       </header>
-      <GuestTabBar slug={menu.venue.slug} tab={tab} partialCents={totalCents} showJoin={menu.venue.acceptsOrders} />
+      {ordering ? (
+        <GuestTabBar slug={menu.venue.slug} tab={tab} partialCents={totalCents} showJoin />
+      ) : null}
 
       {groups.length > 0 ? (
         <nav
@@ -152,25 +155,27 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
                           ) : null}
                         </div>
                       ) : null}
-                      <div className="flex justify-end px-3 pb-3">
-                        {suspended ? null : canOrder ? (
-                          <button
-                            type="button"
-                            onClick={() => addItem(item)}
-                            className="btn-secondary !px-3 !py-1.5 text-sm"
-                          >
-                            {qty > 0 ? `Adicionar · ${qty}` : "Adicionar"}
-                          </button>
-                        ) : tab?.needsProfile ? (
-                          <Link href={`/${menu.venue.slug}/comanda`} className="btn-secondary !px-3 !py-1.5 text-sm">
-                            Abrir comanda
-                          </Link>
-                        ) : (
-                          <Link href={`/${menu.venue.slug}/entrar`} className="btn-secondary !px-3 !py-1.5 text-sm">
-                            Entrar para pedir
-                          </Link>
-                        )}
-                      </div>
+                      {ordering && !suspended ? (
+                        <div className="flex justify-end px-3 pb-3">
+                          {canOrder ? (
+                            <button
+                              type="button"
+                              onClick={() => addItem(item)}
+                              className="btn-secondary !px-3 !py-1.5 text-sm"
+                            >
+                              {qty > 0 ? `Adicionar · ${qty}` : "Adicionar"}
+                            </button>
+                          ) : tab?.needsProfile ? (
+                            <Link href={`/${menu.venue.slug}/comanda`} className="btn-secondary !px-3 !py-1.5 text-sm">
+                              Abrir comanda
+                            </Link>
+                          ) : (
+                            <Link href={`/${menu.venue.slug}/entrar`} className="btn-secondary !px-3 !py-1.5 text-sm">
+                              Entrar para pedir
+                            </Link>
+                          )}
+                        </div>
+                      ) : null}
                     </li>
                   );
                 })}
@@ -180,14 +185,16 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
         )}
       </main>
 
-      <GuestCart
-        cart={cart}
-        onChange={setCart}
-        canOrder={canOrder}
-        orders={orders}
-        partialCents={totalCents}
-        onOrdered={() => void reload()}
-      />
+      {ordering ? (
+        <GuestCart
+          cart={cart}
+          onChange={setCart}
+          canOrder={canOrder}
+          orders={orders}
+          partialCents={totalCents}
+          onOrdered={() => void reload()}
+        />
+      ) : null}
 
       <footer className="pb-10 text-center text-xs text-ink-soft">
         Cardápio por{" "}

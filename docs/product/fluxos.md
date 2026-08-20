@@ -185,7 +185,7 @@ sequenceDiagram
 1. Cadastro escolhe o plano; entra em `trial` (7 dias). Sem cartão nesta fatia.
 2. Checkout stub aprova e grava `active` + `current_period_ends_at` (+30 dias).
 3. Subir Cardápio → Auto atendimento: sempre. Descer: só depois do fim da vigência **paga**.
-4. Plano Cardápio: API responde 403 `PLAN_FEATURE` em mesas, equipe, pedidos, claim, PIN e comanda.
+4. Plano Cardápio: API responde 403 `PLAN_FEATURE` em mesas, equipe, pedidos, claim, PIN e comanda. O `/{slug}` não mostra PIN nem “Entrar para pedir”; `/entrar` redireciona ao cardápio.
 
 ## 6. Venue suspenso (billing)
 
