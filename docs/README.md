@@ -1,6 +1,6 @@
 # Documentação EaiMesa
 
-Índice. Fatia atual: **pedido pelo cardápio**; fatias 1–6 já estão no repo.
+Índice. Fatia atual: **fila do garçom**; fatias 1–7 já estão no repo.
 
 1. [Fatia 1 — Cardápio](product/fatia-01-cardapio.md)
 1b. [Fatia 2 — Pedidos](product/fatia-02-pedidos.md) — Kanban / KDS no painel
@@ -9,6 +9,7 @@
 1e. [Fatia 5 — PIN join](product/fatia-05-pin-join.md) — outro celular entra na mesa
 1f. [Fatia 6 — Comandas individuais](product/fatia-06-comandas-individuais.md) — nome + telefone, várias contas por mesa
 1g. [Fatia 7 — Pedido guest](product/fatia-07-pedido-guest.md) — carrinho no `/{slug}` na comanda pessoal
+1h. [Fatia 8 — Fila do garçom](product/fatia-08-fila-garcom.md) — Kanban em `/garcom/pedidos`
 2. [Visão do produto](product/visao.md) — o quê, para quem, o que fica de fora
 3. [Fluxos](product/fluxos.md) — publicar cardápio; guest pede na mesa
 4. [Pricing](product/pricing.md) — plano Bar
@@ -16,9 +17,9 @@
 6. [Sessão claim + PIN](architecture/sessao-claim-pin.md) — claim, PIN join, cookie guest
 7. [Segurança](security/modelo.md) — tenancy, cookies, ameaças
 8. [Modelo de dados](data/schema.md) — entidades fatia 1–7 + planejadas
-9. [API](api/endpoints.md) — REST fatia 1–7 + contrato futuro
+9. [API](api/endpoints.md) — REST fatia 1–8 + contrato futuro
 10. [Dev setup](ops/dev-setup.md) — pnpm, Postgres, seed `bar-do-tiao`
-11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, mesas, comandas, **pedido guest**
+11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, mesas, comandas, pedido guest, **fila garçom**
 
 ## Cursor
 

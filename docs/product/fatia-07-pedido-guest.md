@@ -8,8 +8,7 @@ Quem tem **comanda pessoal aberta** pede pelo `/{slug}`. O preço sai do servido
 - `POST /v1/guest/orders` — cookie guest, `tab_id`, `source = guest`, header `Idempotency-Key`
 - `GET /v1/guest/orders` e `GET /v1/guest/orders/{id}` — pedidos daquela comanda
 - Snapshot de nome/preço no `OrderItem` (cliente **não** envia preço)
-- Kanban `/painel/pedidos` mostra origem (cardápio vs balcão) e o nome da comanda
-- Garçom já vê a parcial no dialog da mesa (fatia 6)
+- Kanban `/painel/pedidos` (dono) e `/garcom/pedidos` (garçom)
 - Venue `suspended` → 403 `VENUE_SUSPENDED`; seed liga `accepts_orders`
 
 ## Não inclui

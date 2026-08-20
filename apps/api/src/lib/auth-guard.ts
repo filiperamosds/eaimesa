@@ -44,7 +44,7 @@ export async function requireStaff(req: FastifyRequest, _reply: FastifyReply) {
   req.session = session;
 }
 
-/** Dono ou garçom — geração de claim, fila futura. */
+/** Dono ou garçom — claim, comandas e fila. */
 export async function requireVenueActor(req: FastifyRequest, _reply: FastifyReply) {
   const session = await loadSession(req);
   req.session = session;
