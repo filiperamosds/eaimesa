@@ -114,6 +114,7 @@ Cookie `eaimesa_guest` referencia a sessão (JWT assinado).
 - `venue_tables(venue_id, label)` UNIQUE
 - `venue_members(venue_id, account_id)` UNIQUE
 - `venue_members(account_id)`
+- `tabs(venue_id, table_id, status)`
 - `table_claims(venue_id, table_id, token_hash)`
 - `guest_sessions(tab_id, expires_at)`
 
