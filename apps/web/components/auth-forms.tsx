@@ -4,26 +4,34 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { Session } from "../lib/types";
+import type { LoginResponse } from "../lib/types";
 
 export function LoginForm() {
   const router = useRouter();
-  const next = useSearchParams().get("next") || "/painel/pedidos";
+  const next = useSearchParams().get("next");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  function resolveRedirect(result: LoginResponse) {
+    const target = next?.startsWith("/") ? next : result.redirectPath;
+    if (result.role === "staff" && target.startsWith("/painel")) {
+      return "/garcom";
+    }
+    return target;
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setPending(true);
     try {
-      await api<Session>("/v1/auth/login", {
+      const result = await api<LoginResponse>("/v1/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
-      router.push(next.startsWith("/") ? next : "/painel/pedidos");
+      router.push(resolveRedirect(result));
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Falha no login.");
@@ -43,13 +51,16 @@ export function LoginForm() {
         autoComplete="current-password"
       />
       {error ? <p className="text-sm text-chili">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="btn-primary w-full"
-      >
+      <button type="submit" disabled={pending} className="btn-primary w-full">
         {pending ? "Entrando…" : "Entrar"}
       </button>
+      <p className="text-center text-sm text-ink-soft">
+        Garçom? Use o mesmo login — você vai para{" "}
+        <Link href="/login?next=/garcom" className="font-medium text-ink underline">
+          /garcom
+        </Link>
+        .
+      </p>
       <p className="text-center text-sm text-ink-soft">
         Novo bar?{" "}
         <Link href="/cadastro" className="font-medium text-ink underline">
@@ -74,7 +85,7 @@ export function RegisterForm() {
     setError(null);
     setPending(true);
     try {
-      await api<Session>("/v1/auth/register", {
+      await api<LoginResponse>("/v1/auth/register", {
         method: "POST",
         body: JSON.stringify({ email, password, venueName, slug }),
       });
@@ -108,11 +119,7 @@ export function RegisterForm() {
         autoComplete="new-password"
       />
       {error ? <p className="text-sm text-chili">{error}</p> : null}
-      <button
-        type="submit"
-        disabled={pending}
-        className="btn-primary w-full"
-      >
+      <button type="submit" disabled={pending} className="btn-primary w-full">
         {pending ? "Criando…" : "Criar cardápio"}
       </button>
       <p className="text-center text-sm text-ink-soft">

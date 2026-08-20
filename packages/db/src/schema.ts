@@ -82,11 +82,12 @@ export const catalogItems = pgTable(
   (t) => [index("catalog_items_venue_cat").on(t.venueId, t.categoryId)],
 );
 
-export const accountsRelations = relations(accounts, ({ one }) => ({
+export const accountsRelations = relations(accounts, ({ one, many }) => ({
   venue: one(venues, {
     fields: [accounts.id],
     references: [venues.ownerAccountId],
   }),
+  memberships: many(venueMembers),
 }));
 
 export const catalogCategoriesRelations = relations(catalogCategories, ({ one, many }) => ({
@@ -173,7 +174,7 @@ export const venuesRelations = relations(venues, ({ one, many }) => ({
   items: many(catalogItems),
   tables: many(venueTables),
   orders: many(orders),
-  staff: many(staffAccounts),
+  members: many(venueMembers),
   tabs: many(tabs),
 }));
 
@@ -208,23 +209,25 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   }),
 }));
 
-export const staffAccounts = pgTable(
-  "staff_accounts",
+export const venueMembers = pgTable(
+  "venue_members",
   {
     id: uuid("id").defaultRandom().primaryKey(),
     venueId: uuid("venue_id")
       .notNull()
       .references(() => venues.id, { onDelete: "cascade" }),
+    accountId: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    role: text("role").notNull().default("staff"),
     name: text("name").notNull(),
-    email: text("email").notNull(),
-    passwordHash: text("password_hash").notNull(),
     active: boolean("active").notNull().default(true),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
-    uniqueIndex("staff_accounts_email").on(t.email),
-    index("staff_accounts_venue").on(t.venueId),
+    uniqueIndex("venue_members_venue_account").on(t.venueId, t.accountId),
+    index("venue_members_account").on(t.accountId),
   ],
 );
 
@@ -256,7 +259,7 @@ export const tableClaims = pgTable(
     tableId: uuid("table_id")
       .notNull()
       .references(() => venueTables.id, { onDelete: "cascade" }),
-    staffAccountId: uuid("staff_account_id").references(() => staffAccounts.id, {
+    memberId: uuid("member_id").references(() => venueMembers.id, {
       onDelete: "set null",
     }),
     ownerAccountId: uuid("owner_account_id").references(() => accounts.id, {
@@ -291,8 +294,9 @@ export const guestSessions = pgTable(
   (t) => [index("guest_sessions_tab").on(t.tabId)],
 );
 
-export const staffAccountsRelations = relations(staffAccounts, ({ one, many }) => ({
-  venue: one(venues, { fields: [staffAccounts.venueId], references: [venues.id] }),
+export const venueMembersRelations = relations(venueMembers, ({ one, many }) => ({
+  venue: one(venues, { fields: [venueMembers.venueId], references: [venues.id] }),
+  account: one(accounts, { fields: [venueMembers.accountId], references: [accounts.id] }),
   claims: many(tableClaims),
 }));
 
@@ -306,7 +310,7 @@ export const tabsRelations = relations(tabs, ({ one, many }) => ({
 export const tableClaimsRelations = relations(tableClaims, ({ one }) => ({
   venue: one(venues, { fields: [tableClaims.venueId], references: [venues.id] }),
   table: one(venueTables, { fields: [tableClaims.tableId], references: [venueTables.id] }),
-  staff: one(staffAccounts, { fields: [tableClaims.staffAccountId], references: [staffAccounts.id] }),
+  member: one(venueMembers, { fields: [tableClaims.memberId], references: [venueMembers.id] }),
   tab: one(tabs, { fields: [tableClaims.tabId], references: [tabs.id] }),
 }));
 

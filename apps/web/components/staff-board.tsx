@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
-import type { ClaimResponse, StaffSession, StaffTable } from "../lib/types";
+import type { ClaimResponse, Session, StaffTable } from "../lib/types";
 import { ClaimQrModal } from "./claim-qr-modal";
 
 type TablesPayload = { tables: StaffTable[] };
 
 export function StaffBoard() {
-  const [me, setMe] = useState<StaffSession | null>(null);
+  const [me, setMe] = useState<Session | null>(null);
   const [tables, setTables] = useState<StaffTable[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export function StaffBoard() {
   const [activeClaim, setActiveClaim] = useState<ClaimResponse | null>(null);
 
   useEffect(() => {
-    Promise.all([api<StaffSession>("/v1/staff/auth/me"), api<TablesPayload>("/v1/staff/tables")])
+    Promise.all([api<Session>("/v1/auth/me"), api<TablesPayload>("/v1/staff/tables")])
       .then(([session, data]) => {
         setMe(session);
         setTables(data.tables);

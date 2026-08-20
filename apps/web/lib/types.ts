@@ -8,8 +8,14 @@ export type Venue = {
 };
 
 export type Session = {
+  role: "owner" | "staff";
   account: { id: string; email: string };
   venue: Venue;
+  member?: { id: string; name: string };
+};
+
+export type LoginResponse = Session & {
+  redirectPath: string;
 };
 
 export type CatalogItem = {
@@ -69,10 +75,7 @@ export type StaffMember = {
   updatedAt: string;
 };
 
-export type StaffSession = {
-  staff: { id: string; name: string; email: string };
-  venue: Venue;
-};
+export type StaffSession = Session;
 
 export type StaffTable = {
   id: string;

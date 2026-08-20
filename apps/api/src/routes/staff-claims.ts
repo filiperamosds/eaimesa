@@ -76,8 +76,8 @@ export async function staffClaimRoutes(app: FastifyInstance) {
       .values({
         venueId,
         tableId,
-        staffAccountId: actor.staffId ?? null,
-        ownerAccountId: actor.ownerId ?? null,
+        memberId: actor.memberId ?? null,
+        ownerAccountId: actor.memberId ? null : (actor.ownerId ?? null),
         tokenHash,
         expiresAt,
       })

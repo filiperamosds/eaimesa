@@ -23,16 +23,16 @@ CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 |--------|------|------|-----------|
 | GET | `/health` | — | Liveness (fora de `/v1`) |
 
-### Auth estabelecimento
+### Auth estabelecimento (dono e garçom)
 
-Cookie: `eaimesa_owner` (httpOnly, SameSite=Lax, Path=/).
+Cookie: `eaimesa_owner` (httpOnly, SameSite=Lax, Path=/). JWT inclui `role: owner | staff`.
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| POST | `/v1/auth/register` | — | Cria account + venue; Set-Cookie |
-| POST | `/v1/auth/login` | — | E-mail/senha; Set-Cookie |
+| POST | `/v1/auth/register` | — | Cria account + venue (role owner); Set-Cookie |
+| POST | `/v1/auth/login` | — | E-mail/senha; owner ou staff; Set-Cookie + `redirectPath` |
 | POST | `/v1/auth/logout` | Cookie | Clear-Cookie |
-| GET | `/v1/auth/me` | Cookie | Account + venue atuais |
+| GET | `/v1/auth/me` | Cookie | `role`, account, venue; `member` se staff |
 
 #### POST /v1/auth/register (body)
 
@@ -150,19 +150,13 @@ Auth: cookie `eaimesa_owner`. Limite: **5 garçons ativos**.
 | PATCH | `/v1/owner/staff/{id}` | `{ name?, active?, password? }` |
 | DELETE | `/v1/owner/staff/{id}` | Remove garçom |
 
-### Auth garçom (fatia 4)
+### Auth garçom
 
-Cookie: `eaimesa_staff` (httpOnly, SameSite=Lax, Path=/).
-
-| Método | Path | Auth | Descrição |
-|--------|------|------|-----------|
-| POST | `/v1/staff/auth/login` | — | E-mail/senha; Set-Cookie |
-| POST | `/v1/staff/auth/logout` | Cookie staff | Clear-Cookie |
-| GET | `/v1/staff/auth/me` | Cookie staff | Garçom + venue |
+Removido login separado. Garçom usa `/v1/auth/login` e `/v1/auth/me` (ver acima).
 
 ### Staff — mesas e claim (fatia 4)
 
-Auth: cookie `eaimesa_staff` **ou** `eaimesa_owner` (dono pode gerar claim para testes).
+Auth: cookie com `role: owner | staff`.
 
 | Método | Path | Descrição |
 |--------|------|-----------|

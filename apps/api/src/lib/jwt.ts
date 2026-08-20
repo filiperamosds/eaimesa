@@ -1,17 +1,20 @@
 import { SignJWT, jwtVerify } from "jose";
 import { env } from "../env";
 
-export type OwnerToken = {
+export type VenueRole = "owner" | "staff";
+
+export type VenueToken = {
   sub: string;
   venueId: string;
-  role: "owner";
+  role: VenueRole;
+  memberId?: string;
 };
 
-export type StaffToken = {
-  sub: string;
-  venueId: string;
-  role: "staff";
-};
+/** @deprecated use VenueToken */
+export type OwnerToken = VenueToken & { role: "owner" };
+
+/** @deprecated use VenueToken */
+export type StaffToken = VenueToken & { role: "staff" };
 
 export type GuestToken = {
   sub: string;
@@ -20,42 +23,47 @@ export type GuestToken = {
   role: "guest";
 };
 
-const ownerSecret = new TextEncoder().encode(env.ownerJwtSecret);
-const staffSecret = new TextEncoder().encode(env.staffJwtSecret);
+const venueSecret = new TextEncoder().encode(env.ownerJwtSecret);
 const guestSecret = new TextEncoder().encode(env.guestSessionSecret);
 
-export async function signOwnerToken(payload: OwnerToken) {
-  return new SignJWT({ venueId: payload.venueId, role: payload.role })
+export async function signVenueToken(payload: VenueToken) {
+  return new SignJWT({
+    venueId: payload.venueId,
+    role: payload.role,
+    ...(payload.memberId ? { memberId: payload.memberId } : {}),
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt()
     .setExpirationTime(`${env.ownerJwtTtlHours}h`)
-    .sign(ownerSecret);
+    .sign(venueSecret);
 }
 
-export async function verifyOwnerToken(token: string): Promise<OwnerToken> {
-  const { payload } = await jwtVerify(token, ownerSecret);
-  if (!payload.sub || payload.role !== "owner" || typeof payload.venueId !== "string") {
+export async function verifyVenueToken(token: string): Promise<VenueToken> {
+  const { payload } = await jwtVerify(token, venueSecret);
+  if (
+    !payload.sub ||
+    (payload.role !== "owner" && payload.role !== "staff") ||
+    typeof payload.venueId !== "string"
+  ) {
     throw new Error("token inválido");
   }
-  return { sub: payload.sub, venueId: payload.venueId, role: "owner" };
+  return {
+    sub: payload.sub,
+    venueId: payload.venueId,
+    role: payload.role,
+    memberId: typeof payload.memberId === "string" ? payload.memberId : undefined,
+  };
 }
 
-export async function signStaffToken(payload: StaffToken) {
-  return new SignJWT({ venueId: payload.venueId, role: payload.role })
-    .setProtectedHeader({ alg: "HS256" })
-    .setSubject(payload.sub)
-    .setIssuedAt()
-    .setExpirationTime(`${env.staffJwtTtlHours}h`)
-    .sign(staffSecret);
+export async function signOwnerToken(payload: { sub: string; venueId: string; role: "owner" }) {
+  return signVenueToken(payload);
 }
 
-export async function verifyStaffToken(token: string): Promise<StaffToken> {
-  const { payload } = await jwtVerify(token, staffSecret);
-  if (!payload.sub || payload.role !== "staff" || typeof payload.venueId !== "string") {
-    throw new Error("token inválido");
-  }
-  return { sub: payload.sub, venueId: payload.venueId, role: "staff" };
+export async function verifyOwnerToken(token: string): Promise<VenueToken> {
+  const session = await verifyVenueToken(token);
+  if (session.role !== "owner") throw new Error("token inválido");
+  return session;
 }
 
 export async function signGuestToken(payload: GuestToken) {

@@ -23,7 +23,13 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     api<Session>("/v1/auth/me")
-      .then(setMe)
+      .then((session) => {
+        if (session.role === "staff") {
+          router.replace("/garcom");
+          return;
+        }
+        setMe(session);
+      })
       .catch(() => {
         setErr("Sessão inválida");
         router.replace("/login");
