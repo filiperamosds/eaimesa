@@ -107,9 +107,34 @@ Como na fatia 4; `table_session_id` preenchido no redeem. **Não** cria a tab pe
 
 - `tab_id` nullable → Tab (parcial da pessoa; pedido `guest` na fatia 7)
 
+## Entidades — fatia 11 (console SaaS)
+
+### PlatformUser
+
+Operador EaiMesa. Tabela **separada** de `accounts`.
+
+- `id`, `email` UNIQUE, `password_hash`, `name`, `active`, `created_at`
+
+### PlatformSettings
+
+Uma linha `id=default`: `trial_days`, `paid_period_days`.
+
+### PlanCatalog
+
+Catálogo vendável. `id` = `cardapio` | `auto_atendimento`.
+
+- `name`, `price_cents`, `blurb`, `features` (json), `listed`, `sort_order`
+
+`GET /v1/billing/plans` lê daqui. Landing e cadastro não usam só a constante do código.
+
+### BillingEvent
+
+Histórico do checkout stub.
+
+- `venue_id`, `plan`, `plan_name`, `method`, `amount_cents`, `provider`, `status`, `created_at`
+
 ## Entidades — planejadas
 
-- **PlatformUser** — operador EaiMesa
 - **AuditLog** — `venue_id`, `actor_type`, `actor_id`, `action`, `metadata_json`
 
 ## Índices críticos
@@ -127,6 +152,9 @@ Como na fatia 4; `table_session_id` preenchido no redeem. **Não** cria a tab pe
 - `table_sessions(table_id) WHERE status = open` UNIQUE
 - `tabs(table_session_id, guest_phone) WHERE status = open` UNIQUE
 - `orders(venue_id, idempotency_key) WHERE idempotency_key IS NOT NULL` UNIQUE
+- `platform_users(lower(email))` UNIQUE
+- `billing_events(created_at DESC)`
+- `billing_events(venue_id, created_at DESC)`
 
 ## Regras de negócio
 
@@ -140,6 +168,7 @@ Como na fatia 4; `table_session_id` preenchido no redeem. **Não** cria a tab pe
 8. Nome+telefone abre ou retoma comanda pessoal na sessão.
 9. Encerrar mesa só se todas as comandas da sessão estão `closed`. Revoga sessões da comanda ao fechá-la.
 10. `Idempotency-Key` repetida no mesmo venue devolve o mesmo pedido guest.
+11. Cookie `eaimesa_platform` não autoriza `/v1/owner/*` nem guest; cookie do dono não autoriza `/v1/platform/*`.
 
 ## Diagrama ER
 
@@ -156,27 +185,11 @@ erDiagram
   Tab ||--o{ GuestSession : devices
   Tab ||--o{ Order : parcial
   Venue ||--o{ Order : has
+  Venue ||--o{ BillingEvent : checkouts
   Order ||--|{ OrderItem : contains
-```
-
-## Diagrama ER
-
-```mermaid
-erDiagram
-  Account ||--|| Venue : owns
-  Account ||--o{ VenueMember : staff
-  Venue ||--o{ VenueMember : has
-  Venue ||--o{ CatalogCategory : has
-  CatalogCategory ||--o{ CatalogItem : contains
-  Venue ||--o{ CatalogItem : has
-  Venue ||--o{ VenueTable : has
-  Venue ||--o{ Order : has
-  VenueTable ||--o{ Order : optional
-  Order ||--|{ OrderItem : contains
-  Venue ||--o{ Tab : has
-  VenueTable ||--o{ Tab : hosts
-  Tab ||--o{ GuestSession : sessions
-  Tab ||--o{ TableClaim : opened_by
+  PlatformUser
+  PlatformSettings
+  PlanCatalog
 ```
 
 ## Postgres RLS (recomendado fase 1.5)

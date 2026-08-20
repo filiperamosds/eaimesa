@@ -24,7 +24,7 @@ sequenceDiagram
 ```
 
 1. Dono cria conta + venue (nome + slug único).
-2. Monta categorias e itens (preço em centavos no servidor).
+2. Monta categorias e itens (preço mascarado **R$** no painel; centavos no servidor).
 3. Comparte `https://eaimesa.com.br/{slug}` (QR fixo na mesa, Instagram, balcão) — **só cardápio**.
 4. Cliente abre `/{slug}`: navega por **grupos**, toca o item para ver **foto** e descrição. **Não pede pelo link** (comanda exige QR do garçom). Pedidos de balcão: `/painel/pedidos`. Mesas + export do QR fixo: `/painel/mesas`.
 
@@ -187,6 +187,15 @@ sequenceDiagram
 2. Checkout stub (~2s) aprova e grava `active` + `current_period_ends_at` (+30 dias). Front mostra cartão/PIX; a API não recebe o cartão.
 3. Subir Cardápio → Auto atendimento: sempre. Descer: só depois do fim da vigência **paga**.
 4. Plano Cardápio: API responde 403 `PLAN_FEATURE` em mesas, equipe, pedidos, claim, PIN e comanda. O `/{slug}` não mostra PIN nem “Entrar para pedir”; `/entrar` redireciona ao cardápio.
+
+## 5c. Fatia 11 — console SaaS
+
+Detalhe em [fatia-11-console-saas.md](fatia-11-console-saas.md).
+
+1. Operador entra em `/admin/login` (cookie `eaimesa_platform`).
+2. Dashboard: bares, MRR estimado, checkouts stub.
+3. `/admin/bares`: suspender / reativar.
+4. `/admin/planos`: preço e copy; `GET /v1/billing/plans` alimenta landing e cadastro.
 
 ## 6. Venue suspenso (billing)
 

@@ -24,8 +24,14 @@ export type GuestToken = {
   role: "guest";
 };
 
+export type PlatformToken = {
+  sub: string;
+  role: "platform";
+};
+
 const venueSecret = new TextEncoder().encode(env.ownerJwtSecret);
 const guestSecret = new TextEncoder().encode(env.guestSessionSecret);
+const platformSecret = new TextEncoder().encode(env.platformJwtSecret);
 
 export async function signVenueToken(payload: VenueToken) {
   return new SignJWT({
@@ -98,4 +104,21 @@ export async function verifyGuestToken(token: string): Promise<GuestToken> {
     tabId: typeof payload.tabId === "string" ? payload.tabId : null,
     role: "guest",
   };
+}
+
+export async function signPlatformToken(payload: PlatformToken) {
+  return new SignJWT({ role: payload.role })
+    .setProtectedHeader({ alg: "HS256" })
+    .setSubject(payload.sub)
+    .setIssuedAt()
+    .setExpirationTime(`${env.platformJwtTtlHours}h`)
+    .sign(platformSecret);
+}
+
+export async function verifyPlatformToken(token: string): Promise<PlatformToken> {
+  const { payload } = await jwtVerify(token, platformSecret);
+  if (!payload.sub || payload.role !== "platform") {
+    throw new Error("token inválido");
+  }
+  return { sub: payload.sub, role: "platform" };
 }

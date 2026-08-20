@@ -92,7 +92,7 @@ Serviço `postgres:16`; usuário/senha/db `eaimesa`; porta `5432`; volume nomead
 
 - `pnpm dev` — api + web em paralelo
 - `pnpm db:migrate` — aplica SQL em `packages/db/migrations`
-- `pnpm db:seed` — Bar do Tião (Auto atendimento) + Café da Lina (Cardápio)
+- `pnpm db:seed` — Bar do Tião + Café da Lina + operador `ops@eaimesa.local`
 - `pnpm --filter @eaimesa/api dev`
 - `pnpm --filter @eaimesa/web dev`
 
@@ -113,6 +113,14 @@ Serviço `postgres:16`; usuário/senha/db `eaimesa`; porta `5432`; volume nomead
 |-------|--------|
 | Slug | `cafe-da-lina` |
 | E-mail | `dono@cafedalina.local` |
+| Senha | `demo1234` |
+
+**Console SaaS** — operador
+
+| Campo | Valor |
+|-------|--------|
+| URL | `/admin` |
+| E-mail | `ops@eaimesa.local` |
 | Senha | `demo1234` |
 
 ## Rede local (celular / tablet no mesmo Wi‑Fi)

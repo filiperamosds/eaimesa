@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api, ApiError } from "../lib/api";
 import type { OpenComandaResponse } from "../lib/types";
+import { PhoneField } from "./masked-fields";
 
 export function OpenComandaForm({ slug }: { slug: string }) {
   const router = useRouter();
@@ -46,15 +47,7 @@ export function OpenComandaForm({ slug }: { slug: string }) {
       </label>
       <label className="block">
         <span className="mb-1 block text-sm text-ink-soft">Telefone</span>
-        <input
-          className="field"
-          inputMode="tel"
-          autoComplete="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="11 98888-7777"
-          required
-        />
+        <PhoneField className="field" value={phone} onValueChange={setPhone} required />
       </label>
       {error ? <p className="text-sm text-chili">{error}</p> : null}
       <button type="submit" disabled={pending} className="btn-primary w-full">

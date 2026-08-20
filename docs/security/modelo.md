@@ -10,13 +10,13 @@
 
 ## Papéis
 
-| Papel | Auth | Escopo | Fatia 10 |
+| Papel | Auth | Escopo | Fatia 11 |
 |-------|------|--------|----------|
 | Público | — | Ler cardápio por slug | Sim |
 | Owner | Cookie `eaimesa_owner` | Cardápio; resto conforme o plano | Sim |
 | Guest | Cookie `eaimesa_guest` | Mesa + comanda + pedidos (Auto atendimento) | Sim |
 | Staff | Cookie `eaimesa_owner` (`role: staff`) | Mesas, claims, fila (Auto atendimento) | Sim |
-| Platform | SSO interno + 2FA | Tenants, suspensão | Não |
+| Platform | Cookie `eaimesa_platform` | Tenants, catálogo, dashboard | Sim (senha; 2FA depois) |
 
 ## Ameaças SaaS
 
@@ -36,6 +36,7 @@
 
 - HTTPS + HSTS em produção
 - Cookie dono: `Secure` (prod); `HttpOnly`; `SameSite=Lax`; `Path=/`
+- Cookie platform: `eaimesa_platform` — mesmo atributo, **JWT e secret distintos**
 - CORS: **uma** origin (`APP_URL` = `apps/web`), `credentials: true`
 - Não usar o mesmo JWT para dono e guest
 
@@ -44,6 +45,7 @@
 | Ação | Limite |
 |------|--------|
 | Login / register | 10/min/IP |
+| Login do console (`/v1/platform/auth/login`) | 10/min/IP |
 | Redeem claim | 20/min/IP |
 | PIN join | 5 falhas / 15 min / IP+venue |
 | Pedido guest | 20/min/IP |

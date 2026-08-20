@@ -15,7 +15,7 @@ Formato: JSON. Erros:
 
 CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 
-## Implementado (fatias 1–10)
+## Implementado (fatias 1–11)
 
 ### Saúde
 
@@ -66,7 +66,7 @@ Checkout **stub**: sem Asaas. Espera ~2s e devolve sucesso para o front testar o
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| GET | `/v1/billing/plans` | — | Catálogo + `stubDelayMs` |
+| GET | `/v1/billing/plans` | — | Catálogo do banco (`plan_catalog` + settings) + `stubDelayMs` |
 | GET | `/v1/billing/me` | Owner | Plano atual, trial/vigência, `canUpgrade` / `canDowngrade` |
 | POST | `/v1/billing/checkout` | Owner | `{ plan, method? }` → espera 2s → `status: success`, `active` 30 dias |
 
@@ -270,7 +270,7 @@ PIN casa com **TableSession** `open`. Resposta: `tableLabel`, `slug`, `needsProf
 { "name": "Maria", "phone": "11988887777" }
 ```
 
-Telefone: 10–13 dígitos. Mesmo telefone na sessão retoma a comanda. Resposta inclui `guestName`, `tableLabel`, `redirectPath`.
+Telefone: 10–11 dígitos (DDD + número). O front mascara `(11) 98888-7777`; a API normaliza para só dígitos. Mesmo telefone na sessão retoma a comanda. Resposta inclui `guestName`, `tableLabel`, `redirectPath`.
 
 ### Guest — pedidos (fatia 7)
 
@@ -344,12 +344,24 @@ Implementado na fatia 8 (`GET/PATCH/POST /v1/staff/orders`). `lock` e SSE contin
 |--------|------|-----------|
 | POST | `/v1/owner/staff/invites` | Convite staff (futuro) |
 
-### Platform (futuro)
+### Platform (fatia 11)
 
-| Método | Path | Descrição |
-|--------|------|-----------|
-| GET | `/v1/platform/venues` | Lista tenants |
-| POST | `/v1/platform/venues/{id}/suspend` | Suspende |
+Cookie: `eaimesa_platform`. Não autoriza `/v1/owner/*`.
+
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/v1/platform/auth/login` | — | Set-Cookie platform |
+| POST | `/v1/platform/auth/logout` | — | Clear-Cookie |
+| GET | `/v1/platform/auth/me` | Platform | Operador atual |
+| GET | `/v1/platform/dashboard` | Platform | KPIs + checkouts recentes |
+| GET | `/v1/platform/venues` | Platform | Lista tenants (`q`, `plan`, `status`) |
+| POST | `/v1/platform/venues/{id}/suspend` | Platform | `suspended` |
+| POST | `/v1/platform/venues/{id}/unsuspend` | Platform | Volta a `trial`/`active`/`past_due` |
+| GET | `/v1/platform/plans` | Platform | Catálogo completo (inclui não listados) |
+| PATCH | `/v1/platform/plans/{id}` | Platform | Nome, preço, features, `listed` |
+| PATCH | `/v1/platform/settings` | Platform | `trialDays`, `paidPeriodDays` |
+
+`GET /v1/billing/plans` (público) lê `plan_catalog` + settings. Checkout stub grava `billing_events`.
 
 ### Webhooks (futuro)
 
@@ -373,6 +385,7 @@ Implementado na fatia 8 (`GET/PATCH/POST /v1/staff/orders`). `lock` e SSE contin
 | `TAB_REQUIRED` | 403 |
 | `VENUE_SUSPENDED` | 403 |
 | `PLAN_FEATURE` | 403 |
+| `PLAN_NOT_LISTED` | 400 |
 | `PLAN_DOWNGRADE_LOCKED` | 409 |
 | `BILLING_INACTIVE` | 403 |
 | `CLAIM_EXPIRED` | 410 |

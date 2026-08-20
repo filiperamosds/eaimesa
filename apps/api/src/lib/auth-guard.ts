@@ -12,6 +12,7 @@ declare module "fastify" {
     owner?: VenueToken;
     venueActor?: { venueId: string; memberId?: string; ownerId?: string };
     guest?: GuestToken;
+    platform?: { sub: string; role: "platform" };
   }
 }
 

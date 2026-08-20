@@ -5,6 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { AppError } from "../errors";
 import { serializeVenue, trialEndsAtFrom } from "../lib/billing";
+import { loadPlanCatalog } from "../lib/plan-catalog";
 import { clearOwnerCookie, clientIp, OWNER_COOKIE, parseBody, rateLimit, setOwnerCookie } from "../lib/http";
 import { signVenueToken, verifyVenueToken } from "../lib/jwt";
 import { hashPassword, verifyPassword } from "../lib/password";
@@ -19,6 +20,12 @@ export async function authRoutes(app: FastifyInstance) {
   app.post("/v1/auth/register", async (req, reply) => {
     rateLimit(`reg:${clientIp(req)}`, 10, 60_000);
     const body = parseBody(registerSchema, req.body);
+
+    const catalog = await loadPlanCatalog();
+    const chosen = catalog.plans.find((p) => p.id === body.plan);
+    if (!chosen || !chosen.listed) {
+      throw new AppError(400, ERROR_CODES.PLAN_NOT_LISTED, "Este plano não está à venda.");
+    }
 
     const existing = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.email, body.email)).limit(1);
     if (existing[0]) {
@@ -45,7 +52,7 @@ export async function authRoutes(app: FastifyInstance) {
           plan: body.plan,
           subscriptionStatus: "trial",
           acceptsOrders: planAllowsService(body.plan),
-          trialEndsAt: trialEndsAtFrom(),
+          trialEndsAt: trialEndsAtFrom(new Date(), catalog.trialDays),
         })
         .returning();
       if (!venue) throw new AppError(500, "INTERNAL", "Falha ao criar o bar.");
@@ -74,6 +81,8 @@ export async function authRoutes(app: FastifyInstance) {
     if (!account || !(await verifyPassword(body.password, account.passwordHash))) {
       throw new AppError(401, ERROR_CODES.INVALID_CREDENTIALS, "E-mail ou senha incorretos.");
     }
+
+    await loadPlanCatalog();
 
     const [ownedVenue] = await db
       .select()

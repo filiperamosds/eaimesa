@@ -9,7 +9,7 @@ Pedido pelo cardápio (carrinho) está na [fatia 7](fatia-07-pedido-guest.md).
 - **TableSession** — ocupação da mesa + PIN único do grupo
 - **Tab** = comanda pessoal: `guest_name`, `guest_phone`, ligada à sessão da mesa
 - Várias comandas `open` na mesma mesa
-- Guest: após claim ou PIN, formulário nome + telefone (`/{slug}/comanda`)
+- Guest: após claim ou PIN, formulário nome + telefone (`/{slug}/comanda`) — máscara `(11) 98888-7777`; a API grava só dígitos
 - Mesmo telefone na mesma sessão retoma a comanda (outro aparelho)
 - Garçom `/garcom`: o salão mostra os **nomes** nas mesas ocupadas e atualiza sozinho; toque abre **dialog** com as contas e a parcial
 - Guest `/{slug}/comanda` e a cesta: a **própria** parcial ([fatia 9](fatia-09-parcial-guest.md))

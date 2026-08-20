@@ -1,9 +1,11 @@
 import { PlanMarketingCards } from "../../components/plan-cards";
 import { SiteFooter, SiteHeader } from "../../components/site-chrome";
+import { loadBillingPlans } from "../../lib/load-billing-plans";
 
 export const metadata = { title: "Preço" };
 
-export default function PrecoPage() {
+export default async function PrecoPage() {
+  const catalog = await loadBillingPlans();
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader solid />
@@ -11,11 +13,11 @@ export default function PrecoPage() {
         <p className="eyebrow">Preço</p>
         <h1 className="mt-3 font-serif text-4xl">Dois planos. Valor na hora de adquirir.</h1>
         <p className="mt-3 text-ink-soft">
-          Mensalidade fixa, sem comissão. Trial de 7 dias; depois cobra o valor do plano. No painel você
-          escolhe cartão ou PIX — a API ainda só confirma sucesso.
+          Mensalidade fixa, sem comissão. Trial de {catalog.trialDays} dias; depois cobra o valor do
+          plano. No painel você escolhe cartão ou PIX — a API ainda só confirma sucesso.
         </p>
         <div className="mt-10">
-          <PlanMarketingCards />
+          <PlanMarketingCards plans={catalog.plans} trialDays={catalog.trialDays} />
         </div>
         <p className="mt-8 text-sm text-ink-soft">
           Subir de Cardápio para Auto atendimento pode a qualquer momento. Descer só depois do fim da

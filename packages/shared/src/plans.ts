@@ -36,6 +36,16 @@ export const PLANS: Record<
   },
 };
 
+export type PlanCatalogItem = {
+  id: PlanId;
+  name: string;
+  priceCents: number;
+  blurb: string;
+  features: string[];
+  listed: boolean;
+  sortOrder: number;
+};
+
 export const PLAN_FUTURE = {
   id: PLAN_FUTURE_ID,
   name: "Equipamento na mesa",

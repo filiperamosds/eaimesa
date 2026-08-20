@@ -8,7 +8,7 @@ Um único frontend: landing, autenticação do estabelecimento e cardápio por s
 
 ## Fatia atual
 
-[Cardápio](docs/product/fatia-01-cardapio.md) … [parcial do cliente](docs/product/fatia-09-parcial-guest.md) e [planos](docs/product/fatia-10-planos.md).
+[Cardápio](docs/product/fatia-01-cardapio.md) … [planos](docs/product/fatia-10-planos.md) e [console SaaS](docs/product/fatia-11-console-saas.md).
 
 ```bash
 cp .env.example .env
@@ -31,9 +31,11 @@ pnpm dev
 - PIN join (outros celulares): http://localhost:3000/bar-do-tiao/entrar
 - Comanda / parcial: http://localhost:3000/bar-do-tiao/comanda
 - Pagamento (stub): http://localhost:3000/painel/pagamento
+- Console SaaS: http://localhost:3000/admin
 - Painel Auto atendimento: `dono@bardotiao.local` / `demo1234`
 - Painel Cardápio: `dono@cafedalina.local` / `demo1234`
 - Garçom demo: `garcom@bardotiao.local` / `demo1234`
+- Operador: `ops@eaimesa.local` / `demo1234`
 
 Setup completo: [docs/ops/dev-setup.md](docs/ops/dev-setup.md).
 
@@ -53,6 +55,7 @@ Setup completo: [docs/ops/dev-setup.md](docs/ops/dev-setup.md).
 | Fatia 8 | [docs/product/fatia-08-fila-garcom.md](docs/product/fatia-08-fila-garcom.md) |
 | Fatia 9 | [docs/product/fatia-09-parcial-guest.md](docs/product/fatia-09-parcial-guest.md) |
 | Fatia 10 | [docs/product/fatia-10-planos.md](docs/product/fatia-10-planos.md) |
+| Fatia 11 | [docs/product/fatia-11-console-saas.md](docs/product/fatia-11-console-saas.md) |
 | Produto | [docs/product/visao.md](docs/product/visao.md) |
 | Fluxos | [docs/product/fluxos.md](docs/product/fluxos.md) |
 | Preço | [docs/product/pricing.md](docs/product/pricing.md) |
