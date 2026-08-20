@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "./api";
 import type { GuestTab } from "./types";
 
-export function useGuestTab(slug: string) {
-  const [tab, setTab] = useState<GuestTab | null | undefined>(undefined);
+export function useGuestTab(slug: string, enabled = true) {
+  const [tab, setTab] = useState<GuestTab | null | undefined>(enabled ? undefined : null);
 
   useEffect(() => {
-    if (!slug) {
+    if (!enabled || !slug) {
       setTab(null);
       return;
     }
@@ -31,7 +31,7 @@ export function useGuestTab(slug: string) {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, enabled]);
 
   return tab;
 }

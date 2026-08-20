@@ -2,17 +2,8 @@ import { isReservedSlug } from "@eaimesa/shared";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicMenuView } from "../../components/public-menu";
-import { apiBase } from "../../lib/api";
+import { loadPublicMenu } from "../../lib/load-public-menu";
 import type { PublicMenu } from "../../lib/types";
-
-async function loadMenu(slug: string): Promise<PublicMenu | null> {
-  const res = await fetch(`${apiBase()}/v1/public/venues/${encodeURIComponent(slug)}`, {
-    next: { revalidate: 15 },
-  });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error("menu_unavailable");
-  return res.json() as Promise<PublicMenu>;
-}
 
 export async function generateMetadata({
   params,
@@ -21,7 +12,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   if (isReservedSlug(slug)) return { title: "Não encontrado" };
-  const menu = await loadMenu(slug).catch(() => null);
+  const menu = await loadPublicMenu(slug).catch(() => null);
   if (!menu) return { title: "Cardápio não encontrado" };
   return {
     title: menu.venue.name,
@@ -35,7 +26,7 @@ export default async function PublicMenuPage({ params }: { params: Promise<{ slu
 
   let menu: PublicMenu | null;
   try {
-    menu = await loadMenu(slug);
+    menu = await loadPublicMenu(slug);
   } catch {
     return (
       <div className="mx-auto max-w-lg px-5 py-24 text-center">
