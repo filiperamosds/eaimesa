@@ -129,18 +129,29 @@ Detalhe em [fatia-07-pedido-guest.md](fatia-07-pedido-guest.md).
 sequenceDiagram
   participant C as Cliente
   participant API as API
-  participant K as Kanban
+  participant G as Garçom
+  participant K as Kanban dono
 
   C->>API: POST /v1/guest/orders (cookie + Idempotency-Key)
   API->>API: tab open, preço do catálogo, source guest
   API-->>C: pedido pending
+  G->>API: GET /v1/staff/orders
+  G->>API: PATCH status accepted / preparing / delivered
   K->>API: GET /v1/owner/orders
 ```
 
 1. Comanda pessoal aberta no `/{slug}`.
 2. Carrinho: itens + qty + nota opcional. Preço **não** vai no body.
-3. Envia → `pending` no Kanban (nome da pessoa + mesa) e na parcial do garçom.
+3. Envia → `pending` no Kanban do **garçom** (`/garcom/pedidos`) e do dono.
 4. Sem comanda: slug continua só leitura (401/403).
+
+## 4b. Fila do garçom (fatia 8)
+
+Detalhe em [fatia-08-fila-garcom.md](fatia-08-fila-garcom.md).
+
+1. Garçom abre **Pedidos** em `/garcom/pedidos`.
+2. Vê novos, aceita, manda preparar, marca entregue.
+3. Pode lançar pedido de balcão no celular (`POST /v1/staff/orders`).
 
 ## 5. Fechamento (fatia 6)
 

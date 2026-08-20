@@ -10,12 +10,12 @@
 
 ## Papéis
 
-| Papel | Auth | Escopo | Fatia 5 |
+| Papel | Auth | Escopo | Fatia 8 |
 |-------|------|--------|---------|
 | Público | — | Ler cardápio por slug | Sim |
 | Owner | Cookie `eaimesa_owner` | Cardápio, venue, fila, mesas, equipe | Sim |
 | Guest | Cookie `eaimesa_guest` | Mesa + comanda + pedidos da tab | Sim |
-| Staff | Cookie `eaimesa_owner` (`role: staff`) | Claims, mesas | Sim |
+| Staff | Cookie `eaimesa_owner` (`role: staff`) | Mesas, claims, fila | Sim |
 | Platform | SSO interno + 2FA | Tenants, suspensão | Não |
 
 ## Ameaças SaaS

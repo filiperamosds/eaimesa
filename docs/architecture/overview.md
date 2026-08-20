@@ -54,7 +54,8 @@ Não existem `apps/guest` nem `apps/staff`.
 | `/{slug}/bem-vindo` | PIN no primeiro aparelho |
 | `/{slug}/entrar` | PIN join (outros aparelhos) |
 | `/{slug}/comanda` | Nome + telefone (comanda pessoal) |
-| `/garcom` | App do garçom |
+| `/garcom` | Mesas do garçom |
+| `/garcom/pedidos` | Kanban do garçom |
 | `/painel/equipe` | Cadastro de garçons |
 
 ## Integrações futuras

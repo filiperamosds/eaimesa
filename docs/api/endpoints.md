@@ -15,7 +15,7 @@ Formato: JSON. Erros:
 
 CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 
-## Implementado (fatias 1–7)
+## Implementado (fatias 1–8)
 
 ### Saúde
 
@@ -166,6 +166,17 @@ Auth: cookie com `role: owner | staff`.
 | POST | `/v1/staff/tabs/{tabId}/close` | Fecha uma comanda |
 | POST | `/v1/staff/tables/{tableId}/close` | Encerra a mesa (409 se ainda houver comanda aberta) |
 
+### Staff — fila (fatia 8)
+
+Auth: cookie `role: owner | staff`. Mesmas regras de status do Kanban do dono.
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | `/v1/staff/orders` | Fila 48h (`pending`…`delivered`) |
+| POST | `/v1/staff/orders` | Pedido de balcão (preço no servidor) |
+| PATCH | `/v1/staff/orders/{id}` | `{ status }` |
+| GET | `/v1/staff/catalog` | Cardápio (leitura) para o formulário de balcão |
+
 Resposta de `GET /v1/staff/tables` (recorte):
 
 ```json
@@ -289,16 +300,9 @@ Não implementar agora. Mantido para não perder o contrato do MVP.
 
 Implementado na fatia 7 (`POST/GET /v1/guest/orders`).
 
-### Staff (além do claim — fatia 4)
+### Staff (além do claim)
 
-Auth: cookie `eaimesa_staff`.
-
-| Método | Path | Role | Descrição |
-|--------|------|------|-----------|
-| GET | `/v1/staff/orders` | staff | Fila (hoje: `/v1/owner/orders`) |
-| PATCH | `/v1/staff/orders/{id}` | staff | `{ status }` |
-| POST | `/v1/staff/tabs/{tabId}/lock` | staff | Trava tab (futuro) |
-| GET | `/v1/staff/orders/stream` | staff | SSE |
+Implementado na fatia 8 (`GET/PATCH/POST /v1/staff/orders`). `lock` e SSE continuam fora.
 
 ### Owner (além do catálogo)
 

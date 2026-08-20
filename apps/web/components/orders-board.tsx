@@ -27,16 +27,46 @@ const COLUMN_DOT: Record<(typeof KANBAN_COLUMNS)[number], string> = {
   delivered: "bg-ink/30",
 };
 
-export function OrdersBoard() {
+type BoardEndpoints = {
+  list: string;
+  patch: (id: string) => string;
+  create: string;
+  catalog: string;
+  tables: string;
+};
+
+const OWNER_ENDPOINTS: BoardEndpoints = {
+  list: "/v1/owner/orders",
+  patch: (id) => `/v1/owner/orders/${id}`,
+  create: "/v1/owner/orders",
+  catalog: "/v1/owner/catalog",
+  tables: "/v1/owner/tables",
+};
+
+export const STAFF_BOARD_ENDPOINTS: BoardEndpoints = {
+  list: "/v1/staff/orders",
+  patch: (id) => `/v1/staff/orders/${id}`,
+  create: "/v1/staff/orders",
+  catalog: "/v1/staff/catalog",
+  tables: "/v1/staff/tables",
+};
+
+export function OrdersBoard({
+  endpoints = OWNER_ENDPOINTS,
+  compact = false,
+}: {
+  endpoints?: BoardEndpoints;
+  compact?: boolean;
+}) {
   const [orders, setOrders] = useState<StaffOrder[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
-    const data = await api<{ orders: StaffOrder[] }>("/v1/owner/orders");
+    const data = await api<{ orders: StaffOrder[] }>(endpoints.list);
     setOrders(data.orders);
-  }, []);
+  }, [endpoints.list]);
 
   useEffect(() => {
     load().catch((e) => setError(e instanceof ApiError ? e.message : "Falha ao carregar pedidos."));
@@ -58,7 +88,7 @@ export function OrdersBoard() {
   async function setStatus(id: string, status: OrderStatus) {
     setError(null);
     try {
-      const updated = await api<StaffOrder>(`/v1/owner/orders/${id}`, {
+      const updated = await api<StaffOrder>(endpoints.patch(id), {
         method: "PATCH",
         body: JSON.stringify({ status }),
       });
@@ -76,9 +106,9 @@ export function OrdersBoard() {
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="eyebrow">Turno</p>
-          <h1 className="mt-2 font-serif text-3xl">Pedidos</h1>
+          <h1 className={`mt-2 font-serif ${compact ? "text-2xl" : "text-3xl"}`}>Pedidos</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            Kanban do turno. Pedidos do cardápio e de balcão.
+            {compact ? "Aceite e avance os pedidos da mesa e do cardápio." : "Kanban do turno. Pedidos do cardápio e de balcão."}
           </p>
         </div>
         <button type="button" onClick={() => setCreating(true)} className="btn-primary !py-2 text-sm">
@@ -118,6 +148,7 @@ export function OrdersBoard() {
       </div>
       {creating ? (
         <NewOrderModal
+          endpoints={endpoints}
           onClose={() => setCreating(false)}
           onCreated={(order) => {
             setOrders((cur) => [order, ...cur]);
@@ -201,10 +232,12 @@ function OrderCard({
 }
 
 function NewOrderModal({
+  endpoints,
   onClose,
   onCreated,
   onError,
 }: {
+  endpoints: BoardEndpoints;
   onClose: () => void;
   onCreated: (order: StaffOrder) => void;
   onError: (m: string | null) => void;
@@ -218,17 +251,17 @@ function NewOrderModal({
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    api<{ categories: CatalogCategory[] }>("/v1/owner/catalog")
+    api<{ categories: CatalogCategory[] }>(endpoints.catalog)
       .then((d) => setCatalog(d.categories.filter((c) => c.active)))
       .catch(() => onError("Não foi possível carregar o cardápio."));
-    api<{ tables: VenueTable[] }>("/v1/owner/tables")
+    api<{ tables: { id: string; label: string; active?: boolean }[] }>(endpoints.tables)
       .then((d) => {
-        const active = d.tables.filter((t) => t.active);
-        setTables(active);
+        const active = d.tables.filter((t) => t.active !== false);
+        setTables(active.map((t) => ({ id: t.id, label: t.label, sortOrder: 0, active: true })));
         if (active[0]) setTableId(active[0].id);
       })
       .catch(() => undefined);
-  }, [onError]);
+  }, [onError, endpoints.catalog, endpoints.tables]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -250,7 +283,7 @@ function NewOrderModal({
     setPending(true);
     onError(null);
     try {
-      const order = await api<StaffOrder>("/v1/owner/orders", {
+      const order = await api<StaffOrder>(endpoints.create, {
         method: "POST",
         body: JSON.stringify({
           tableId: tables.length > 0 ? tableId : undefined,
