@@ -47,7 +47,9 @@ export function WelcomeView() {
     <div className="mx-auto max-w-lg px-5 py-16 text-center">
       <p className="eyebrow">Comanda aberta</p>
       <h1 className="mt-2 font-serif text-3xl">{data.tableLabel}</h1>
-      <p className="mt-3 text-ink-soft">Anote o PIN — outros na mesa usam o mesmo código.</p>
+      <p className="mt-3 text-ink-soft">
+        Anote o PIN — outros na mesa abrem o cardápio e entram com o mesmo código.
+      </p>
       <div
         className="surface mx-auto mt-10 max-w-xs rounded-3xl border-2 border-chili/30 px-6 py-10"
         aria-label={`PIN da mesa: ${data.pin.split("").join(" ")}`}
@@ -58,6 +60,12 @@ export function WelcomeView() {
       <Link href={`/${params.slug}`} className="btn-primary mt-10 inline-flex">
         Ver cardápio
       </Link>
+      <p className="mt-4 text-sm text-ink-soft">
+        Outro celular?{" "}
+        <Link href={`/${params.slug}/entrar`} className="font-medium text-ink underline">
+          Entrar com o PIN
+        </Link>
+      </p>
       <p className="mt-6 text-xs text-ink-soft">Pedir pelo cardápio chega na fatia 6.</p>
     </div>
   );

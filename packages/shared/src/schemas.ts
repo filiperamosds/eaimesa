@@ -133,3 +133,11 @@ export const patchStaffSchema = z
   .refine((b) => b.name !== undefined || b.active !== undefined || b.password !== undefined, {
     message: "Envie name, active e/ou password.",
   });
+
+export const joinTabSchema = z.object({
+  slug: slugSchema,
+  pin: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, "PIN: informe os 4 dígitos."),
+});

@@ -21,6 +21,8 @@ export const ERROR_CODES = {
   CLAIM_INVALID: "CLAIM_INVALID",
   TAB_ALREADY_OPEN: "TAB_ALREADY_OPEN",
   TAB_CLOSED: "TAB_CLOSED",
+  PIN_INVALID: "PIN_INVALID",
+  PIN_LOCKED: "PIN_LOCKED",
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

@@ -1,19 +1,20 @@
 # Documentação EaiMesa
 
-Índice. Fatia atual: **claim garçom**; cardápio (1), pedidos (2) e mesas (3) já estão no repo.
+Índice. Fatia atual: **PIN join**; cardápio (1), pedidos (2), mesas (3) e claim (4) já estão no repo.
 
 1. [Fatia 1 — Cardápio](product/fatia-01-cardapio.md)
 1b. [Fatia 2 — Pedidos](product/fatia-02-pedidos.md) — Kanban / KDS no painel
 1c. [Fatia 3 — Mesas](product/fatia-03-mesas.md) — salão cadastrado, pedido escolhe mesa
 1d. [Fatia 4 — Claim garçom](product/fatia-04-claim-garcom.md) — equipe, `/garcom`, redeem + PIN
+1e. [Fatia 5 — PIN join](product/fatia-05-pin-join.md) — outro celular entra na comanda
 2. [Visão do produto](product/visao.md) — o quê, para quem, o que fica de fora
 3. [Fluxos](product/fluxos.md) — publicar cardápio; depois guest/garçom
 4. [Pricing](product/pricing.md) — plano Bar
 5. [Arquitetura](architecture/overview.md) — monorepo, um front, Fastify
-6. [Sessão claim + PIN](architecture/sessao-claim-pin.md) — núcleo futuro de pedido
+6. [Sessão claim + PIN](architecture/sessao-claim-pin.md) — claim, PIN join, cookie guest
 7. [Segurança](security/modelo.md) — tenancy, cookies, ameaças
-8. [Modelo de dados](data/schema.md) — entidades fatia 1–4 + planejadas
-9. [API](api/endpoints.md) — REST fatia 1–4 + contrato futuro
+8. [Modelo de dados](data/schema.md) — entidades fatia 1–5 + planejadas
+9. [API](api/endpoints.md) — REST fatia 1–5 + contrato futuro
 10. [Dev setup](ops/dev-setup.md) — pnpm, Postgres, seed `bar-do-tiao`
 11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, **mesas**
 

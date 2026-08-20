@@ -48,8 +48,8 @@ Após redirect, **token não permanece** na barra de endereço.
 
 - Gerado ao abrir tab (4 dígitos, ex. `4821`).
 - Mostrado grande no primeiro aparelho.
-- `POST /guest/tabs/join` com `{ pin }` → cookie para outro device.
-- Rate limit: 5 tentativas / 15 min / IP+tab.
+- `POST /v1/guest/tabs/join` com `{ slug, pin }` → cookie para outro device ([fatia 5](../product/fatia-05-pin-join.md)).
+- Rate limit: 5 **falhas** / 15 min / IP+venue (o join não envia `tabId`).
 - PIN **não** imprime no cardápio da porta.
 
 ## 4. GuestSession (cookie)

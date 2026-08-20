@@ -15,7 +15,7 @@ Formato: JSON. Erros:
 
 CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 
-## Implementado (fatias 1–4)
+## Implementado (fatias 1–5)
 
 ### Saúde
 
@@ -197,6 +197,35 @@ Resposta:
 
 Front: `/{slug}/c/{token}` chama redeem e redireciona; `/{slug}/bem-vindo` exibe PIN.
 
+### Guest — PIN join (fatia 5)
+
+Cookie guest: `eaimesa_guest`. Sem cookie no join; o PIN abre sessão no segundo aparelho.
+
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/v1/guest/tabs/join` | — | Body `{ slug, pin }`; Set-Cookie guest |
+| GET | `/v1/guest/tab` | Cookie guest | Tab atual (mesa, slug) |
+
+#### POST /v1/guest/tabs/join (body)
+
+```json
+{ "slug": "bar-do-tiao", "pin": "4821" }
+```
+
+PIN: exatamente 4 dígitos. Casa com uma tab `open` do venue. Resposta:
+
+```json
+{
+  "tableLabel": "Mesa 4",
+  "slug": "bar-do-tiao",
+  "redirectPath": "/bar-do-tiao"
+}
+```
+
+Erros: `PIN_INVALID` (401), `PIN_LOCKED` (429, 5 falhas / 15 min / IP+venue), `VENUE_NOT_FOUND` (404).
+
+Front: `/{slug}/entrar`.
+
 #### PATCH /v1/owner/orders/{id}
 
 ```json
@@ -209,12 +238,10 @@ Valores: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`.
 
 Não implementar agora. Mantido para não perder o contrato do MVP.
 
-### Guest / comanda (parcial — fatia 4 fez redeem + tab + PIN)
+### Guest / comanda (parcial — fatia 5 fez join + GET tab)
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| POST | `/v1/guest/tabs/join` | — | Body `{ slug, pin }` — fatia 5 |
-| GET | `/v1/guest/tab` | Cookie guest | Tab atual |
 | POST | `/v1/guest/orders` | Cookie guest | Header `Idempotency-Key` |
 | GET | `/v1/guest/orders/{id}` | Cookie guest | Status |
 
@@ -275,4 +302,6 @@ Auth: cookie `eaimesa_staff`.
 | `STAFF_INACTIVE` | 403 |
 | `CLAIM_INVALID` | 404 |
 | `TAB_CLOSED` | 409 |
-| `FORBIDDEN_CROSS_VENUE` | 403 | gerar em `apps/api/openapi.yaml` quando o contrato da fatia 1 estabilizar.
+| `FORBIDDEN_CROSS_VENUE` | 403 |
+
+OpenAPI: gerar em `apps/api/openapi.yaml` quando o contrato da fatia 1 estabilizar.

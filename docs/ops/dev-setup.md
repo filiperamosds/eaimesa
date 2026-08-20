@@ -78,6 +78,7 @@ URLs:
 | Mesas | http://localhost:3000/painel/mesas |
 | Equipe | http://localhost:3000/painel/equipe |
 | Garçom | http://localhost:3000/garcom |
+| PIN join | http://localhost:3000/bar-do-tiao/entrar |
 
 Login demo abre direto o Kanban. Garçom demo: `garcom@bardotiao.local` / `demo1234`.
 
@@ -151,6 +152,7 @@ O script `pnpm dev` já sobe o Next em `0.0.0.0:3000` e a API em `0.0.0.0:4000`.
 | URL | Uso |
 |-----|-----|
 | `http://mac-filipe.local:3000/bar-do-tiao` | Cardápio público |
+| `http://mac-filipe.local:3000/bar-do-tiao/entrar` | PIN join (segundo celular) |
 | `http://mac-filipe.local:3000/garcom` | App garçom (login demo) |
 | QR gerado em `/garcom` | Deve mostrar `mac-filipe.local` na URL, não `localhost` |
 

@@ -88,12 +88,12 @@ Token de abertura (QR do garçom).
 
 ### GuestSession
 
-Sessão do cliente após redeem.
+Sessão do cliente após redeem **ou PIN join**.
 
 - `id`, `venue_id`, `tab_id` → Tab
 - `expires_at`, timestamps
 
-Cookie `eaimesa_guest` referencia a sessão (JWT assinado).
+Cookie `eaimesa_guest` referencia a sessão (JWT assinado). Cada aparelho ganha uma linha.
 
 ## Entidades — planejadas
 
@@ -124,15 +124,18 @@ Cookie `eaimesa_guest` referencia a sessão (JWT assinado).
 2. Menu público: `active = true` em categoria e item.
 3. DELETE categoria com itens → `CATEGORY_NOT_EMPTY`.
 4. `OrderItem` sempre grava snapshot de preço/nome; o cliente **não** envia preço.
-5. Pedido público pelo slug **não** existe nesta fatia.
+5. Pedido público pelo slug **não** existe nesta fatia (fatia 6).
 6. Pedido de balcão com `table_id` só aceita mesa **ativa** do mesmo venue; grava snapshot do rótulo.
-7. Fechar tab (futuro) → revoke sessions + claims pendentes.
+7. PIN join casa o PIN com uma tab `open` do venue; tab `locked`/`closed` não entra.
+8. Fechar tab (futuro) → revoke sessions + claims pendentes.
 
 ## Diagrama ER
 
 ```mermaid
 erDiagram
   Account ||--|| Venue : owns
+  Account ||--o{ VenueMember : staff
+  Venue ||--o{ VenueMember : has
   Venue ||--o{ CatalogCategory : has
   CatalogCategory ||--o{ CatalogItem : contains
   Venue ||--o{ CatalogItem : has
@@ -140,6 +143,10 @@ erDiagram
   Venue ||--o{ Order : has
   VenueTable ||--o{ Order : optional
   Order ||--|{ OrderItem : contains
+  Venue ||--o{ Tab : has
+  VenueTable ||--o{ Tab : hosts
+  Tab ||--o{ GuestSession : sessions
+  Tab ||--o{ TableClaim : opened_by
 ```
 
 ## Postgres RLS (recomendado fase 1.5)

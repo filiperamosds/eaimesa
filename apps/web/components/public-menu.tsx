@@ -3,6 +3,7 @@
 import { formatBrlFromCents } from "@eaimesa/shared";
 import Link from "next/link";
 import { useState } from "react";
+import { GuestTabBar } from "./guest-tab-bar";
 import { mediaSrc } from "../lib/media";
 import type { PublicMenu } from "../lib/types";
 
@@ -27,6 +28,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
           )}
         </div>
       </header>
+      <GuestTabBar slug={menu.venue.slug} />
 
       {groups.length > 0 ? (
         <nav

@@ -13,6 +13,7 @@ import { ownerTableRoutes } from "./routes/owner-tables";
 import { ownerVenueRoutes } from "./routes/owner-venue";
 import { publicClaimRoutes } from "./routes/public-claim";
 import { publicMenuRoutes } from "./routes/public-menu";
+import { guestTabRoutes } from "./routes/guest-tab";
 import { staffClaimRoutes } from "./routes/staff-claims";
 
 export async function buildApp() {
@@ -45,6 +46,7 @@ export async function buildApp() {
   await app.register(staffClaimRoutes);
   await app.register(publicClaimRoutes);
   await app.register(publicMenuRoutes);
+  await app.register(guestTabRoutes);
 
   app.setErrorHandler((err, req, reply) => {
     if (err instanceof AppError) {

@@ -85,7 +85,7 @@ sequenceDiagram
   participant C as Cliente
 
   D->>API: POST /v1/owner/staff (cadastro)
-  G->>API: POST /v1/staff/auth/login
+  G->>API: POST /v1/auth/login
   G->>API: POST /v1/staff/tables/{id}/claims
   API-->>G: claimUrl + TTL
   G->>C: Cliente escaneia QR
@@ -95,18 +95,30 @@ sequenceDiagram
 ```
 
 1. Dono cadastra garçons em **Equipe** (`/painel/equipe`).
-2. Garçom entra em `/garcom/login`, escolhe mesa, mostra QR (countdown ~3 min).
+2. Garçom entra em `/login` → `/garcom`, escolhe mesa, mostra QR (countdown ~3 min).
 3. Cliente escaneia → redeem → PIN grande em `/{slug}/bem-vindo` + cookie guest.
 4. Pedido pelo cardápio (fatia 6) exige sessão guest ativa.
 
-## 3. Outros celulares na mesa
+## 3. Outros celulares na mesa (fatia 5)
 
-*Fatia futura.*
+Detalhe em [fatia-05-pin-join.md](fatia-05-pin-join.md).
 
-1. Cliente abre `/{slug}`.
-2. Tab já aberta → pede **PIN** (4 dígitos).
-3. PIN correto → nova `GuestSession` na mesma `Tab`.
-4. Garçom **não** precisa voltar.
+```mermaid
+sequenceDiagram
+  participant C2 as Outro celular
+  participant API as API
+
+  C2->>API: POST /v1/guest/tabs/join { slug, pin }
+  API->>API: Tab open do venue + PIN
+  API-->>C2: Set-Cookie eaimesa_guest
+  C2->>API: GET /v1/guest/tab
+  API-->>C2: mesa + slug
+```
+
+1. Cliente abre `/{slug}` (QR fixo) ou `/{slug}/entrar`.
+2. Informa o PIN de 4 dígitos da mesa.
+3. PIN correto → nova `GuestSession` na mesma `Tab` + cookie guest.
+4. Garçom **não** precisa voltar. Pedido pelo cardápio: fatia 6.
 
 ## 4. Pedido
 

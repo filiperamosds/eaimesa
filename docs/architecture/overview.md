@@ -10,7 +10,7 @@
 | ORM | **Drizzle** | Migrations SQL, types |
 | UI | **Next.js** (um app) | Landing + painel + cardápio |
 | Auth dono | Cookie **httpOnly** `eaimesa_owner` | JWT assinado |
-| Auth guest | Cookie `eaimesa_guest` | Fatia futura |
+| Auth guest | Cookie `eaimesa_guest` | Redeem (fatia 4) e PIN join (fatia 5) |
 | Cache/fila | Redis | Fase 2 |
 
 Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md), [ADR-006](../decisions/ADR-006-mesas.md).
@@ -50,6 +50,11 @@ Não existem `apps/guest` nem `apps/staff`.
 | `/painel/pedidos` | Kanban do dono |
 | `/painel/cardapio`, `/painel/mesas`, `/painel/bar` | Cardápio, salão e dados do bar |
 | `/{slug}` | Cardápio público (sem pedidos) |
+| `/{slug}/c/{token}` | Redeem do claim |
+| `/{slug}/bem-vindo` | PIN no primeiro aparelho |
+| `/{slug}/entrar` | PIN join (outros aparelhos) |
+| `/garcom` | App do garçom |
+| `/painel/equipe` | Cadastro de garçons |
 
 ## Integrações futuras
 

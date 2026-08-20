@@ -92,6 +92,21 @@ export type ClaimResponse = {
   expiresInSeconds: number;
 };
 
+export type JoinTabResponse = {
+  tableLabel: string;
+  slug: string;
+  redirectPath: string;
+};
+
+export type GuestTab = {
+  tabId: string;
+  status: "open" | "locked" | "closed";
+  tableLabel: string;
+  slug: string;
+  venueName: string;
+  expiresAt: string;
+};
+
 export type StaffOrder = {
   id: string;
   status: OrderStatus;

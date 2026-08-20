@@ -29,6 +29,8 @@ export const env = {
   guestSessionSecret: req("GUEST_SESSION_SECRET"),
   guestSessionTtlHours: Number(process.env.GUEST_SESSION_TTL_HOURS ?? 4),
   claimTtlSeconds: Number(process.env.CLAIM_TTL_SECONDS ?? 180),
+  pinJoinMaxFailures: Number(process.env.PIN_JOIN_MAX_FAILURES ?? 5),
+  pinJoinWindowMinutes: Number(process.env.PIN_JOIN_WINDOW_MINUTES ?? 15),
 };
 
 export const isProd = env.nodeEnv === "production";

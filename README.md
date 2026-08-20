@@ -8,7 +8,7 @@ Um único frontend: landing, autenticação do estabelecimento e cardápio por s
 
 ## Fatia atual
 
-[Cardápio](docs/product/fatia-01-cardapio.md), [pedidos Kanban](docs/product/fatia-02-pedidos.md), [mesas](docs/product/fatia-03-mesas.md) e [claim garçom](docs/product/fatia-04-claim-garcom.md).
+[Cardápio](docs/product/fatia-01-cardapio.md), [pedidos Kanban](docs/product/fatia-02-pedidos.md), [mesas](docs/product/fatia-03-mesas.md), [claim garçom](docs/product/fatia-04-claim-garcom.md) e [PIN join](docs/product/fatia-05-pin-join.md).
 
 ```bash
 cp .env.example .env
@@ -26,6 +26,7 @@ pnpm dev
 - Mesas: http://localhost:3000/painel/mesas
 - Equipe (garçons): http://localhost:3000/painel/equipe
 - App garçom: http://localhost:3000/garcom
+- PIN join (outros celulares): http://localhost:3000/bar-do-tiao/entrar
 - Painel: `dono@bardotiao.local` / `demo1234` (seed local)
 - Garçom demo: `garcom@bardotiao.local` / `demo1234`
 
@@ -40,6 +41,8 @@ Setup completo: [docs/ops/dev-setup.md](docs/ops/dev-setup.md).
 | Fatia 1 | [docs/product/fatia-01-cardapio.md](docs/product/fatia-01-cardapio.md) |
 | Fatia 2 | [docs/product/fatia-02-pedidos.md](docs/product/fatia-02-pedidos.md) |
 | Fatia 3 | [docs/product/fatia-03-mesas.md](docs/product/fatia-03-mesas.md) |
+| Fatia 4 | [docs/product/fatia-04-claim-garcom.md](docs/product/fatia-04-claim-garcom.md) |
+| Fatia 5 | [docs/product/fatia-05-pin-join.md](docs/product/fatia-05-pin-join.md) |
 | Produto | [docs/product/visao.md](docs/product/visao.md) |
 | Fluxos | [docs/product/fluxos.md](docs/product/fluxos.md) |
 | Preço | [docs/product/pricing.md](docs/product/pricing.md) |
