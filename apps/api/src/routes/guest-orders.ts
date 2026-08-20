@@ -1,5 +1,5 @@
 import { catalogItems, db, guestSessions, orderItems, orders, tableSessions, tabs, venueTables, venues } from "@eaimesa/db";
-import { createGuestOrderSchema, ERROR_CODES, idempotencyKeySchema } from "@eaimesa/shared";
+import { createGuestOrderSchema, ERROR_CODES, idempotencyKeySchema, tabPartialCents } from "@eaimesa/shared";
 import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
@@ -19,7 +19,10 @@ function readIdempotencyKey(header: string | string[] | undefined) {
   return parsed.data;
 }
 
-async function loadGuestTabContext(guest: { sub: string; venueId: string; tableSessionId: string; tabId: string | null }) {
+async function loadGuestTabContext(
+  guest: { sub: string; venueId: string; tableSessionId: string; tabId: string | null },
+  opts: { requireOrdering?: boolean } = {},
+) {
   const [row] = await db
     .select({
       guestSession: guestSessions,
@@ -37,22 +40,24 @@ async function loadGuestTabContext(guest: { sub: string; venueId: string; tableS
   if (!row || row.venue.id !== guest.venueId) {
     throw new AppError(401, "UNAUTHORIZED", "Sessão expirada. Entre de novo com o PIN.");
   }
-  if (row.venue.subscriptionStatus === "suspended") {
-    throw new AppError(403, ERROR_CODES.VENUE_SUSPENDED, "Este bar está com a assinatura inativa.");
-  }
-  if (!row.venue.acceptsOrders) {
-    throw new AppError(403, ERROR_CODES.VENUE_SUSPENDED, "Este bar não está aceitando pedidos pelo cardápio.");
+  if (opts.requireOrdering) {
+    if (row.venue.subscriptionStatus === "suspended") {
+      throw new AppError(403, ERROR_CODES.VENUE_SUSPENDED, "Este bar está com a assinatura inativa.");
+    }
+    if (!row.venue.acceptsOrders) {
+      throw new AppError(403, ERROR_CODES.VENUE_SUSPENDED, "Este bar não está aceitando pedidos pelo cardápio.");
+    }
   }
   if (row.session.status !== "open") {
     throw new AppError(409, ERROR_CODES.TAB_CLOSED, "Esta mesa foi encerrada. Peça um novo QR ao garçom.");
   }
   if (!guest.tabId || !row.guestSession.tabId) {
-    throw new AppError(403, ERROR_CODES.TAB_REQUIRED, "Abra sua comanda com nome e telefone para pedir.");
+    throw new AppError(403, ERROR_CODES.TAB_REQUIRED, "Abra sua comanda com nome e telefone.");
   }
 
   const [tab] = await db.select().from(tabs).where(eq(tabs.id, row.guestSession.tabId)).limit(1);
   if (!tab || tab.venueId !== guest.venueId) {
-    throw new AppError(403, ERROR_CODES.TAB_REQUIRED, "Abra sua comanda com nome e telefone para pedir.");
+    throw new AppError(403, ERROR_CODES.TAB_REQUIRED, "Abra sua comanda com nome e telefone.");
   }
   if (tab.status !== "open") {
     throw new AppError(409, ERROR_CODES.TAB_CLOSED, "Esta comanda foi fechada.");
@@ -84,15 +89,14 @@ export async function guestOrderRoutes(app: FastifyInstance) {
     const items =
       ids.length === 0 ? [] : await db.select().from(orderItems).where(inArray(orderItems.orderId, ids));
 
-    return {
-      orders: rows.map((o) =>
-        serializeOrder(
-          o,
-          items.filter((i) => i.orderId === o.id),
-          { guestName: ctx.tab.guestName },
-        ),
+    const serialized = rows.map((o) =>
+      serializeOrder(
+        o,
+        items.filter((i) => i.orderId === o.id),
+        { guestName: ctx.tab.guestName },
       ),
-    };
+    );
+    return { orders: serialized, totalCents: tabPartialCents(serialized) };
   });
 
   app.get("/v1/guest/orders/:id", async (req) => {
@@ -109,7 +113,7 @@ export async function guestOrderRoutes(app: FastifyInstance) {
 
   app.post("/v1/guest/orders", async (req) => {
     rateLimit(`guest-order:${clientIp(req)}`, 20, 60_000);
-    const ctx = await loadGuestTabContext(req.guest!);
+    const ctx = await loadGuestTabContext(req.guest!, { requireOrdering: true });
     const body = parseBody(createGuestOrderSchema, req.body);
     const idempotencyKey = readIdempotencyKey(req.headers["idempotency-key"]);
 

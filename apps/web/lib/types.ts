@@ -170,3 +170,8 @@ export type StaffOrder = {
 };
 
 export type GuestOrder = StaffOrder;
+
+export type GuestOrdersPayload = {
+  orders: GuestOrder[];
+  totalCents: number;
+};

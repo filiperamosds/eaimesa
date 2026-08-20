@@ -1,9 +1,18 @@
 "use client";
 
+import { formatBrlFromCents } from "@eaimesa/shared";
 import Link from "next/link";
 import type { GuestTab } from "../lib/types";
 
-export function GuestTabBar({ slug, tab }: { slug: string; tab: GuestTab | null | undefined }) {
+export function GuestTabBar({
+  slug,
+  tab,
+  partialCents = 0,
+}: {
+  slug: string;
+  tab: GuestTab | null | undefined;
+  partialCents?: number;
+}) {
   if (tab === undefined) {
     return (
       <div className="border-b border-white/10 bg-night/40 px-5 py-3 text-center text-sm text-white/60">
@@ -28,7 +37,12 @@ export function GuestTabBar({ slug, tab }: { slug: string; tab: GuestTab | null 
       <div className="border-b border-sage/30 bg-sage px-5 py-3 text-center text-sm text-white">
         <span className="font-medium">{tab.guestName}</span>
         <span className="text-white/80"> · {tab.tableLabel}</span>
-        <span className="text-white/70"> · peça pelo cardápio</span>
+        {partialCents > 0 ? (
+          <span className="text-white/90"> · {formatBrlFromCents(partialCents)}</span>
+        ) : null}
+        <Link href={`/${slug}/comanda`} className="ml-2 font-medium underline decoration-white/40">
+          Parcial
+        </Link>
       </div>
     );
   }

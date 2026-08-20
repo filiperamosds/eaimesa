@@ -49,11 +49,11 @@ Não existem `apps/guest` nem `apps/staff`.
 | `/painel` | Redirect para `/painel/pedidos` |
 | `/painel/pedidos` | Kanban do dono |
 | `/painel/cardapio`, `/painel/mesas`, `/painel/bar` | Cardápio, salão e dados do bar |
-| `/{slug}` | Cardápio público (+ carrinho se comanda aberta) |
+| `/{slug}` | Cardápio público (+ carrinho e parcial se comanda aberta) |
 | `/{slug}/c/{token}` | Redeem do claim |
 | `/{slug}/bem-vindo` | PIN no primeiro aparelho |
 | `/{slug}/entrar` | PIN join (outros aparelhos) |
-| `/{slug}/comanda` | Nome + telefone (comanda pessoal) |
+| `/{slug}/comanda` | Nome + telefone **ou** parcial da comanda |
 | `/garcom` | Mesas do garçom |
 | `/garcom/pedidos` | Kanban do garçom |
 | `/painel/equipe` | Cadastro de garçons |

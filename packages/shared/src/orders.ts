@@ -22,3 +22,16 @@ export const ORDER_NEXT_LABEL: Partial<Record<OrderStatus, string>> = {
   accepted: "Preparar",
   preparing: "Entregar",
 };
+
+/** Status na comanda do cliente (não usa os rótulos da cozinha). */
+export const GUEST_ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  pending: "Na fila",
+  accepted: "Aceito",
+  preparing: "Preparando",
+  delivered: "Entregue",
+  cancelled: "Cancelado",
+};
+
+export function tabPartialCents(orders: { status: string; totalCents: number }[]): number {
+  return orders.filter((o) => o.status !== "cancelled").reduce((sum, o) => sum + o.totalCents, 0);
+}

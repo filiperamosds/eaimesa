@@ -135,6 +135,8 @@ sequenceDiagram
   C->>API: POST /v1/guest/orders (cookie + Idempotency-Key)
   API->>API: tab open, preço do catálogo, source guest
   API-->>C: pedido pending
+  C->>API: GET /v1/guest/orders
+  API-->>C: parcial (itens + totalCents)
   G->>API: GET /v1/staff/orders
   G->>API: PATCH status accepted / preparing / delivered
   K->>API: GET /v1/owner/orders
@@ -143,7 +145,8 @@ sequenceDiagram
 1. Comanda pessoal aberta no `/{slug}`.
 2. Carrinho: itens + qty + nota opcional. Preço **não** vai no body.
 3. Envia → `pending` no Kanban do **garçom** (`/garcom/pedidos`) e do dono.
-4. Sem comanda: slug continua só leitura (401/403).
+4. Cliente vê a **parcial** da própria comanda (`GET /v1/guest/orders`, `/{slug}/comanda`).
+5. Sem comanda: slug continua só leitura (401/403).
 
 ## 4b. Fila do garçom (fatia 8)
 

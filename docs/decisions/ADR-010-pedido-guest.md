@@ -25,5 +25,6 @@ O cardápio por slug não pode autorizar pedir (entrega remota, conta de outra m
 ## Consequências
 
 - `/{slug}` ganha carrinho só depois da comanda pessoal
+- Cliente vê a própria parcial (`GET /v1/guest/orders`, `/{slug}/comanda`)
 - Kanban mistura balcão e cardápio; o card mostra o nome da pessoa
 - Venue suspenso não cria pedido (`VENUE_SUSPENDED`)

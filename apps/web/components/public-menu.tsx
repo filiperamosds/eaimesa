@@ -6,6 +6,7 @@ import { useState } from "react";
 import { GuestCart, type CartLine } from "./guest-cart";
 import { GuestTabBar } from "./guest-tab-bar";
 import { mediaSrc } from "../lib/media";
+import { useGuestOrders } from "../lib/use-guest-orders";
 import { useGuestTab } from "../lib/use-guest-tab";
 import type { PublicMenu } from "../lib/types";
 
@@ -16,6 +17,8 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
   const tab = useGuestTab(menu.venue.slug);
   const suspended = menu.venue.subscriptionStatus === "suspended";
   const canOrder = Boolean(tab && !tab.needsProfile && !suspended && menu.venue.acceptsOrders);
+  const hasTab = Boolean(tab && !tab.needsProfile);
+  const { orders, totalCents, reload } = useGuestOrders(hasTab);
 
   function addItem(item: PublicMenu["categories"][number]["items"][number]) {
     setCart((cur) => {
@@ -59,7 +62,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
           )}
         </div>
       </header>
-      <GuestTabBar slug={menu.venue.slug} tab={tab} />
+      <GuestTabBar slug={menu.venue.slug} tab={tab} partialCents={totalCents} />
 
       {groups.length > 0 ? (
         <nav
@@ -81,7 +84,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
         </nav>
       ) : null}
 
-      <main className={`mx-auto max-w-lg px-5 pb-16 pt-8 ${cart.length > 0 ? "pb-28" : ""}`}>
+      <main className={`mx-auto max-w-lg px-5 pb-16 pt-8 ${cart.length > 0 || orders.length > 0 ? "pb-28" : ""}`}>
         {groups.length === 0 ? (
           <p className="py-16 text-center text-ink-soft">Cardápio em montagem.</p>
         ) : (
@@ -177,7 +180,14 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
         )}
       </main>
 
-      <GuestCart cart={cart} onChange={setCart} canOrder={canOrder} />
+      <GuestCart
+        cart={cart}
+        onChange={setCart}
+        canOrder={canOrder}
+        orders={orders}
+        partialCents={totalCents}
+        onOrdered={() => void reload()}
+      />
 
       <footer className="pb-10 text-center text-xs text-ink-soft">
         Cardápio por{" "}

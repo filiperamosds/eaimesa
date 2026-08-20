@@ -12,6 +12,7 @@ Pedido pelo cardápio (carrinho) está na [fatia 7](fatia-07-pedido-guest.md).
 - Guest: após claim ou PIN, formulário nome + telefone (`/{slug}/comanda`)
 - Mesmo telefone na mesma sessão retoma a comanda (outro aparelho)
 - Garçom `/garcom`: o salão mostra os **nomes** nas mesas ocupadas e atualiza sozinho; toque abre **dialog** com as contas e a parcial
+- Guest `/{slug}/comanda` e a cesta: a **própria** parcial ([fatia 9](fatia-09-parcial-guest.md))
 - `POST /v1/staff/tabs/{id}/close` — fecha uma comanda
 - `POST /v1/staff/tables/{id}/close` — encerra a mesa; **409** se ainda houver comanda aberta
 - Telefone mascarado no painel do garçom (últimos 4 dígitos)
