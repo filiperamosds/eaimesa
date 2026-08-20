@@ -17,7 +17,7 @@ export default function LoginPage() {
             garçom na mesa.
           </p>
         </div>
-        <p className="text-sm text-white/40">EaiMesa · plano Bar</p>
+        <p className="text-sm text-white/40">EaiMesa</p>
       </aside>
       <div className="mx-auto flex w-full max-w-md flex-col justify-center px-5 py-12">
         <Logo className="mb-8 lg:hidden" />

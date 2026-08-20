@@ -1,8 +1,9 @@
 import { catalogCategories, catalogItems, db, venues } from "@eaimesa/db";
-import { ERROR_CODES } from "@eaimesa/shared";
+import { ERROR_CODES, planAllowsService } from "@eaimesa/shared";
 import { and, asc, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
+import { subscriptionAllowsUse } from "../lib/billing";
 
 export async function publicMenuRoutes(app: FastifyInstance) {
   app.get("/v1/public/venues/:slug", async (req) => {
@@ -29,7 +30,9 @@ export async function publicMenuRoutes(app: FastifyInstance) {
         name: venue.name,
         slug: venue.slug,
         subscriptionStatus: venue.subscriptionStatus,
-        acceptsOrders: venue.acceptsOrders,
+        plan: venue.plan,
+        acceptsOrders:
+          venue.acceptsOrders && planAllowsService(venue.plan) && subscriptionAllowsUse(venue).ok,
       },
       categories: categories.map((c) => ({
         id: c.id,

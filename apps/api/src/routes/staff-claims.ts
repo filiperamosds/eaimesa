@@ -5,10 +5,12 @@ import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { AppError } from "../errors";
 import { requireVenueActor } from "../lib/auth-guard";
+import { requireServicePlan } from "../lib/billing";
 import { generateClaimToken, hashClaimToken } from "../lib/claim";
 
 export async function staffClaimRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireVenueActor);
+  app.addHook("preHandler", requireServicePlan);
 
   app.get("/v1/staff/tables", async (req) => {
     const venueId = req.venueActor!.venueId;

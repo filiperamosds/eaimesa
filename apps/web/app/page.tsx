@@ -20,18 +20,18 @@ export default function HomePage() {
                 público nunca abre comanda sozinho.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <Link href="/cadastro" className="btn-primary">
-                  Criar meu cardápio
+                <Link href="/cadastro?plano=cardapio" className="btn-primary">
+                  Adquirir Cardápio
                 </Link>
-                <Link href="/bar-do-tiao" className="btn-secondary">
-                  Ver o Bar do Tião
+                <Link href="/cadastro?plano=auto_atendimento" className="btn-secondary">
+                  Adquirir Auto atendimento
                 </Link>
               </div>
               <dl className="mt-10 grid max-w-md grid-cols-3 gap-4 text-sm">
                 {[
-                  ["15", "mesas no plano"],
+                  ["7 dias", "de trial"],
                   ["0%", "comissão"],
-                  ["1 URL", "do seu bar"],
+                  ["2 planos", "agora"],
                 ].map(([k, v]) => (
                   <div key={v}>
                     <dt className="font-serif text-2xl text-ink">{k}</dt>
@@ -80,13 +80,13 @@ export default function HomePage() {
               },
               {
                 n: "02",
-                t: "Monte o salão",
-                d: "Cardápio com foto e preço no servidor. Mesas até o limite do plano.",
+                t: "Publique o cardápio",
+                d: "Categorias, foto e preço no servidor. No Auto atendimento, mesas e equipe entram depois.",
               },
               {
                 n: "03",
                 t: "Opere a fila",
-                d: "Kanban no painel. O cliente ainda não pede pelo link — o garçom lança no balcão.",
+                d: "No Auto atendimento o cliente pede no celular. Kanban no painel e na tela do garçom.",
               },
             ].map((s) => (
               <div key={s.n} className="surface p-6">
@@ -99,19 +99,58 @@ export default function HomePage() {
         </section>
 
         <section className="mx-auto max-w-6xl px-5 py-20">
-          <div className="overflow-hidden rounded-[1.35rem] bg-night p-8 text-white sm:p-12">
-            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-amber">Plano Bar</p>
-            <h2 className="mt-3 font-serif text-4xl">Feito para o bar de 10 mesas</h2>
-            <p className="mt-4 max-w-xl text-white/70">
-              R$ 149/mês, até 15 mesas, pedidos ilimitados quando a comanda entrar. Sem comissão
-              sobre o consumo.
-            </p>
-            <Link
-              href="/preco"
-              className="mt-8 inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-medium text-night hover:bg-paper"
-            >
-              Ver tabela de preço →
-            </Link>
+          <p className="eyebrow">Planos</p>
+          <h2 className="mt-3 font-serif text-4xl">Escolha o que o bar precisa</h2>
+          <p className="mt-3 max-w-xl text-ink-soft">
+            Trial de 7 dias. A cobrança entra depois — por enquanto o checkout só confirma sucesso, sem
+            gateway. Equipamento na mesa fica para uma fatia futura.
+          </p>
+          <div className="mt-10 grid gap-6 lg:grid-cols-3">
+            <div className="surface p-8">
+              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-chili">Cardápio</p>
+              <p className="mt-3 font-serif text-4xl">
+                R$ 49<span className="text-xl text-ink-soft">/mês</span>
+              </p>
+              <ul className="mt-5 space-y-2 text-sm text-ink-soft">
+                <li>URL pública do cardápio</li>
+                <li>Categorias, itens e foto</li>
+                <li>QR do cardápio</li>
+                <li>Sem pedido no celular</li>
+              </ul>
+              <Link href="/cadastro?plano=cardapio" className="btn-primary mt-8 w-full">
+                Adquirir Cardápio
+              </Link>
+              <Link href="/cafe-da-lina" className="mt-3 block text-center text-sm text-ink-soft underline">
+                Ver demo Café da Lina
+              </Link>
+            </div>
+            <div className="surface p-8 ring-2 ring-chili/30">
+              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-chili">
+                Auto atendimento
+              </p>
+              <p className="mt-3 font-serif text-4xl">
+                R$ 149<span className="text-xl text-ink-soft">/mês</span>
+              </p>
+              <ul className="mt-5 space-y-2 text-sm text-ink-soft">
+                <li>Tudo do Cardápio</li>
+                <li>Mesas, equipe, QR do garçom e PIN</li>
+                <li>Pedido e parcial no celular</li>
+                <li>Kanban no painel e no garçom</li>
+              </ul>
+              <Link href="/cadastro?plano=auto_atendimento" className="btn-primary mt-8 w-full">
+                Adquirir Auto atendimento
+              </Link>
+              <Link href="/bar-do-tiao" className="mt-3 block text-center text-sm text-ink-soft underline">
+                Ver demo Bar do Tião
+              </Link>
+            </div>
+            <div className="surface p-8 opacity-80">
+              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-ink-soft">Em breve</p>
+              <p className="mt-3 font-serif text-3xl">Equipamento na mesa</p>
+              <p className="mt-4 text-sm text-ink-soft">
+                Tablet/hardware na mesa. Fora desta fatia — não dá para adquirir agora.
+              </p>
+            </div>
           </div>
         </section>
       </main>

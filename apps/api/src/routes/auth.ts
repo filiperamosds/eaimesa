@@ -1,27 +1,18 @@
 import { db, accounts, venueMembers, venues } from "@eaimesa/db";
-import { ERROR_CODES, loginSchema, registerSchema } from "@eaimesa/shared";
+import { ERROR_CODES, loginSchema, planAllowsService, registerSchema } from "@eaimesa/shared";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { AppError } from "../errors";
+import { serializeVenue, trialEndsAtFrom } from "../lib/billing";
 import { clearOwnerCookie, clientIp, OWNER_COOKIE, parseBody, rateLimit, setOwnerCookie } from "../lib/http";
 import { signVenueToken, verifyVenueToken } from "../lib/jwt";
 import { hashPassword, verifyPassword } from "../lib/password";
 import { newPublicId } from "../lib/public-id";
 
-function serializeVenue(v: typeof venues.$inferSelect) {
-  return {
-    id: v.id,
-    name: v.name,
-    slug: v.slug,
-    publicId: v.publicId,
-    subscriptionStatus: v.subscriptionStatus,
-    acceptsOrders: v.acceptsOrders,
-  };
-}
-
-function defaultRedirect(role: "owner" | "staff") {
-  return role === "staff" ? "/garcom" : "/painel/pedidos";
+function defaultRedirect(role: "owner" | "staff", plan?: string) {
+  if (role === "staff") return "/garcom";
+  return planAllowsService(plan ?? "") ? "/painel/pedidos" : "/painel/cardapio";
 }
 
 export async function authRoutes(app: FastifyInstance) {
@@ -51,8 +42,10 @@ export async function authRoutes(app: FastifyInstance) {
           name: body.venueName,
           slug: body.slug,
           publicId: newPublicId(),
+          plan: body.plan,
           subscriptionStatus: "trial",
-          acceptsOrders: true,
+          acceptsOrders: planAllowsService(body.plan),
+          trialEndsAt: trialEndsAtFrom(),
         })
         .returning();
       if (!venue) throw new AppError(500, "INTERNAL", "Falha ao criar o bar.");
@@ -67,7 +60,7 @@ export async function authRoutes(app: FastifyInstance) {
     setOwnerCookie(reply, token, env.ownerJwtTtlHours * 3600);
     return {
       role: "owner" as const,
-      redirectPath: defaultRedirect("owner"),
+      redirectPath: defaultRedirect("owner", created.venue.plan),
       account: { id: created.account.id, email: created.account.email },
       venue: serializeVenue(created.venue),
     };
@@ -97,7 +90,7 @@ export async function authRoutes(app: FastifyInstance) {
       setOwnerCookie(reply, token, env.ownerJwtTtlHours * 3600);
       return {
         role: "owner" as const,
-        redirectPath: defaultRedirect("owner"),
+        redirectPath: defaultRedirect("owner", ownedVenue.plan),
         account: { id: account.id, email: account.email },
         venue: serializeVenue(ownedVenue),
       };

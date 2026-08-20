@@ -13,10 +13,12 @@ import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireVenueActor } from "../lib/auth-guard";
+import { requireServicePlan } from "../lib/billing";
 import { serializeOrder } from "../lib/orders";
 
 export async function staffTabRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireVenueActor);
+  app.addHook("preHandler", requireServicePlan);
 
   app.get("/v1/staff/tables/:tableId/tabs", async (req) => {
     const venueId = req.venueActor!.venueId;

@@ -65,7 +65,7 @@ export function TablesEditor() {
       </div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <p className="text-sm text-ink-soft">
-          {activeCount}/{maxActive} mesas ativas no plano Bar. Pedido de balcão escolhe daqui.
+          {activeCount}/{maxActive} mesas ativas no plano Auto atendimento. Pedido de balcão escolhe daqui.
         </p>
         <Link href="/painel/pedidos" className="text-sm font-medium text-chili">
           Ir para pedidos →

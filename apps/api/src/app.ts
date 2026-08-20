@@ -11,6 +11,7 @@ import { ownerOrderRoutes } from "./routes/owner-orders";
 import { ownerStaffRoutes } from "./routes/owner-staff";
 import { ownerTableRoutes } from "./routes/owner-tables";
 import { ownerVenueRoutes } from "./routes/owner-venue";
+import { billingRoutes } from "./routes/billing";
 import { publicClaimRoutes } from "./routes/public-claim";
 import { publicMenuRoutes } from "./routes/public-menu";
 import { guestTabRoutes } from "./routes/guest-tab";
@@ -42,6 +43,7 @@ export async function buildApp() {
 
   await app.register(authRoutes);
   await app.register(ownerVenueRoutes);
+  await app.register(billingRoutes);
   await app.register(ownerCatalogRoutes);
   await app.register(ownerOrderRoutes);
   await app.register(ownerTableRoutes);

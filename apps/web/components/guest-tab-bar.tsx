@@ -8,11 +8,17 @@ export function GuestTabBar({
   slug,
   tab,
   partialCents = 0,
+  showJoin = true,
 }: {
   slug: string;
   tab: GuestTab | null | undefined;
   partialCents?: number;
+  showJoin?: boolean;
 }) {
+  if (!showJoin && (tab === undefined || tab === null)) {
+    return null;
+  }
+
   if (tab === undefined) {
     return (
       <div className="border-b border-white/10 bg-night/40 px-5 py-3 text-center text-sm text-white/60">

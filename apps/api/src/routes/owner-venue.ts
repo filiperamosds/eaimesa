@@ -4,6 +4,7 @@ import { and, eq, ne } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireOwner } from "../lib/auth-guard";
+import { serializeVenue } from "../lib/billing";
 import { parseBody } from "../lib/http";
 
 export async function ownerVenueRoutes(app: FastifyInstance) {
@@ -12,14 +13,7 @@ export async function ownerVenueRoutes(app: FastifyInstance) {
   app.get("/v1/owner/venue", async (req) => {
     const [venue] = await db.select().from(venues).where(eq(venues.id, req.owner!.venueId)).limit(1);
     if (!venue) throw new AppError(404, ERROR_CODES.VENUE_NOT_FOUND, "Estabelecimento não encontrado.");
-    return {
-      id: venue.id,
-      name: venue.name,
-      slug: venue.slug,
-      publicId: venue.publicId,
-      subscriptionStatus: venue.subscriptionStatus,
-      acceptsOrders: venue.acceptsOrders,
-    };
+    return serializeVenue(venue);
   });
 
   app.patch("/v1/owner/venue", async (req) => {
@@ -46,13 +40,6 @@ export async function ownerVenueRoutes(app: FastifyInstance) {
       .returning();
 
     if (!venue) throw new AppError(404, ERROR_CODES.VENUE_NOT_FOUND, "Estabelecimento não encontrado.");
-    return {
-      id: venue.id,
-      name: venue.name,
-      slug: venue.slug,
-      publicId: venue.publicId,
-      subscriptionStatus: venue.subscriptionStatus,
-      acceptsOrders: venue.acceptsOrders,
-    };
+    return serializeVenue(venue);
   });
 }

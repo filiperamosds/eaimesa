@@ -73,10 +73,12 @@ export function LoginForm() {
 
 export function RegisterForm() {
   const router = useRouter();
+  const requested = useSearchParams().get("plano");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [venueName, setVenueName] = useState("");
   const [slug, setSlug] = useState("");
+  const [plan, setPlan] = useState(requested === "auto_atendimento" ? "auto_atendimento" : "cardapio");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -85,11 +87,11 @@ export function RegisterForm() {
     setError(null);
     setPending(true);
     try {
-      await api<LoginResponse>("/v1/auth/register", {
+      const result = await api<LoginResponse>("/v1/auth/register", {
         method: "POST",
-        body: JSON.stringify({ email, password, venueName, slug }),
+        body: JSON.stringify({ email, password, venueName, slug, plan }),
       });
-      router.push("/painel/cardapio");
+      router.push(result.redirectPath || "/painel/cardapio");
       router.refresh();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Não foi possível cadastrar.");
@@ -118,6 +120,34 @@ export function RegisterForm() {
         onChange={setPassword}
         autoComplete="new-password"
       />
+      <fieldset>
+        <legend className="mb-2 text-sm font-medium">Plano (trial de 7 dias)</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {(
+            [
+              ["cardapio", "Cardápio"],
+              ["auto_atendimento", "Auto atendimento"],
+            ] as const
+          ).map(([id, label]) => (
+            <label
+              key={id}
+              className={`cursor-pointer rounded-2xl border px-3 py-3 text-sm ${
+                plan === id ? "border-chili bg-chili/5" : "border-line"
+              }`}
+            >
+              <input
+                type="radio"
+                name="plan"
+                value={id}
+                checked={plan === id}
+                onChange={() => setPlan(id)}
+                className="sr-only"
+              />
+              {label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
       {error ? <p className="text-sm text-chili">{error}</p> : null}
       <button type="submit" disabled={pending} className="btn-primary w-full">
         {pending ? "Criando…" : "Criar cardápio"}

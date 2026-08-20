@@ -70,7 +70,7 @@ sequenceDiagram
 
 1. Dono cria conta (e-mail + senha).
 2. Cadastra venue: nome e **slug** (`bar-do-tiao`). CNPJ, CPF responsável e OTP entram em fatia posterior.
-3. Escolhe plano Bar; gateway marca `subscription_status = active` (fatia billing). Na fatia 1 o seed/cadastro fica em `trial`.
+3. Escolhe **Cardápio** ou **Auto atendimento**. Cadastro entra em `trial` (7 dias). Checkout stub (`POST /v1/billing/checkout`) marca `active` por 30 dias — sem gateway.
 4. Sistema gera `public_id` opaco interno; a URL pública é o slug.
 5. Dono cadastra cardápio (fatia 1), fila (fatia 2) e mesas (fatia 3).
 6. Divulga `/{slug}` — **não** o claim.
@@ -163,6 +163,29 @@ Detalhe em [fatia-06-comandas-individuais.md](fatia-06-comandas-individuais.md).
 1. Staff: `POST /v1/staff/tabs/{id}/close` — fecha **uma** comanda (revoga sessões daquela conta).
 2. Staff: `POST /v1/staff/tables/{id}/close` — encerra a **mesa** só se todas as comandas estão `closed`.
 3. Próxima rodada na mesa = novo claim (novo PIN).
+
+## 5b. Fatia 10 — planos e checkout stub
+
+Detalhe em [fatia-10-planos.md](fatia-10-planos.md).
+
+```mermaid
+sequenceDiagram
+  participant D as Dono
+  participant W as apps/web
+  participant API as API
+
+  D->>W: /cadastro?plano=cardapio ou auto_atendimento
+  W->>API: POST /v1/auth/register (plan)
+  API-->>W: trial 7 dias
+  D->>W: /painel/pagamento
+  W->>API: POST /v1/billing/checkout
+  API-->>W: status success (stub), active 30 dias
+```
+
+1. Cadastro escolhe o plano; entra em `trial` (7 dias). Sem cartão nesta fatia.
+2. Checkout stub aprova e grava `active` + `current_period_ends_at` (+30 dias).
+3. Subir Cardápio → Auto atendimento: sempre. Descer: só depois do fim da vigência **paga**.
+4. Plano Cardápio: API responde 403 `PLAN_FEATURE` em mesas, equipe, pedidos, claim, PIN e comanda.
 
 ## 6. Venue suspenso (billing)
 

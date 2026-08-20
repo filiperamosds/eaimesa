@@ -83,7 +83,7 @@ export function StaffEditor() {
         <p className="font-medium text-ink">Garçons entram em /login (mesmo acesso do painel).</p>
         <p className="mt-1">
           Cada garçom escolhe a mesa e gera o QR de comanda para o cliente. Máximo {maxActive} ativos no
-          plano Bar.
+          plano Auto atendimento.
         </p>
       </div>
       <p className="mb-6 text-sm text-ink-soft">
