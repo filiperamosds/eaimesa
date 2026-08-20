@@ -23,7 +23,7 @@ function req(name: string): string {
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? "development",
   port: Number(process.env.API_PORT ?? 4000),
-  appUrl: process.env.APP_URL ?? "http://localhost:3000",
+  appUrl: process.env.APP_URL ?? "http://mac-filipe.local:3000",
   ownerJwtSecret: req("OWNER_JWT_SECRET"),
   ownerJwtTtlHours: Number(process.env.OWNER_JWT_TTL_HOURS ?? 12),
   guestSessionSecret: req("GUEST_SESSION_SECRET"),
