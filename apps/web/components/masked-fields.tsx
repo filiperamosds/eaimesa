@@ -1,7 +1,7 @@
 "use client";
 
-import { formatBrlMasked, formatBrlTyping, formatPhoneInput, reaisToCents } from "@eaimesa/shared";
-import { useEffect, useState, type InputHTMLAttributes } from "react";
+import { formatBrlMasked, formatPhoneInput, shiftMoneyCents } from "@eaimesa/shared";
+import { useEffect, useRef, useState, type InputHTMLAttributes } from "react";
 
 type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange" | "type">;
 
@@ -40,43 +40,36 @@ export function MoneyField({
 }) {
   const [focused, setFocused] = useState(false);
   const [text, setText] = useState(() => (cents == null ? "" : formatBrlMasked(cents)));
+  const centsRef = useRef(cents);
+  centsRef.current = cents;
 
   useEffect(() => {
     if (!focused) setText(cents == null ? "" : formatBrlMasked(cents));
   }, [cents, focused]);
 
-  function commit(next: string) {
-    setText(next);
-    if (!next.trim()) {
-      onCentsChange(null);
-      return;
-    }
-    const parsed = reaisToCents(next);
-    if (parsed !== null) onCentsChange(parsed);
+  function apply(next: number | null) {
+    centsRef.current = next;
+    setText(next == null ? "" : formatBrlMasked(next));
+    onCentsChange(next);
   }
 
   return (
     <input
       {...rest}
       className={className}
-      inputMode="decimal"
+      inputMode="numeric"
       autoComplete="off"
       placeholder={rest.placeholder ?? "R$ 0,00"}
       value={text}
       onFocus={() => setFocused(true)}
-      onChange={(e) => commit(formatBrlTyping(e.target.value))}
+      onChange={(e) => {
+        const inputType = (e.nativeEvent as InputEvent).inputType ?? "";
+        apply(shiftMoneyCents(centsRef.current, inputType, e.target.value));
+      }}
       onBlur={() => {
         setFocused(false);
-        if (!text.trim()) {
-          onCentsChange(null);
-          setText("");
-          return;
-        }
-        const parsed = reaisToCents(text);
-        if (parsed !== null) {
-          onCentsChange(parsed);
-          setText(formatBrlMasked(parsed));
-        }
+        const current = centsRef.current;
+        setText(current == null ? "" : formatBrlMasked(current));
       }}
     />
   );
