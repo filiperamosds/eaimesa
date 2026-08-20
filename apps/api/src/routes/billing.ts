@@ -1,5 +1,6 @@
 import { db, venues } from "@eaimesa/db";
 import {
+  CHECKOUT_STUB_DELAY_MS,
   checkoutSchema,
   ERROR_CODES,
   PAID_PERIOD_DAYS,
@@ -25,6 +26,7 @@ export async function billingRoutes(app: FastifyInstance) {
   app.get("/v1/billing/plans", async () => ({
     trialDays: TRIAL_DAYS,
     paidPeriodDays: PAID_PERIOD_DAYS,
+    stubDelayMs: CHECKOUT_STUB_DELAY_MS,
     plans: Object.values(PLANS),
     future: {
       id: "equipamento",
@@ -56,6 +58,8 @@ export async function billingRoutes(app: FastifyInstance) {
 
     const now = new Date();
     const periodEnd = paidPeriodEndsAtFrom(now);
+    // Stub no lugar do gateway: espera para o front testar o loading. Não processa cartão/PIX.
+    await new Promise((resolve) => setTimeout(resolve, CHECKOUT_STUB_DELAY_MS));
     const [updated] = await db
       .update(venues)
       .set({
@@ -73,6 +77,7 @@ export async function billingRoutes(app: FastifyInstance) {
     return {
       status: "success",
       provider: "stub",
+      method: body.method,
       plan: catalog.id,
       planName: catalog.name,
       amountCents: catalog.priceCents,

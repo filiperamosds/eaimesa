@@ -23,7 +23,7 @@ Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-fron
 
 | Superfície | Rota | Usuário | Fatia 10 | MVP completo |
 |------------|------|---------|----------|--------------|
-| **Landing** | `/` | Visitante B2B | Planos Cardápio + Auto atendimento | Sim |
+| **Landing** | `/` | Visitante B2B | Dois cards (Cardápio + Auto atendimento) com valor | Sim |
 | **Auth estabelecimento** | `/cadastro`, `/login` | Dono / garçom | Trial 7 dias no plano escolhido | Sim |
 | **Painel** | `/painel/*` | Dono | Cardápio; resto só no Auto atendimento | — |
 | **Pagamento** | `/painel/pagamento` | Dono | Checkout stub (sucesso) | Gateway |

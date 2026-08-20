@@ -177,13 +177,14 @@ sequenceDiagram
   D->>W: /cadastro?plano=cardapio ou auto_atendimento
   W->>API: POST /v1/auth/register (plan)
   API-->>W: trial 7 dias
-  D->>W: /painel/pagamento
-  W->>API: POST /v1/billing/checkout
-  API-->>W: status success (stub), active 30 dias
+  D->>W: /painel/pagamento (valor + cartão ou PIX)
+  W->>API: POST /v1/billing/checkout {plan, method}
+  Note over API: stub espera 2s
+  API-->>W: status success, active 30 dias
 ```
 
-1. Cadastro escolhe o plano; entra em `trial` (7 dias). Sem cartão nesta fatia.
-2. Checkout stub aprova e grava `active` + `current_period_ends_at` (+30 dias).
+1. Cadastro escolhe o plano (com o valor); entra em `trial` (7 dias). Cartão só no pagamento, depois.
+2. Checkout stub (~2s) aprova e grava `active` + `current_period_ends_at` (+30 dias). Front mostra cartão/PIX; a API não recebe o cartão.
 3. Subir Cardápio → Auto atendimento: sempre. Descer: só depois do fim da vigência **paga**.
 4. Plano Cardápio: API responde 403 `PLAN_FEATURE` em mesas, equipe, pedidos, claim, PIN e comanda. O `/{slug}` não mostra PIN nem “Entrar para pedir”; `/entrar` redireciona ao cardápio.
 

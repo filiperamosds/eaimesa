@@ -2,7 +2,7 @@ import { z } from "zod";
 import { ORDER_STATUSES } from "./orders";
 import { normalizePhone } from "./phone";
 import { isReservedSlug, normalizeSlug, SLUG_MAX, SLUG_MIN, SLUG_REGEX } from "./slug";
-import { PLAN_IDS } from "./plans";
+import { PAYMENT_METHODS, PLAN_IDS } from "./plans";
 import { TABLE_LABEL_MAX } from "./tables";
 
 export const slugSchema = z
@@ -28,6 +28,10 @@ export const registerSchema = z.object({
 
 export const checkoutSchema = z.object({
   plan: z.enum(PLAN_IDS, { errorMap: () => ({ message: "Escolha o plano Cardápio ou Auto atendimento." }) }),
+  method: z
+    .enum(PAYMENT_METHODS, { errorMap: () => ({ message: "Escolha cartão ou PIX." }) })
+    .optional()
+    .default("card"),
 });
 
 export const loginSchema = z.object({

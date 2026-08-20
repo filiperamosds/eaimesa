@@ -5,6 +5,11 @@ export const PLAN_FUTURE_ID = "equipamento" as const;
 
 export const TRIAL_DAYS = 7;
 export const PAID_PERIOD_DAYS = 30;
+/** Tempo do stub no lugar do gateway — o front usa para o estado de loading. */
+export const CHECKOUT_STUB_DELAY_MS = 2000;
+
+export const PAYMENT_METHODS = ["card", "pix"] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export const PLANS: Record<
   PlanId,

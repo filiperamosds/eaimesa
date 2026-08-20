@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { formatBrlFromCents, PLANS } from "@eaimesa/shared";
+import { PlanMarketingCards } from "../components/plan-cards";
 import { SiteFooter, SiteHeader } from "../components/site-chrome";
 
 export default function HomePage() {
@@ -21,10 +23,10 @@ export default function HomePage() {
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
                 <Link href="/cadastro?plano=cardapio" className="btn-primary">
-                  Adquirir Cardápio
+                  Adquirir Cardápio · {formatBrlFromCents(PLANS.cardapio.priceCents)}/mês
                 </Link>
                 <Link href="/cadastro?plano=auto_atendimento" className="btn-secondary">
-                  Adquirir Auto atendimento
+                  Adquirir Auto atendimento · {formatBrlFromCents(PLANS.auto_atendimento.priceCents)}/mês
                 </Link>
               </div>
               <dl className="mt-10 grid max-w-md grid-cols-3 gap-4 text-sm">
@@ -102,55 +104,11 @@ export default function HomePage() {
           <p className="eyebrow">Planos</p>
           <h2 className="mt-3 font-serif text-4xl">Escolha o que o bar precisa</h2>
           <p className="mt-3 max-w-xl text-ink-soft">
-            Trial de 7 dias. A cobrança entra depois — por enquanto o checkout só confirma sucesso, sem
-            gateway. Equipamento na mesa fica para uma fatia futura.
+            Dois planos, com preço na hora. Trial de 7 dias; depois cobra o valor do plano. Pagamento
+            (cartão ou PIX) no painel — ainda sem gateway.
           </p>
-          <div className="mt-10 grid gap-6 lg:grid-cols-3">
-            <div className="surface p-8">
-              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-chili">Cardápio</p>
-              <p className="mt-3 font-serif text-4xl">
-                R$ 49<span className="text-xl text-ink-soft">/mês</span>
-              </p>
-              <ul className="mt-5 space-y-2 text-sm text-ink-soft">
-                <li>URL pública do cardápio</li>
-                <li>Categorias, itens e foto</li>
-                <li>QR do cardápio</li>
-                <li>Sem pedido no celular</li>
-              </ul>
-              <Link href="/cadastro?plano=cardapio" className="btn-primary mt-8 w-full">
-                Adquirir Cardápio
-              </Link>
-              <Link href="/cafe-da-lina" className="mt-3 block text-center text-sm text-ink-soft underline">
-                Ver demo Café da Lina
-              </Link>
-            </div>
-            <div className="surface p-8 ring-2 ring-chili/30">
-              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-chili">
-                Auto atendimento
-              </p>
-              <p className="mt-3 font-serif text-4xl">
-                R$ 149<span className="text-xl text-ink-soft">/mês</span>
-              </p>
-              <ul className="mt-5 space-y-2 text-sm text-ink-soft">
-                <li>Tudo do Cardápio</li>
-                <li>Mesas, equipe, QR do garçom e PIN</li>
-                <li>Pedido e parcial no celular</li>
-                <li>Kanban no painel e no garçom</li>
-              </ul>
-              <Link href="/cadastro?plano=auto_atendimento" className="btn-primary mt-8 w-full">
-                Adquirir Auto atendimento
-              </Link>
-              <Link href="/bar-do-tiao" className="mt-3 block text-center text-sm text-ink-soft underline">
-                Ver demo Bar do Tião
-              </Link>
-            </div>
-            <div className="surface p-8 opacity-80">
-              <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-ink-soft">Em breve</p>
-              <p className="mt-3 font-serif text-3xl">Equipamento na mesa</p>
-              <p className="mt-4 text-sm text-ink-soft">
-                Tablet/hardware na mesa. Fora desta fatia — não dá para adquirir agora.
-              </p>
-            </div>
+          <div className="mt-10">
+            <PlanMarketingCards />
           </div>
         </section>
       </main>
