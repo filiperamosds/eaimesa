@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\CatalogCategory;
-use App\Models\CatalogItem;
+use App\Models\GuestSession;
 use App\Models\Order;
 use App\Models\Tab;
 use App\Models\TableClaim;
@@ -13,17 +12,28 @@ use App\Models\Venue;
 use App\Models\VenueTable;
 use App\Services\Orders as OrderService;
 use App\Support\ApiException;
+use App\Support\Claim;
 use App\Support\Http;
 use App\Support\Phone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StaffController extends Controller
 {
     public function tables(Request $request)
     {
         $venueId = $request->attributes->get('venueActor')['venueId'];
-        $rows = VenueTable::query()->where('venue_id', $venueId)->where('active', true)->orderBy('sort_order')->orderBy('created_at')->get();
-        $openSessions = TableSession::query()->where('venue_id', $venueId)->where('status', 'open')->pluck('table_id')->all();
+        $rows = VenueTable::query()
+            ->where('venue_id', $venueId)
+            ->where('active', true)
+            ->orderBy('sort_order')
+            ->orderBy('created_at')
+            ->get();
+        $openSessions = TableSession::query()
+            ->where('venue_id', $venueId)
+            ->where('status', 'open')
+            ->pluck('table_id')
+            ->all();
         $openTabRows = Tab::query()
             ->where('venue_id', $venueId)
             ->where('status', 'open')
@@ -62,21 +72,36 @@ class StaffController extends Controller
     public function createClaim(Request $request, string $tableId)
     {
         $actor = $request->attributes->get('venueActor');
-        $table = VenueTable::query()->where('id', $tableId)->where('venue_id', $actor['venueId'])->where('active', true)->first();
+        $table = VenueTable::query()
+            ->where('id', $tableId)
+            ->where('venue_id', $actor['venueId'])
+            ->where('active', true)
+            ->first();
         if (! $table) {
             throw new ApiException(404, 'TABLE_NOT_FOUND', 'Mesa não encontrada ou inativa.');
         }
         $venue = Venue::query()->findOrFail($actor['venueId']);
-        $token = bin2hex(random_bytes(16));
-        $claim = TableClaim::query()->create([
-            'venue_id' => $venue->id,
-            'table_id' => $table->id,
-            'member_id' => $actor['role'] === 'staff' ? $actor['memberId'] : null,
-            'owner_account_id' => $actor['role'] === 'owner' ? $actor['accountId'] : $actor['accountId'],
-            'token_hash' => hash('sha256', $token),
-            'expires_at' => now()->addSeconds((int) config('eaimesa.claim_ttl_seconds')),
-        ]);
+        $token = Claim::token();
         $ttl = (int) config('eaimesa.claim_ttl_seconds');
+        $staffMemberId = $actor['role'] === 'staff' ? $actor['memberId'] : null;
+
+        $claim = DB::transaction(function () use ($actor, $table, $venue, $token, $ttl, $staffMemberId) {
+            TableClaim::query()
+                ->where('venue_id', $venue->id)
+                ->where('table_id', $table->id)
+                ->whereNull('redeemed_at')
+                ->whereNull('invalidated_at')
+                ->update(['invalidated_at' => now()]);
+
+            return TableClaim::query()->create([
+                'venue_id' => $venue->id,
+                'table_id' => $table->id,
+                'member_id' => $staffMemberId,
+                'owner_account_id' => $staffMemberId ? null : $actor['accountId'],
+                'token_hash' => Claim::hash($token),
+                'expires_at' => now()->addSeconds($ttl),
+            ]);
+        });
 
         return [
             'claimId' => $claim->id,
@@ -95,28 +120,48 @@ class StaffController extends Controller
         if (! $table) {
             throw new ApiException(404, 'TABLE_NOT_FOUND', 'Mesa não encontrada.');
         }
-        $session = TableSession::query()->where('table_id', $tableId)->where('status', 'open')->first();
-        $tabs = Tab::query()
+        $session = TableSession::query()
+            ->where('venue_id', $venueId)
             ->where('table_id', $tableId)
-            ->when($session, fn ($q) => $q->where('table_session_id', $session->id))
-            ->orderBy('created_at')
-            ->get();
+            ->where('status', 'open')
+            ->first();
+        if (! $session) {
+            return [
+                'table' => ['id' => $table->id, 'label' => $table->label, 'sessionOpen' => false, 'openTabCount' => 0],
+                'tabs' => [],
+            ];
+        }
+        $tabs = Tab::query()->where('table_session_id', $session->id)->orderBy('created_at')->get();
+        $orders = Order::query()
+            ->with(['items', 'tab'])
+            ->where('venue_id', $venueId)
+            ->whereIn('tab_id', $tabs->pluck('id'))
+            ->orderByDesc('created_at')
+            ->get()
+            ->groupBy('tab_id');
 
         return [
-            'tabs' => $tabs->map(function ($tab) {
-                $orders = Order::query()->with('items')->where('tab_id', $tab->id)->orderByDesc('created_at')->get();
-                $serialized = $orders->map(fn ($o) => OrderService::serialize($o));
-                $total = $serialized->where('status', '!=', 'cancelled')->sum('totalCents');
+            'table' => [
+                'id' => $table->id,
+                'label' => $table->label,
+                'sessionOpen' => true,
+                'openTabCount' => $tabs->where('status', 'open')->count(),
+            ],
+            'tabs' => $tabs->map(function (Tab $tab) use ($orders) {
+                $serialized = ($orders->get($tab->id) ?? collect())
+                    ->map(fn (Order $o) => OrderService::serialize($o, $tab->guest_name))
+                    ->values();
 
                 return [
                     'id' => $tab->id,
                     'guestName' => $tab->guest_name,
                     'guestPhoneMasked' => Phone::mask($tab->guest_phone),
                     'status' => $tab->status,
-                    'totalCents' => $total,
+                    'createdAt' => $tab->created_at?->toIso8601String(),
+                    'totalCents' => OrderService::partialCents($serialized),
                     'orders' => $serialized->all(),
                 ];
-            })->all(),
+            })->values()->all(),
         ];
     }
 
@@ -127,28 +172,49 @@ class StaffController extends Controller
         if (! $tab) {
             throw new ApiException(404, 'TAB_NOT_FOUND', 'Comanda não encontrada.');
         }
-        if ($tab->status === 'closed') {
-            throw new ApiException(409, 'TAB_CLOSED', 'Esta comanda já foi fechada.');
+        if ($tab->status !== 'open') {
+            throw new ApiException(409, 'TAB_CLOSED', 'Esta comanda já está fechada.');
         }
-        $tab->update(['status' => 'closed', 'closed_at' => now()]);
+        $now = now();
+        DB::transaction(function () use ($tab, $now) {
+            $tab->update(['status' => 'closed', 'closed_at' => $now]);
+            GuestSession::query()->where('tab_id', $tab->id)->update(['expires_at' => $now]);
+        });
 
-        return ['ok' => true, 'id' => $tab->id, 'status' => 'closed'];
+        return ['ok' => true, 'tabId' => $tab->id, 'status' => 'closed'];
     }
 
     public function closeTable(Request $request, string $tableId)
     {
         $venueId = $request->attributes->get('venueActor')['venueId'];
-        $session = TableSession::query()->where('table_id', $tableId)->where('venue_id', $venueId)->where('status', 'open')->first();
+        $table = VenueTable::query()->where('id', $tableId)->where('venue_id', $venueId)->first();
+        if (! $table) {
+            throw new ApiException(404, 'TABLE_NOT_FOUND', 'Mesa não encontrada.');
+        }
+        $session = TableSession::query()
+            ->where('table_id', $tableId)
+            ->where('venue_id', $venueId)
+            ->where('status', 'open')
+            ->first();
         if (! $session) {
-            throw new ApiException(404, 'TABLE_NOT_FOUND', 'Mesa sem sessão aberta.');
+            throw new ApiException(409, 'TAB_CLOSED', 'Esta mesa já está encerrada.');
         }
-        $open = Tab::query()->where('table_session_id', $session->id)->where('status', 'open')->exists();
-        if ($open) {
-            throw new ApiException(409, 'TABS_STILL_OPEN', 'Feche todas as comandas antes de encerrar a mesa.');
+        $openCount = Tab::query()->where('table_session_id', $session->id)->where('status', 'open')->count();
+        if ($openCount > 0) {
+            throw new ApiException(409, 'TABS_STILL_OPEN', "Feche as {$openCount} comanda(s) aberta(s) antes de encerrar a mesa.");
         }
-        $session->update(['status' => 'closed', 'closed_at' => now()]);
+        $now = now();
+        DB::transaction(function () use ($session, $tableId, $now) {
+            $session->update(['status' => 'closed', 'closed_at' => $now]);
+            GuestSession::query()->where('table_session_id', $session->id)->update(['expires_at' => $now]);
+            TableClaim::query()
+                ->where('table_id', $tableId)
+                ->whereNull('redeemed_at')
+                ->whereNull('invalidated_at')
+                ->update(['invalidated_at' => $now]);
+        });
 
-        return ['ok' => true];
+        return ['ok' => true, 'tableId' => $table->id, 'status' => 'closed'];
     }
 
     public function orders(Request $request)
@@ -180,20 +246,6 @@ class StaffController extends Controller
 
     public function catalog(Request $request)
     {
-        $venueId = $request->attributes->get('venueActor')['venueId'];
-        $categories = CatalogCategory::query()->where('venue_id', $venueId)->where('active', true)->orderBy('sort_order')->get();
-        $items = CatalogItem::query()->where('venue_id', $venueId)->where('active', true)->orderBy('sort_order')->get();
-
-        return [
-            'categories' => $categories->map(fn ($c) => [
-                'id' => $c->id,
-                'name' => $c->name,
-                'items' => $items->where('category_id', $c->id)->values()->map(fn ($i) => [
-                    'id' => $i->id,
-                    'name' => $i->name,
-                    'priceCents' => $i->price_cents,
-                ])->all(),
-            ])->values()->all(),
-        ];
+        return OrderService::venueCatalog($request->attributes->get('venueActor')['venueId']);
     }
 }

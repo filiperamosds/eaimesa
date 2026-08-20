@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\Venue;
 use App\Models\VenueMember;
 use App\Models\VenueTable;
 use App\Services\Orders as OrderService;
@@ -11,6 +12,7 @@ use App\Support\ApiException;
 use App\Support\Http;
 use App\Support\Plans;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class OwnerOpsController extends Controller
@@ -51,12 +53,9 @@ class OwnerOpsController extends Controller
             ->get();
 
         return [
-            'tables' => $rows->map(fn ($t) => [
-                'id' => $t->id,
-                'label' => $t->label,
-                'sortOrder' => $t->sort_order,
-                'active' => $t->active,
-            ])->all(),
+            'tables' => $rows->map(fn ($t) => $this->tablePayload($t))->all(),
+            'maxActive' => Plans::BAR_MAX_TABLES,
+            'activeCount' => $rows->where('active', true)->count(),
         ];
     }
 
@@ -67,21 +66,23 @@ class OwnerOpsController extends Controller
             'sortOrder' => 'nullable|integer|min:0',
         ]);
         $venueId = $request->attributes->get('session')['venueId'];
+        $label = trim($body['label']);
+        if ($this->labelTaken($venueId, $label)) {
+            throw new ApiException(409, 'TABLE_LABEL_TAKEN', 'Já existe uma mesa com esse nome.');
+        }
         $active = VenueTable::query()->where('venue_id', $venueId)->where('active', true)->count();
         if ($active >= Plans::BAR_MAX_TABLES) {
-            throw new ApiException(409, 'TABLE_LIMIT', 'No máximo 15 mesas ativas.');
+            throw new ApiException(409, 'TABLE_LIMIT', 'Auto atendimento: no máximo '.Plans::BAR_MAX_TABLES.' mesas ativas.');
         }
-        if (VenueTable::query()->where('venue_id', $venueId)->where('label', trim($body['label']))->exists()) {
-            throw new ApiException(409, 'TABLE_LABEL_TAKEN', 'Já existe uma mesa com este nome.');
-        }
+        $maxSort = (int) VenueTable::query()->where('venue_id', $venueId)->max('sort_order');
         $row = VenueTable::query()->create([
             'venue_id' => $venueId,
-            'label' => trim($body['label']),
-            'sort_order' => $body['sortOrder'] ?? 0,
+            'label' => $label,
+            'sort_order' => $body['sortOrder'] ?? ($maxSort + 1),
             'active' => true,
         ]);
 
-        return ['id' => $row->id, 'label' => $row->label, 'sortOrder' => $row->sort_order, 'active' => $row->active];
+        return $this->tablePayload($row);
     }
 
     public function patchTable(Request $request, string $id)
@@ -94,8 +95,8 @@ class OwnerOpsController extends Controller
         $patch = [];
         if ($request->exists('label')) {
             $label = trim((string) $request->input('label'));
-            if (VenueTable::query()->where('venue_id', $venueId)->where('label', $label)->where('id', '!=', $id)->exists()) {
-                throw new ApiException(409, 'TABLE_LABEL_TAKEN', 'Já existe uma mesa com este nome.');
+            if ($this->labelTaken($venueId, $label, $id)) {
+                throw new ApiException(409, 'TABLE_LABEL_TAKEN', 'Já existe uma mesa com esse nome.');
             }
             $patch['label'] = $label;
         }
@@ -107,7 +108,7 @@ class OwnerOpsController extends Controller
             if ($want && ! $row->active) {
                 $active = VenueTable::query()->where('venue_id', $venueId)->where('active', true)->count();
                 if ($active >= Plans::BAR_MAX_TABLES) {
-                    throw new ApiException(409, 'TABLE_LIMIT', 'No máximo 15 mesas ativas.');
+                    throw new ApiException(409, 'TABLE_LIMIT', 'Auto atendimento: no máximo '.Plans::BAR_MAX_TABLES.' mesas ativas.');
                 }
             }
             $patch['active'] = $want;
@@ -116,7 +117,7 @@ class OwnerOpsController extends Controller
             $row->update($patch);
         }
 
-        return ['id' => $row->id, 'label' => $row->fresh()->label, 'sortOrder' => $row->sort_order, 'active' => $row->active];
+        return $this->tablePayload($row->fresh());
     }
 
     public function deleteTable(Request $request, string $id)
@@ -130,24 +131,22 @@ class OwnerOpsController extends Controller
         }
         $row->delete();
 
-        return ['ok' => true];
+        return response()->noContent();
     }
 
     public function staff(Request $request)
     {
         $venueId = $request->attributes->get('session')['venueId'];
-        $rows = VenueMember::query()->with('account')->where('venue_id', $venueId)->orderBy('created_at')->get();
-        $activeCount = $rows->where('active', true)->count();
+        $rows = VenueMember::query()
+            ->with('account')
+            ->where('venue_id', $venueId)
+            ->orderBy('name')
+            ->get();
 
         return [
-            'activeCount' => $activeCount,
-            'limit' => Plans::STAFF_LIMIT,
-            'staff' => $rows->map(fn ($m) => [
-                'id' => $m->id,
-                'name' => $m->name,
-                'email' => $m->account?->email,
-                'active' => $m->active,
-            ])->all(),
+            'staff' => $rows->map(fn ($m) => $this->staffPayload($m))->all(),
+            'maxActive' => Plans::STAFF_LIMIT,
+            'activeCount' => $rows->where('active', true)->count(),
         ];
     }
 
@@ -159,28 +158,30 @@ class OwnerOpsController extends Controller
             'password' => 'required|string|min:8',
         ]);
         $venueId = $request->attributes->get('session')['venueId'];
+        $email = strtolower(trim($body['email']));
+        if (Account::query()->where('email', $email)->exists()) {
+            throw new ApiException(409, 'EMAIL_TAKEN', 'Este e-mail já está em uso.');
+        }
         $active = VenueMember::query()->where('venue_id', $venueId)->where('active', true)->count();
         if ($active >= Plans::STAFF_LIMIT) {
-            throw new ApiException(409, 'STAFF_LIMIT', 'No máximo 5 garçons ativos.');
+            throw new ApiException(409, 'STAFF_LIMIT', 'Auto atendimento: no máximo '.Plans::STAFF_LIMIT.' garçons ativos.');
         }
-        $email = strtolower(trim($body['email']));
-        $account = Account::query()->where('email', $email)->first();
-        if ($account) {
-            throw new ApiException(409, 'EMAIL_TAKEN', 'Este e-mail já tem conta.');
-        }
-        $account = Account::query()->create([
-            'email' => $email,
-            'password_hash' => Hash::make($body['password']),
-        ]);
-        $member = VenueMember::query()->create([
-            'venue_id' => $venueId,
-            'account_id' => $account->id,
-            'role' => 'staff',
-            'name' => trim($body['name']),
-            'active' => true,
-        ]);
+        $member = DB::transaction(function () use ($email, $body, $venueId) {
+            $account = Account::query()->create([
+                'email' => $email,
+                'password_hash' => Hash::make($body['password']),
+            ]);
 
-        return ['id' => $member->id, 'name' => $member->name, 'email' => $account->email, 'active' => true];
+            return VenueMember::query()->create([
+                'venue_id' => $venueId,
+                'account_id' => $account->id,
+                'role' => 'staff',
+                'name' => trim($body['name']),
+                'active' => true,
+            ]);
+        });
+
+        return $this->staffPayload($member->load('account'));
     }
 
     public function patchStaff(Request $request, string $id)
@@ -201,7 +202,7 @@ class OwnerOpsController extends Controller
             if ($want && ! $member->active) {
                 $active = VenueMember::query()->where('venue_id', $member->venue_id)->where('active', true)->count();
                 if ($active >= Plans::STAFF_LIMIT) {
-                    throw new ApiException(409, 'STAFF_LIMIT', 'No máximo 5 garçons ativos.');
+                    throw new ApiException(409, 'STAFF_LIMIT', 'Auto atendimento: no máximo '.Plans::STAFF_LIMIT.' garçons ativos.');
                 }
             }
             $member->active = $want;
@@ -211,20 +212,66 @@ class OwnerOpsController extends Controller
             $member->account?->update(['password_hash' => Hash::make((string) $request->input('password'))]);
         }
 
-        return ['id' => $member->id, 'name' => $member->name, 'email' => $member->account?->email, 'active' => $member->active];
+        return $this->staffPayload($member->fresh('account'));
     }
 
     public function deleteStaff(Request $request, string $id)
     {
-        $member = VenueMember::query()
-            ->where('id', $id)
-            ->where('venue_id', $request->attributes->get('session')['venueId'])
-            ->first();
-        if (! $member) {
+        $venueId = $request->attributes->get('session')['venueId'];
+        $deleted = DB::transaction(function () use ($id, $venueId) {
+            $member = VenueMember::query()->where('id', $id)->where('venue_id', $venueId)->first();
+            if (! $member) {
+                return null;
+            }
+            $accountId = $member->account_id;
+            $member->delete();
+            $ownsVenue = Venue::query()->where('owner_account_id', $accountId)->exists();
+            if (! $ownsVenue) {
+                Account::query()->where('id', $accountId)->delete();
+            }
+
+            return true;
+        });
+        if (! $deleted) {
             throw new ApiException(404, 'STAFF_NOT_FOUND', 'Garçom não encontrado.');
         }
-        $member->delete();
 
-        return ['ok' => true];
+        return response()->noContent();
+    }
+
+    private function tablePayload(VenueTable $t): array
+    {
+        return [
+            'id' => $t->id,
+            'label' => $t->label,
+            'sortOrder' => $t->sort_order,
+            'active' => $t->active,
+            'createdAt' => $t->created_at?->toIso8601String(),
+            'updatedAt' => $t->updated_at?->toIso8601String(),
+        ];
+    }
+
+    private function staffPayload(VenueMember $m): array
+    {
+        return [
+            'id' => $m->id,
+            'name' => $m->name,
+            'email' => $m->account?->email,
+            'active' => $m->active,
+            'createdAt' => $m->created_at?->toIso8601String(),
+            'updatedAt' => $m->updated_at?->toIso8601String(),
+        ];
+    }
+
+    private function labelTaken(string $venueId, string $label, ?string $exceptId = null): bool
+    {
+        $q = VenueTable::query()
+            ->where('venue_id', $venueId)
+            ->whereRaw('LOWER(label) = ?', [mb_strtolower($label)]);
+        if ($exceptId) {
+            $q->where('id', '!=', $exceptId);
+        }
+
+        return $q->exists();
     }
 }

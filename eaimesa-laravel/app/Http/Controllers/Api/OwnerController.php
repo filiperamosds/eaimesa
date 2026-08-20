@@ -7,6 +7,7 @@ use App\Models\CatalogCategory;
 use App\Models\CatalogItem;
 use App\Models\Venue;
 use App\Services\Billing;
+use App\Services\Orders as OrderService;
 use App\Support\ApiException;
 use App\Support\Http;
 use App\Support\Slug;
@@ -52,28 +53,7 @@ class OwnerController extends Controller
 
     public function catalog(Request $request)
     {
-        $venueId = $request->attributes->get('session')['venueId'];
-        $categories = CatalogCategory::query()->where('venue_id', $venueId)->orderBy('sort_order')->orderBy('created_at')->get();
-        $items = CatalogItem::query()->where('venue_id', $venueId)->orderBy('sort_order')->orderBy('created_at')->get();
-
-        return [
-            'categories' => $categories->map(fn ($c) => [
-                'id' => $c->id,
-                'name' => $c->name,
-                'sortOrder' => $c->sort_order,
-                'active' => $c->active,
-                'items' => $items->where('category_id', $c->id)->values()->map(fn ($i) => [
-                    'id' => $i->id,
-                    'categoryId' => $i->category_id,
-                    'name' => $i->name,
-                    'description' => $i->description,
-                    'imageUrl' => $i->image_url,
-                    'priceCents' => $i->price_cents,
-                    'sortOrder' => $i->sort_order,
-                    'active' => $i->active,
-                ])->all(),
-            ])->values()->all(),
-        ];
+        return OrderService::venueCatalog($request->attributes->get('session')['venueId']);
     }
 
     public function createCategory(Request $request)
@@ -185,6 +165,15 @@ class OwnerController extends Controller
         foreach ($map as $in => $col) {
             if ($request->exists($in)) {
                 $patch[$col] = $request->input($in);
+            }
+        }
+        if (isset($patch['category_id'])) {
+            $cat = CatalogCategory::query()
+                ->where('id', $patch['category_id'])
+                ->where('venue_id', $row->venue_id)
+                ->first();
+            if (! $cat) {
+                throw new ApiException(404, 'CATEGORY_NOT_FOUND', 'Categoria não encontrada.');
             }
         }
         if ($patch) {

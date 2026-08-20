@@ -148,6 +148,8 @@ class Billing
             'blurb' => $p->blurb,
             'features' => $p->features ?? [],
             'listed' => (bool) $p->listed,
+            'sortOrder' => $p->sort_order,
+            'updatedAt' => $p->updated_at?->toIso8601String(),
         ];
     }
 
@@ -160,7 +162,12 @@ class Billing
             'trialDays' => $settings?->trial_days ?? 7,
             'paidPeriodDays' => $settings?->paid_period_days ?? 30,
             'stubDelayMs' => (int) config('eaimesa.checkout_stub_delay_ms'),
-            'plans' => $plans->map(fn (PlanCatalog $p) => self::publicPlanPayload($p))->values()->all(),
+            'plans' => $plans->map(fn (PlanCatalog $p) => array_merge(self::publicPlanPayload($p), ['listed' => true]))->values()->all(),
+            'future' => [
+                'id' => 'equipamento',
+                'name' => 'Equipamento na mesa',
+                'blurb' => 'Hardware/tablet na mesa. Fora desta fatia — em breve.',
+            ],
         ];
     }
 

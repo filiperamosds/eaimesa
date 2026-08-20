@@ -39,11 +39,6 @@ Route::prefix('v1')->group(function () {
         Route::patch('owner/catalog/items/{id}', [OwnerController::class, 'patchItem']);
         Route::delete('owner/catalog/items/{id}', [OwnerController::class, 'deleteItem']);
         Route::post('owner/catalog/items/{id}/image', [OwnerController::class, 'uploadItemImage']);
-
-        Route::get('owner/staff', [OwnerOpsController::class, 'staff']);
-        Route::post('owner/staff', [OwnerOpsController::class, 'createStaff']);
-        Route::patch('owner/staff/{id}', [OwnerOpsController::class, 'patchStaff']);
-        Route::delete('owner/staff/{id}', [OwnerOpsController::class, 'deleteStaff']);
     });
 
     Route::middleware(['owner', 'service.plan'])->group(function () {
@@ -54,6 +49,10 @@ Route::prefix('v1')->group(function () {
         Route::post('owner/tables', [OwnerOpsController::class, 'createTable']);
         Route::patch('owner/tables/{id}', [OwnerOpsController::class, 'patchTable']);
         Route::delete('owner/tables/{id}', [OwnerOpsController::class, 'deleteTable']);
+        Route::get('owner/staff', [OwnerOpsController::class, 'staff']);
+        Route::post('owner/staff', [OwnerOpsController::class, 'createStaff']);
+        Route::patch('owner/staff/{id}', [OwnerOpsController::class, 'patchStaff']);
+        Route::delete('owner/staff/{id}', [OwnerOpsController::class, 'deleteStaff']);
     });
 
     Route::middleware(['venue.actor', 'service.plan'])->group(function () {

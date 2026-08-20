@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Account;
 use App\Models\BillingEvent;
 use App\Models\PlanCatalog;
 use App\Models\PlatformSetting;
@@ -32,7 +33,9 @@ class PlatformController extends Controller
         $token = JwtCookies::signPlatform($user->id);
 
         return response()->json([
-            'user' => ['id' => $user->id, 'email' => $user->email, 'name' => $user->name],
+            'role' => 'platform',
+            'redirectPath' => '/admin',
+            'account' => ['id' => $user->id, 'email' => $user->email, 'name' => $user->name],
         ])->cookie(JwtCookies::cookie((string) config('eaimesa.cookies.platform'), $token, (int) config('eaimesa.platform_jwt_ttl_hours') * 3600));
     }
 
@@ -46,28 +49,71 @@ class PlatformController extends Controller
     {
         $user = $request->attributes->get('platformUser');
 
-        return ['user' => ['id' => $user->id, 'email' => $user->email, 'name' => $user->name]];
+        return [
+            'role' => 'platform',
+            'account' => ['id' => $user->id, 'email' => $user->email, 'name' => $user->name],
+        ];
     }
 
     public function dashboard()
     {
+        $catalog = PlanCatalog::query()->orderBy('sort_order')->get();
         $venues = Venue::query()->get();
-        $events = BillingEvent::query()->with('venue')->orderByDesc('created_at')->limit(20)->get();
+        $now = now();
+        $byStatus = ['trial' => 0, 'active' => 0, 'suspended' => 0, 'past_due' => 0];
+        $byPlanCount = [];
+        foreach ($catalog as $p) {
+            $byPlanCount[$p->id] = 0;
+        }
+        $trialExpired = 0;
+        $mrrCents = 0;
+        $priceByPlan = $catalog->mapWithKeys(fn (PlanCatalog $p) => [
+            $p->id => Plans::effectivePriceCents((int) $p->price_cents, $p->promo_price_cents),
+        ]);
+        $nameByPlan = $catalog->mapWithKeys(fn (PlanCatalog $p) => [$p->id => $p->name]);
+
+        foreach ($venues as $v) {
+            $byStatus[$v->subscription_status] = ($byStatus[$v->subscription_status] ?? 0) + 1;
+            $byPlanCount[$v->plan] = ($byPlanCount[$v->plan] ?? 0) + 1;
+            if ($v->subscription_status === 'trial' && $v->trial_ends_at && $v->trial_ends_at->lt($now)) {
+                $trialExpired++;
+            }
+            if ($v->subscription_status === 'active' && (! $v->current_period_ends_at || $v->current_period_ends_at->gt($now))) {
+                $mrrCents += $priceByPlan[$v->plan] ?? 0;
+            }
+        }
+
+        $since = now()->subDays(30);
+        $sales = BillingEvent::query()->where('status', 'success')->where('created_at', '>=', $since);
+        $recent = BillingEvent::query()->with('venue')->orderByDesc('created_at')->limit(10)->get();
 
         return [
-            'kpis' => [
-                'venues' => $venues->count(),
-                'trial' => $venues->where('subscription_status', 'trial')->count(),
-                'active' => $venues->where('subscription_status', 'active')->count(),
-                'suspended' => $venues->where('subscription_status', 'suspended')->count(),
+            'venues' => [
+                'total' => $venues->count(),
+                'byStatus' => $byStatus,
+                'byPlan' => collect($byPlanCount)->map(fn ($count, $id) => [
+                    'id' => $id,
+                    'name' => $nameByPlan[$id] ?? $id,
+                    'count' => $count,
+                ])->values()->all(),
+                'trialExpired' => $trialExpired,
             ],
-            'recentCheckouts' => $events->map(fn ($e) => [
+            'mrrCents' => $mrrCents,
+            'checkouts30d' => [
+                'count' => (int) $sales->count(),
+                'totalCents' => (int) (clone $sales)->sum('amount_cents'),
+            ],
+            'recent' => $recent->map(fn ($e) => [
                 'id' => $e->id,
+                'venueId' => $e->venue_id,
                 'venueName' => $e->venue?->name,
+                'venueSlug' => $e->venue?->slug,
                 'plan' => $e->plan,
                 'planName' => $e->plan_name,
-                'amountCents' => $e->amount_cents,
                 'method' => $e->method,
+                'amountCents' => $e->amount_cents,
+                'provider' => $e->provider,
+                'status' => $e->status,
                 'createdAt' => $e->created_at?->toIso8601String(),
             ])->all(),
         ];
@@ -75,7 +121,7 @@ class PlatformController extends Controller
 
     public function venues(Request $request)
     {
-        $q = Venue::query()->with('owner')->orderBy('name');
+        $q = Venue::query()->with('owner')->orderByDesc('created_at');
         if ($request->filled('q')) {
             $term = '%'.$request->string('q').'%';
             $q->where(function ($w) use ($term) {
@@ -88,11 +134,22 @@ class PlatformController extends Controller
         if ($request->filled('status')) {
             $q->where('subscription_status', $request->string('status'));
         }
+        $names = PlanCatalog::query()->pluck('name', 'id');
 
         return [
-            'venues' => $q->limit(200)->get()->map(fn (Venue $v) => array_merge(Billing::serializeVenue($v), [
+            'venues' => $q->limit(100)->get()->map(fn (Venue $v) => [
+                'id' => $v->id,
+                'name' => $v->name,
+                'slug' => $v->slug,
+                'plan' => $v->plan,
+                'planName' => $names[$v->plan] ?? $v->plan,
+                'subscriptionStatus' => $v->subscription_status,
+                'acceptsOrders' => $v->accepts_orders,
+                'trialEndsAt' => optional($v->trial_ends_at)?->toIso8601String(),
+                'currentPeriodEndsAt' => optional($v->current_period_ends_at)?->toIso8601String(),
+                'createdAt' => $v->created_at?->toIso8601String(),
                 'ownerEmail' => $v->owner?->email,
-            ]))->all(),
+            ])->all(),
         ];
     }
 
@@ -102,9 +159,9 @@ class PlatformController extends Controller
         if (! $venue) {
             throw new ApiException(404, 'VENUE_NOT_FOUND', 'Estabelecimento não encontrado.');
         }
-        $venue->update(['subscription_status' => 'suspended', 'accepts_orders' => false]);
+        $venue->update(['subscription_status' => 'suspended']);
 
-        return Billing::serializeVenue($venue->fresh());
+        return ['ok' => true, 'venueId' => $venue->id, 'subscriptionStatus' => 'suspended'];
     }
 
     public function unsuspend(string $id)
@@ -113,32 +170,40 @@ class PlatformController extends Controller
         if (! $venue) {
             throw new ApiException(404, 'VENUE_NOT_FOUND', 'Estabelecimento não encontrado.');
         }
-        $status = 'trial';
-        if ($venue->current_period_ends_at && $venue->current_period_ends_at->gt(now())) {
-            $status = 'active';
-        } elseif ($venue->trial_ends_at && $venue->trial_ends_at->lt(now())) {
-            $status = 'past_due';
+        $now = now();
+        $next = 'past_due';
+        if ($venue->current_period_ends_at && $venue->current_period_ends_at->gt($now)) {
+            $next = 'active';
+        } elseif ($venue->trial_ends_at && $venue->trial_ends_at->gt($now)) {
+            $next = 'trial';
         }
-        $venue->update([
-            'subscription_status' => $status,
-            'accepts_orders' => Plans::allowsService(Billing::planKind($venue->plan)) && $status !== 'past_due',
-        ]);
+        $venue->update(['subscription_status' => $next]);
 
-        return Billing::serializeVenue($venue->fresh());
+        return ['ok' => true, 'venueId' => $venue->id, 'subscriptionStatus' => $next];
     }
 
     public function plans()
     {
+        $settings = PlatformSetting::query()->find('default');
+        $plans = PlanCatalog::query()->orderBy('sort_order')->get();
+
         return [
-            'plans' => PlanCatalog::query()->orderBy('sort_order')->get()->map(fn ($p) => Billing::publicPlanPayload($p))->all(),
-            'settings' => PlatformSetting::current()->only(['trial_days', 'paid_period_days']),
+            'trialDays' => $settings?->trial_days ?? 7,
+            'paidPeriodDays' => $settings?->paid_period_days ?? 30,
+            'stubDelayMs' => (int) config('eaimesa.checkout_stub_delay_ms'),
+            'plans' => $plans->map(fn (PlanCatalog $p) => Billing::publicPlanPayload($p))->values()->all(),
+            'future' => [
+                'id' => 'equipamento',
+                'name' => 'Equipamento na mesa',
+                'blurb' => 'Hardware/tablet na mesa. Fora desta fatia — em breve.',
+            ],
         ];
     }
 
     public function createPlan(Request $request)
     {
         if (PlanCatalog::query()->count() >= Plans::MAX_CATALOG) {
-            throw new ApiException(400, 'VALIDATION_ERROR', 'Máximo de 12 planos.');
+            throw new ApiException(409, 'VALIDATION_ERROR', 'Máximo de 12 planos no catálogo.');
         }
         $body = Http::validate($request->all(), [
             'name' => 'required|string|min:2|max:80',
@@ -148,18 +213,19 @@ class PlatformController extends Controller
             'blurb' => 'required|string|max:240',
             'features' => 'nullable|array',
             'listed' => 'nullable|boolean',
-            'id' => 'nullable|string|min:3|max:48',
         ]);
-        $id = $body['id'] ?? Plans::slugifyPlanId($body['name']);
-        if (! preg_match(Plans::ID_REGEX, $id)) {
-            throw new ApiException(400, 'VALIDATION_ERROR', 'SKU inválido.');
-        }
-        if (PlanCatalog::query()->find($id)) {
-            $id = $id.'-'.substr(bin2hex(random_bytes(2)), 0, 4);
+        $taken = PlanCatalog::query()->pluck('id')->all();
+        $id = Plans::slugifyPlanId($body['name']);
+        if (in_array($id, $taken, true)) {
+            $n = 2;
+            while (in_array(substr($id.'-'.$n, 0, 48), $taken, true)) {
+                $n++;
+            }
+            $id = substr($id.'-'.$n, 0, 48);
         }
         $promo = $body['promoPriceCents'] ?? null;
         if ($promo !== null && $promo >= $body['priceCents']) {
-            throw new ApiException(400, 'VALIDATION_ERROR', 'Promo precisa ser menor que o preço cheio.');
+            throw new ApiException(400, 'VALIDATION_ERROR', 'O preço promocional deve ser menor que o preço cheio.');
         }
         $max = (int) PlanCatalog::query()->max('sort_order');
         $row = PlanCatalog::query()->create([
@@ -169,7 +235,7 @@ class PlatformController extends Controller
             'price_cents' => $body['priceCents'],
             'promo_price_cents' => $promo,
             'blurb' => $body['blurb'],
-            'features' => $body['features'] ?? [],
+            'features' => array_values(array_filter($body['features'] ?? [], fn ($f) => trim((string) $f) !== '')),
             'listed' => $body['listed'] ?? true,
             'sort_order' => $max + 1,
             'updated_at' => now(),
@@ -182,19 +248,28 @@ class PlatformController extends Controller
     {
         $row = PlanCatalog::query()->find($id);
         if (! $row) {
-            throw new ApiException(404, 'VENUE_NOT_FOUND', 'Plano não encontrado.');
+            throw new ApiException(404, 'NOT_FOUND', 'Plano inexistente.');
         }
-        $patch = [];
-        foreach (['name' => 'name', 'kind' => 'kind', 'blurb' => 'blurb'] as $in => $col) {
-            if ($request->exists($in)) {
-                $patch[$col] = $request->input($in);
-            }
+        $nextPrice = $request->exists('priceCents') ? (int) $request->input('priceCents') : (int) $row->price_cents;
+        $nextPromo = $request->exists('promoPriceCents') ? $request->input('promoPriceCents') : $row->promo_price_cents;
+        if ($nextPromo !== null && $nextPromo >= $nextPrice) {
+            throw new ApiException(400, 'VALIDATION_ERROR', 'O preço promocional deve ser menor que o preço cheio.');
+        }
+        $patch = ['updated_at' => now()];
+        if ($request->exists('name')) {
+            $patch['name'] = $request->input('name');
+        }
+        if ($request->exists('kind')) {
+            $patch['kind'] = $request->input('kind');
         }
         if ($request->exists('priceCents')) {
-            $patch['price_cents'] = (int) $request->input('priceCents');
+            $patch['price_cents'] = $nextPrice;
         }
         if ($request->exists('promoPriceCents')) {
-            $patch['promo_price_cents'] = $request->input('promoPriceCents');
+            $patch['promo_price_cents'] = $nextPromo;
+        }
+        if ($request->exists('blurb')) {
+            $patch['blurb'] = $request->input('blurb');
         }
         if ($request->exists('features')) {
             $patch['features'] = $request->input('features');
@@ -202,7 +277,6 @@ class PlatformController extends Controller
         if ($request->exists('listed')) {
             $patch['listed'] = (bool) $request->input('listed');
         }
-        $patch['updated_at'] = now();
         $row->update($patch);
 
         return Billing::publicPlanPayload($row->fresh());
@@ -210,12 +284,16 @@ class PlatformController extends Controller
 
     public function patchSettings(Request $request)
     {
-        $settings = PlatformSetting::current();
+        $settings = PlatformSetting::query()->firstOrNew(['id' => 'default']);
         if ($request->exists('trialDays')) {
             $settings->trial_days = (int) $request->input('trialDays');
+        } elseif (! $settings->exists) {
+            $settings->trial_days = 7;
         }
         if ($request->exists('paidPeriodDays')) {
             $settings->paid_period_days = (int) $request->input('paidPeriodDays');
+        } elseif (! $settings->exists) {
+            $settings->paid_period_days = 30;
         }
         $settings->updated_at = now();
         $settings->save();
