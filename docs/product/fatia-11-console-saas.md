@@ -35,7 +35,7 @@ Mesmo `apps/web`. Rotas `/admin/*` (slug `admin` já é reservado).
 ## Fluxo
 
 1. Operador entra em `/admin/login`.
-2. Dashboard mostra os bares do seed (trial → MRR 0) e os checkouts stub.
+2. Dashboard mostra os bares do seed (trial → MRR 0) e os checkouts stub. Status e plano aparecem em português (Em trial, Ativo, Cardápio…).
 3. Dono paga no painel → evento entra em vendas; MRR sobe se `active`.
 4. Operador altera o preço do Cardápio → landing/`/preco`/cadastro passam a mostrar o valor novo.
 5. Suspender um bar → `subscription_status=suspended`; cardápio público continua leitura.

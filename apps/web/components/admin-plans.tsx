@@ -105,7 +105,7 @@ export function AdminPlans() {
           <label className="text-sm">
             <span className="mb-1 block text-white/60">Dias de trial</span>
             <input
-              className="field bg-white/5 text-white"
+              className="field-night"
               type="number"
               min={0}
               max={90}
@@ -116,7 +116,7 @@ export function AdminPlans() {
           <label className="text-sm">
             <span className="mb-1 block text-white/60">Dias da vigência paga (stub)</span>
             <input
-              className="field bg-white/5 text-white"
+              className="field-night"
               type="number"
               min={1}
               max={366}
@@ -144,7 +144,7 @@ export function AdminPlans() {
               <label className="text-sm">
                 <span className="mb-1 block text-white/60">Nome</span>
                 <input
-                  className="field bg-white/5 text-white"
+                  className="field-night"
                   value={d.name}
                   onChange={(e) => setDrafts((cur) => ({ ...cur, [p.id]: { ...d, name: e.target.value } }))}
                 />
@@ -152,7 +152,7 @@ export function AdminPlans() {
               <label className="text-sm">
                 <span className="mb-1 block text-white/60">Preço mensal</span>
                 <MoneyField
-                  className="field bg-white/5 text-white"
+                  className="field-night"
                   cents={d.priceCents}
                   onCentsChange={(cents) =>
                     setDrafts((cur) => ({ ...cur, [p.id]: { ...d, priceCents: cents ?? 0 } }))
@@ -164,7 +164,7 @@ export function AdminPlans() {
             <label className="mt-3 block text-sm">
               <span className="mb-1 block text-white/60">Texto curto</span>
               <input
-                className="field bg-white/5 text-white"
+                className="field-night"
                 value={d.blurb}
                 onChange={(e) => setDrafts((cur) => ({ ...cur, [p.id]: { ...d, blurb: e.target.value } }))}
               />
@@ -172,7 +172,7 @@ export function AdminPlans() {
             <label className="mt-3 block text-sm">
               <span className="mb-1 block text-white/60">O que inclui (um por linha)</span>
               <textarea
-                className="field min-h-28 bg-white/5 text-white"
+                className="field-night min-h-28"
                 value={d.features.join("\n")}
                 onChange={(e) =>
                   setDrafts((cur) => ({ ...cur, [p.id]: { ...d, features: e.target.value.split("\n") } }))

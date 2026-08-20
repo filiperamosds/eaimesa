@@ -2,6 +2,14 @@
 
 import { formatBrlFromCents } from "@eaimesa/shared";
 import { useEffect, useState } from "react";
+import {
+  PLAN_ID_LABEL,
+  PLAN_ID_ORDER,
+  SUBSCRIPTION_STATUS_HINT,
+  SUBSCRIPTION_STATUS_LABEL,
+  SUBSCRIPTION_STATUS_ORDER,
+  paymentMethodLabel,
+} from "../lib/admin-copy";
 import { api, ApiError } from "../lib/api";
 
 type Dash = {
@@ -24,6 +32,56 @@ type Dash = {
   }[];
 };
 
+const STATUS_BAR: Record<string, string> = {
+  trial: "bg-amber",
+  active: "bg-sage",
+  past_due: "bg-chili/80",
+  suspended: "bg-white/35",
+};
+
+function Breakdown({
+  title,
+  total,
+  rows,
+}: {
+  title: string;
+  total: number;
+  rows: { id: string; label: string; hint?: string; n: number; bar: string }[];
+}) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-sm font-medium">{title}</p>
+        <p className="text-xs text-white/40">
+          {total} {total === 1 ? "bar" : "bares"}
+        </p>
+      </div>
+      <ul className="mt-4 space-y-3">
+        {rows.map((row) => {
+          const pct = total > 0 ? Math.round((row.n / total) * 100) : 0;
+          return (
+            <li key={row.id}>
+              <div className="flex items-baseline justify-between gap-3 text-sm">
+                <span>
+                  <span className="text-white/90">{row.label}</span>
+                  {row.hint ? <span className="mt-0.5 block text-[11px] text-white/40">{row.hint}</span> : null}
+                </span>
+                <span className="shrink-0 tabular-nums text-white">
+                  {row.n}
+                  <span className="ml-1.5 text-xs text-white/40">{pct}%</span>
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className={`h-full rounded-full ${row.bar}`} style={{ width: `${pct}%` }} />
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function AdminDashboard() {
   const [data, setData] = useState<Dash | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +101,28 @@ export function AdminDashboard() {
     ["Faturado 30d", formatBrlFromCents(data.checkouts30d.totalCents)],
   ];
 
+  const statusRows = SUBSCRIPTION_STATUS_ORDER.map((id) => {
+    const n = data.venues.byStatus[id] ?? 0;
+    const expiredNote =
+      id === "trial" && data.venues.trialExpired > 0
+        ? `${data.venues.trialExpired} com a data já vencida`
+        : undefined;
+    return {
+      id,
+      label: SUBSCRIPTION_STATUS_LABEL[id] ?? id,
+      hint: expiredNote ?? SUBSCRIPTION_STATUS_HINT[id],
+      n,
+      bar: STATUS_BAR[id] ?? "bg-white/40",
+    };
+  });
+
+  const planRows = PLAN_ID_ORDER.map((id) => ({
+    id,
+    label: PLAN_ID_LABEL[id] ?? id,
+    n: data.venues.byPlan[id] ?? 0,
+    bar: id === "auto_atendimento" ? "bg-chili" : "bg-white/50",
+  }));
+
   return (
     <div className="space-y-8">
       <div>
@@ -59,32 +139,8 @@ export function AdminDashboard() {
         ))}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-sm font-medium">Por status</p>
-          <ul className="mt-3 space-y-1 text-sm text-white/70">
-            {Object.entries(data.venues.byStatus).map(([k, n]) => (
-              <li key={k} className="flex justify-between">
-                <span>{k}</span>
-                <span>{n}</span>
-              </li>
-            ))}
-            <li className="flex justify-between text-amber">
-              <span>trial vencido</span>
-              <span>{data.venues.trialExpired}</span>
-            </li>
-          </ul>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-sm font-medium">Por plano</p>
-          <ul className="mt-3 space-y-1 text-sm text-white/70">
-            {Object.entries(data.venues.byPlan).map(([k, n]) => (
-              <li key={k} className="flex justify-between">
-                <span>{k}</span>
-                <span>{n}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Breakdown title="Por status da assinatura" total={data.venues.total} rows={statusRows} />
+        <Breakdown title="Por plano" total={data.venues.total} rows={planRows} />
       </div>
       <div>
         <p className="text-sm font-medium">Últimos checkouts</p>
@@ -99,7 +155,7 @@ export function AdminDashboard() {
                   <span className="text-white/40">/{e.venueSlug}</span>
                 </span>
                 <span className="text-white/70">
-                  {e.planName} · {e.method} · {formatBrlFromCents(e.amountCents)} ·{" "}
+                  {e.planName} · {paymentMethodLabel(e.method)} · {formatBrlFromCents(e.amountCents)} ·{" "}
                   {new Date(e.createdAt).toLocaleString("pt-BR")}
                 </span>
               </li>
