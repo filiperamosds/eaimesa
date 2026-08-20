@@ -19,9 +19,10 @@ export function apiBase() {
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   const isForm = typeof FormData !== "undefined" && init?.body instanceof FormData;
+  const hasBody = init?.body != null && init.body !== "";
   if (isForm) {
     headers.delete("Content-Type");
-  } else if (!headers.has("Content-Type")) {
+  } else if (hasBody && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 
