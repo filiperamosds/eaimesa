@@ -1,10 +1,11 @@
 "use client";
 
-import { centsToInput, formatBrlFromCents, reaisToCents } from "@eaimesa/shared";
+import { formatBrlFromCents } from "@eaimesa/shared";
 import { useEffect, useState } from "react";
 import { api, ApiError, apiUpload } from "../lib/api";
 import { mediaSrc } from "../lib/media";
 import type { CatalogCategory } from "../lib/types";
+import { MoneyField } from "./masked-fields";
 
 export function CatalogEditor() {
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
@@ -82,7 +83,7 @@ function CategoryBlock({
   const [name, setName] = useState(category.name);
   const [itemName, setItemName] = useState("");
   const [itemDesc, setItemDesc] = useState("");
-  const [itemPrice, setItemPrice] = useState("");
+  const [itemPriceCents, setItemPriceCents] = useState<number | null>(null);
   const [itemPhoto, setItemPhoto] = useState<File | null>(null);
 
   async function saveName() {
@@ -124,9 +125,9 @@ function CategoryBlock({
 
   async function addItem(e: React.FormEvent) {
     e.preventDefault();
-    const cents = reaisToCents(itemPrice);
+    const cents = itemPriceCents;
     if (cents === null) {
-      onError("Preço inválido. Use 12,50");
+      onError("Informe o preço (ex. R$ 12,50).");
       return;
     }
     onError(null);
@@ -146,7 +147,7 @@ function CategoryBlock({
       }
       setItemName("");
       setItemDesc("");
-      setItemPrice("");
+      setItemPriceCents(null);
       setItemPhoto(null);
       await onChange();
     } catch (err) {
@@ -186,10 +187,9 @@ function CategoryBlock({
           className="field"
           required
         />
-        <input
-          value={itemPrice}
-          onChange={(e) => setItemPrice(e.target.value)}
-          placeholder="12,50"
+        <MoneyField
+          cents={itemPriceCents}
+          onCentsChange={setItemPriceCents}
           className="field"
           required
         />
@@ -227,13 +227,13 @@ function ItemRow({
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
   const [description, setDescription] = useState(item.description ?? "");
-  const [price, setPrice] = useState(centsToInput(item.priceCents));
+  const [priceCents, setPriceCents] = useState<number | null>(item.priceCents);
   const photo = mediaSrc(item.imageUrl);
 
   async function save() {
-    const cents = reaisToCents(price);
+    const cents = priceCents;
     if (cents === null) {
-      onError("Preço inválido.");
+      onError("Informe o preço (ex. R$ 12,50).");
       return;
     }
     onError(null);
@@ -300,11 +300,7 @@ function ItemRow({
           maxLength={280}
           className="field"
         />
-        <input
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="field"
-        />
+        <MoneyField cents={priceCents} onCentsChange={setPriceCents} className="field" required />
         <div className="flex gap-2">
           <button type="button" onClick={save} className="text-sm font-medium text-sage">
             Salvar

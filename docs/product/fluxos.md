@@ -24,7 +24,7 @@ sequenceDiagram
 ```
 
 1. Dono cria conta + venue (nome + slug único).
-2. Monta categorias e itens (preço em centavos no servidor).
+2. Monta categorias e itens (preço mascarado **R$** no painel; centavos no servidor).
 3. Comparte `https://eaimesa.com.br/{slug}` (QR fixo na mesa, Instagram, balcão) — **só cardápio**.
 4. Cliente abre `/{slug}`: navega por **grupos**, toca o item para ver **foto** e descrição. **Não pede pelo link** (comanda exige QR do garçom). Pedidos de balcão: `/painel/pedidos`. Mesas + export do QR fixo: `/painel/mesas`.
 

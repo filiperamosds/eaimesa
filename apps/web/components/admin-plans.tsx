@@ -3,6 +3,7 @@
 import { formatBrlFromCents } from "@eaimesa/shared";
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
+import { MoneyField } from "./masked-fields";
 
 type PlanRow = {
   id: string;
@@ -149,14 +150,12 @@ export function AdminPlans() {
                 />
               </label>
               <label className="text-sm">
-                <span className="mb-1 block text-white/60">Preço (centavos)</span>
-                <input
+                <span className="mb-1 block text-white/60">Preço mensal</span>
+                <MoneyField
                   className="field bg-white/5 text-white"
-                  type="number"
-                  min={0}
-                  value={d.priceCents}
-                  onChange={(e) =>
-                    setDrafts((cur) => ({ ...cur, [p.id]: { ...d, priceCents: Number(e.target.value) } }))
+                  cents={d.priceCents}
+                  onCentsChange={(cents) =>
+                    setDrafts((cur) => ({ ...cur, [p.id]: { ...d, priceCents: cents ?? 0 } }))
                   }
                 />
                 <span className="mt-1 block text-xs text-white/40">{formatBrlFromCents(d.priceCents)}/mês</span>
