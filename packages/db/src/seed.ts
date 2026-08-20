@@ -10,6 +10,7 @@ import {
   orderItems,
   orders,
   tableClaims,
+  tableSessions,
   tabs,
   venueMembers,
   venues,
@@ -149,6 +150,7 @@ async function seed() {
     await tx.delete(guestSessions).where(eq(guestSessions.venueId, venue.id));
     await tx.delete(tableClaims).where(eq(tableClaims.venueId, venue.id));
     await tx.delete(tabs).where(eq(tabs.venueId, venue.id));
+    await tx.delete(tableSessions).where(eq(tableSessions.venueId, venue.id));
     await tx.delete(venueTables).where(eq(venueTables.venueId, venue.id));
     await tx.delete(catalogItems).where(eq(catalogItems.venueId, venue.id));
     await tx.delete(catalogCategories).where(eq(catalogCategories.venueId, venue.id));

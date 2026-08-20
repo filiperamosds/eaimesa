@@ -38,11 +38,23 @@ export function GuestTabBar({ slug }: { slug: string }) {
     );
   }
 
-  if (tab) {
+  if (tab?.needsProfile) {
+    return (
+      <div className="border-b border-amber/40 bg-night/70 px-5 py-3 text-center text-sm text-white">
+        Você está na {tab.tableLabel}.{" "}
+        <Link href={`/${slug}/comanda`} className="font-medium text-amber underline decoration-amber/40">
+          Abrir sua comanda
+        </Link>
+      </div>
+    );
+  }
+
+  if (tab && !tab.needsProfile) {
     return (
       <div className="border-b border-sage/30 bg-sage px-5 py-3 text-center text-sm text-white">
-        Você está na <span className="font-medium">{tab.tableLabel}</span>
-        <span className="text-white/70"> · pedir pelo cardápio chega na fatia 6</span>
+        <span className="font-medium">{tab.guestName}</span>
+        <span className="text-white/80"> · {tab.tableLabel}</span>
+        <span className="text-white/70"> · pedir pelo cardápio chega na próxima fatia</span>
       </div>
     );
   }
@@ -51,7 +63,7 @@ export function GuestTabBar({ slug }: { slug: string }) {
     <div className="border-b border-white/10 bg-night/50 px-5 py-3 text-center text-sm text-white/80">
       Já tem o PIN?{" "}
       <Link href={`/${slug}/entrar`} className="font-medium text-amber underline decoration-amber/40">
-        Entrar na comanda
+        Entrar na mesa
       </Link>
     </div>
   );

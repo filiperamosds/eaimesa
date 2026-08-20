@@ -53,6 +53,7 @@ Não existem `apps/guest` nem `apps/staff`.
 | `/{slug}/c/{token}` | Redeem do claim |
 | `/{slug}/bem-vindo` | PIN no primeiro aparelho |
 | `/{slug}/entrar` | PIN join (outros aparelhos) |
+| `/{slug}/comanda` | Nome + telefone (comanda pessoal) |
 | `/garcom` | App do garçom |
 | `/painel/equipe` | Cadastro de garçons |
 

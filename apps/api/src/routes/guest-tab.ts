@@ -1,12 +1,12 @@
-import { db, guestSessions, tabs, venueTables, venues } from "@eaimesa/db";
-import { ERROR_CODES, joinTabSchema } from "@eaimesa/shared";
+import { db, guestSessions, tableSessions, tabs, venueTables, venues } from "@eaimesa/db";
+import { ERROR_CODES, joinTabSchema, openComandaSchema } from "@eaimesa/shared";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { AppError } from "../errors";
 import { requireGuest } from "../lib/auth-guard";
-import { clientIp, parseBody, pinJoinLock, rateLimit, setGuestCookie } from "../lib/http";
-import { signGuestToken } from "../lib/jwt";
+import { issueGuestCookie } from "../lib/guest-cookie";
+import { clientIp, parseBody, pinJoinLock, rateLimit } from "../lib/http";
 import { verifyPassword } from "../lib/password";
 
 export async function guestTabRoutes(app: FastifyInstance) {
@@ -25,15 +25,15 @@ export async function guestTabRoutes(app: FastifyInstance) {
       env.pinJoinWindowMinutes * 60_000,
     );
 
-    const openTabs = await db
-      .select({ tab: tabs, table: venueTables })
-      .from(tabs)
-      .innerJoin(venueTables, eq(tabs.tableId, venueTables.id))
-      .where(and(eq(tabs.venueId, venue.id), eq(tabs.status, "open")));
+    const openSessions = await db
+      .select({ session: tableSessions, table: venueTables })
+      .from(tableSessions)
+      .innerJoin(venueTables, eq(tableSessions.tableId, venueTables.id))
+      .where(and(eq(tableSessions.venueId, venue.id), eq(tableSessions.status, "open")));
 
-    let matched: (typeof openTabs)[number] | undefined;
-    for (const row of openTabs) {
-      if (await verifyPassword(body.pin, row.tab.pinHash)) {
+    let matched: (typeof openSessions)[number] | undefined;
+    for (const row of openSessions) {
+      if (await verifyPassword(body.pin, row.session.pinHash)) {
         matched = row;
         break;
       }
@@ -46,28 +46,88 @@ export async function guestTabRoutes(app: FastifyInstance) {
 
     lock.succeed();
 
-    const expiresAt = new Date(Date.now() + env.guestSessionTtlHours * 3600 * 1000);
-    const [session] = await db
-      .insert(guestSessions)
-      .values({
-        tabId: matched.tab.id,
-        venueId: venue.id,
-        expiresAt,
-      })
-      .returning();
-    if (!session) throw new AppError(500, "INTERNAL", "Falha na sessão.");
-
-    const guestJwt = await signGuestToken({
-      sub: session.id,
+    await issueGuestCookie(reply, {
       venueId: venue.id,
-      tabId: matched.tab.id,
-      role: "guest",
+      tableSessionId: matched.session.id,
+      tabId: null,
     });
-    setGuestCookie(reply, guestJwt, env.guestSessionTtlHours * 3600);
 
     return {
       tableLabel: matched.table.label,
       slug: venue.slug,
+      needsProfile: true,
+      redirectPath: `/${venue.slug}/comanda`,
+    };
+  });
+
+  app.post("/v1/guest/tabs", { preHandler: requireGuest }, async (req, reply) => {
+    const guest = req.guest!;
+    const body = parseBody(openComandaSchema, req.body);
+
+    const [session] = await db
+      .select()
+      .from(tableSessions)
+      .where(eq(tableSessions.id, guest.tableSessionId))
+      .limit(1);
+    if (!session || session.venueId !== guest.venueId || session.status !== "open") {
+      throw new AppError(409, ERROR_CODES.TAB_CLOSED, "Esta mesa foi encerrada. Peça um novo QR ao garçom.");
+    }
+
+    const [table] = await db.select().from(venueTables).where(eq(venueTables.id, session.tableId)).limit(1);
+    const [venue] = await db.select().from(venues).where(eq(venues.id, session.venueId)).limit(1);
+    if (!table || !venue) {
+      throw new AppError(404, ERROR_CODES.TABLE_NOT_FOUND, "Mesa não encontrada.");
+    }
+
+    const [existing] = await db
+      .select()
+      .from(tabs)
+      .where(
+        and(
+          eq(tabs.tableSessionId, session.id),
+          eq(tabs.guestPhone, body.phone),
+          eq(tabs.status, "open"),
+        ),
+      )
+      .limit(1);
+
+    let tab = existing;
+    if (!tab) {
+      const [created] = await db
+        .insert(tabs)
+        .values({
+          venueId: session.venueId,
+          tableId: session.tableId,
+          tableSessionId: session.id,
+          guestName: body.name,
+          guestPhone: body.phone,
+          status: "open",
+        })
+        .returning();
+      if (!created) throw new AppError(500, "INTERNAL", "Falha ao abrir comanda.");
+      tab = created;
+    } else if (tab.guestName !== body.name) {
+      const [updated] = await db
+        .update(tabs)
+        .set({ guestName: body.name, updatedAt: new Date() })
+        .where(eq(tabs.id, tab.id))
+        .returning();
+      if (updated) tab = updated;
+    }
+
+    await issueGuestCookie(reply, {
+      venueId: session.venueId,
+      tableSessionId: session.id,
+      tabId: tab.id,
+      sessionId: guest.sub,
+    });
+
+    return {
+      tabId: tab.id,
+      guestName: tab.guestName,
+      tableLabel: table.label,
+      slug: venue.slug,
+      needsProfile: false,
       redirectPath: `/${venue.slug}`,
     };
   });
@@ -76,32 +136,43 @@ export async function guestTabRoutes(app: FastifyInstance) {
     const guest = req.guest!;
     const [row] = await db
       .select({
-        tab: tabs,
+        session: tableSessions,
         table: venueTables,
         venue: venues,
-        session: guestSessions,
+        guestSession: guestSessions,
       })
       .from(guestSessions)
-      .innerJoin(tabs, eq(guestSessions.tabId, tabs.id))
-      .innerJoin(venueTables, eq(tabs.tableId, venueTables.id))
-      .innerJoin(venues, eq(tabs.venueId, venues.id))
+      .innerJoin(tableSessions, eq(guestSessions.tableSessionId, tableSessions.id))
+      .innerJoin(venueTables, eq(tableSessions.tableId, venueTables.id))
+      .innerJoin(venues, eq(tableSessions.venueId, venues.id))
       .where(eq(guestSessions.id, guest.sub))
       .limit(1);
 
     if (!row) {
       throw new AppError(401, "UNAUTHORIZED", "Sessão expirada. Entre de novo com o PIN.");
     }
-    if (row.tab.status !== "open") {
-      throw new AppError(409, ERROR_CODES.TAB_CLOSED, "Esta comanda foi fechada.");
+    if (row.session.status !== "open") {
+      throw new AppError(409, ERROR_CODES.TAB_CLOSED, "Esta mesa foi encerrada.");
+    }
+
+    let tab: typeof tabs.$inferSelect | null = null;
+    if (row.guestSession.tabId) {
+      const [found] = await db.select().from(tabs).where(eq(tabs.id, row.guestSession.tabId)).limit(1);
+      tab = found ?? null;
+      if (tab && tab.status !== "open") {
+        throw new AppError(409, ERROR_CODES.TAB_CLOSED, "Esta comanda foi fechada.");
+      }
     }
 
     return {
-      tabId: row.tab.id,
-      status: row.tab.status,
+      tabId: tab?.id ?? null,
+      status: tab?.status ?? "open",
+      needsProfile: !tab,
+      guestName: tab?.guestName ?? null,
       tableLabel: row.table.label,
       slug: row.venue.slug,
       venueName: row.venue.name,
-      expiresAt: row.session.expiresAt.toISOString(),
+      expiresAt: row.guestSession.expiresAt.toISOString(),
     };
   });
 }

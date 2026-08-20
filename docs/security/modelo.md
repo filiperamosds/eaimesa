@@ -14,7 +14,7 @@
 |-------|------|--------|---------|
 | Público | — | Ler cardápio por slug | Sim |
 | Owner | Cookie `eaimesa_owner` | Cardápio, venue, fila, mesas, equipe | Sim |
-| Guest | Cookie `eaimesa_guest` | Uma tab, um venue | Sim (redeem + PIN join) |
+| Guest | Cookie `eaimesa_guest` | Mesa + comanda pessoal | Sim |
 | Staff | Cookie `eaimesa_owner` (`role: staff`) | Claims, mesas | Sim |
 | Platform | SSO interno + 2FA | Tenants, suspensão | Não |
 
@@ -54,6 +54,7 @@ Na fatia 1 o limiter de login pode ser in-memory (um processo).
 - **Operador:** EaiMesa (infra, processamento).
 - Cadastro B2B na fatia 1: só e-mail + senha + nome do bar. CNPJ/CPF na fatia KYC.
 - CPF do **consumidor** não coletar no MVP para pedir.
+- **Telefone + nome** na comanda pessoal (fatia 6): PII do estabelecimento (controlador). API staff devolve telefone **mascarado**. Não logar telefone.
 
 ## Cadastro B2B (KYC — fatia posterior)
 

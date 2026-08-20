@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { OpenComandaForm } from "./open-comanda-form";
 
 const WELCOME_KEY = "eaimesa_welcome";
 
 type WelcomeData = {
   slug: string;
-  pin: string;
+  pin: string | null;
   tableLabel: string;
 };
 
@@ -34,39 +35,45 @@ export function WelcomeView() {
       <div className="mx-auto max-w-lg px-5 py-24 text-center">
         <p className="font-serif text-2xl">Bem-vindo</p>
         <p className="mt-4 text-ink-soft">
-          Escaneie o QR do garçom para abrir a comanda e ver o PIN da mesa.
+          Escaneie o QR do garçom ou entre com o PIN da mesa para abrir sua comanda.
         </p>
-        <Link href={`/${params.slug}`} className="btn-primary mt-8 inline-flex">
-          Ver cardápio
-        </Link>
+        <div className="mt-8 flex flex-wrap justify-center gap-3">
+          <Link href={`/${params.slug}/entrar`} className="btn-primary inline-flex">
+            Tenho o PIN
+          </Link>
+          <Link href={`/${params.slug}`} className="btn-secondary inline-flex">
+            Ver cardápio
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-lg px-5 py-16 text-center">
-      <p className="eyebrow">Comanda aberta</p>
+      <p className="eyebrow">Mesa aberta</p>
       <h1 className="mt-2 font-serif text-3xl">{data.tableLabel}</h1>
-      <p className="mt-3 text-ink-soft">
-        Anote o PIN — outros na mesa abrem o cardápio e entram com o mesmo código.
-      </p>
-      <div
-        className="surface mx-auto mt-10 max-w-xs rounded-3xl border-2 border-chili/30 px-6 py-10"
-        aria-label={`PIN da mesa: ${data.pin.split("").join(" ")}`}
-      >
-        <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-ink-soft">PIN</p>
-        <p className="mt-4 font-serif text-5xl tracking-[0.35em] text-chili">{data.pin}</p>
-      </div>
-      <Link href={`/${params.slug}`} className="btn-primary mt-10 inline-flex">
+      {data.pin ? (
+        <>
+          <p className="mt-3 text-ink-soft">
+            Anote o PIN — outros na mesa entram com o mesmo código e abrem a <strong>própria</strong>{" "}
+            comanda.
+          </p>
+          <div
+            className="surface mx-auto mt-8 max-w-xs rounded-3xl border-2 border-chili/30 px-6 py-10"
+            aria-label={`PIN da mesa: ${data.pin.split("").join(" ")}`}
+          >
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-ink-soft">PIN</p>
+            <p className="mt-4 font-serif text-5xl tracking-[0.35em] text-chili">{data.pin}</p>
+          </div>
+        </>
+      ) : (
+        <p className="mt-3 text-ink-soft">Identifique-se para abrir sua comanda nesta mesa.</p>
+      )}
+      <OpenComandaForm slug={params.slug} />
+      <Link href={`/${params.slug}`} className="btn-ghost mt-6 inline-flex">
         Ver cardápio
       </Link>
-      <p className="mt-4 text-sm text-ink-soft">
-        Outro celular?{" "}
-        <Link href={`/${params.slug}/entrar`} className="font-medium text-ink underline">
-          Entrar com o PIN
-        </Link>
-      </p>
-      <p className="mt-6 text-xs text-ink-soft">Pedir pelo cardápio chega na fatia 6.</p>
     </div>
   );
 }

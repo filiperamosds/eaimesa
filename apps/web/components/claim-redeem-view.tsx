@@ -8,9 +8,10 @@ import { api, ApiError } from "../lib/api";
 const WELCOME_KEY = "eaimesa_welcome";
 
 type RedeemResult = {
-  pinDisplay: string;
+  pinDisplay: string | null;
   tableLabel: string;
   slug: string;
+  needsProfile: boolean;
   redirectPath: string;
 };
 

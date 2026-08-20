@@ -76,11 +76,15 @@ export async function requireGuest(req: FastifyRequest, _reply: FastifyReply) {
   if (
     !row ||
     row.venueId !== session.venueId ||
-    row.tabId !== session.tabId ||
+    row.tableSessionId !== session.tableSessionId ||
     row.expiresAt.getTime() < Date.now()
   ) {
     throw new AppError(401, "UNAUTHORIZED", "Sessão expirada. Entre de novo com o PIN.");
   }
 
-  req.guest = session;
+  req.guest = {
+    ...session,
+    tabId: row.tabId,
+    tableSessionId: row.tableSessionId,
+  };
 }

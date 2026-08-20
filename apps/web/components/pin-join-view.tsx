@@ -38,7 +38,8 @@ export function PinJoinView() {
       <p className="eyebrow">Comanda</p>
       <h1 className="mt-2 font-serif text-3xl">PIN da mesa</h1>
       <p className="mt-3 text-ink-soft">
-        Quem já escaneou o QR do garçom vê o código de 4 dígitos. O garçom não precisa voltar.
+        Quem já escaneou o QR do garçom vê o código de 4 dígitos. Depois você abre a <strong>sua</strong>{" "}
+        comanda com nome e telefone.
       </p>
       <form onSubmit={onSubmit} className="mx-auto mt-10 max-w-xs space-y-5">
         <label className="block text-left">
@@ -57,7 +58,7 @@ export function PinJoinView() {
         </label>
         {error ? <p className="text-sm text-chili">{error}</p> : null}
         <button type="submit" disabled={pending || pin.length !== 4} className="btn-primary w-full">
-          {pending ? "Entrando…" : "Entrar na comanda"}
+          {pending ? "Entrando…" : "Entrar na mesa"}
         </button>
       </form>
       {slug ? (

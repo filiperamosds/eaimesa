@@ -46,11 +46,10 @@ Após redirect, **token não permanece** na barra de endereço.
 
 ## 3. PIN da Tab
 
-- Gerado ao abrir tab (4 dígitos, ex. `4821`).
-- Mostrado grande no primeiro aparelho.
-- `POST /v1/guest/tabs/join` com `{ slug, pin }` → cookie para outro device ([fatia 5](../product/fatia-05-pin-join.md)).
-- Rate limit: 5 **falhas** / 15 min / IP+venue (o join não envia `tabId`).
-- PIN **não** imprime no cardápio da porta.
+- PIN **da mesa** (TableSession), 4 dígitos, ex. `4821`.
+- Mostrado no primeiro aparelho.
+- `POST /guest/tabs/join` com `{ slug, pin }` → cookie na ocupação da mesa.
+- Comanda pessoal: `POST /guest/tabs` `{ name, phone }`.
 
 ## 4. GuestSession (cookie)
 
@@ -67,9 +66,9 @@ Servidor resolve session → `tab_id`, `venue_id`, `device_id`.
 
 | Cenário | Fluxo |
 |---------|--------|
-| Primeiro na mesa | Claim redeem → tab criada → PIN exibido |
-| Tab já aberta | PIN join → mesma tab |
-| Sem PIN, sem claim | Cardápio read-only ou 403 em pedido |
+| Primeiro na mesa | Claim → PIN da mesa → nome+telefone (comanda) |
+| Outro aparelho / pessoa | PIN join → nome+telefone (retoma se o telefone já existe) |
+| Sem PIN, sem claim | Cardápio read-only |
 
 ## O que o claim substitui
 
