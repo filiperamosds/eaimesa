@@ -9,6 +9,7 @@ Quem tem **comanda pessoal aberta** pede pelo `/{slug}`. O preço sai do servido
 - `GET /v1/guest/orders` e `GET /v1/guest/orders/{id}` — pedidos daquela comanda
 - Snapshot de nome/preço no `OrderItem` (cliente **não** envia preço)
 - Kanban `/painel/pedidos` (dono) e `/garcom/pedidos` (garçom)
+- Parcial do cliente: [fatia 9](fatia-09-parcial-guest.md)
 - Venue `suspended` → 403 `VENUE_SUSPENDED`; seed liga `accepts_orders`
 
 ## Não inclui
@@ -23,7 +24,7 @@ Quem tem **comanda pessoal aberta** pede pelo `/{slug}`. O preço sai do servido
 1. QR ou PIN → nome + telefone → comanda.
 2. No cardápio, adiciona itens (qty, nota opcional do item).
 3. Envia o pedido → `pending` na fila.
-4. Faixa: nome · mesa. Sem comanda: “Entre na mesa” / “Abra sua comanda”.
+4. Faixa: nome · mesa · total. Link **Parcial** e `/{slug}/comanda` listam os pedidos da pessoa.
 
 ## Regras
 

@@ -266,10 +266,31 @@ Cookie `eaimesa_guest` com **tab** `open`. Preço **não** vai no body.
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
 | POST | `/v1/guest/orders` | Cookie guest | Carrinho → pedido `pending`, `source=guest` |
-| GET | `/v1/guest/orders` | Cookie guest | Pedidos da comanda (48h) |
+| GET | `/v1/guest/orders` | Cookie guest | Pedidos da comanda (48h) + `totalCents` (sem cancelados) |
 | GET | `/v1/guest/orders/{id}` | Cookie guest | Um pedido da comanda |
 
 Header obrigatório no POST: `Idempotency-Key` (UUID). Mesma chave no venue devolve o mesmo pedido.
+
+`GET /v1/guest/orders` (recorte):
+
+```json
+{
+  "totalCents": 3890,
+  "orders": [
+    {
+      "id": "uuid",
+      "status": "pending",
+      "source": "guest",
+      "tableLabel": "Mesa 4",
+      "guestName": "Maria",
+      "totalCents": 3890,
+      "items": [{ "name": "Pão de alho", "qty": 1, "unitPriceCents": 1290 }]
+    }
+  ]
+}
+```
+
+Só a comanda do cookie. Cancelados aparecem na lista e **não** somam em `totalCents`.
 
 #### POST /v1/guest/orders (body)
 
