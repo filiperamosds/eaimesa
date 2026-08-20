@@ -5,13 +5,14 @@ Núcleo de confiança do produto. Três peças **separadas**.
 ## 1. Código da casa (`slug`)
 
 - Ex.: `bar-do-tiao` (configurável). `public_id` opaco existe no banco mas **não** é a URL do cardápio.
-- Público (Instagram, QR na porta).
+- Público (Instagram, QR **fixo na mesa**, QR na porta).
 - `GET /v1/public/venues/{slug}` → cardápio (somente leitura se sem sessão).
 - **Nunca** autoriza `POST /guest/orders`.
+- QR fixo da mesa = URL `/{slug}` (mesmo cardápio em todas as mesas). Gerado e exportado no painel; adesivo pode mostrar o rótulo da mesa ao lado do código.
 
 ## 2. Claim (TableClaim)
 
-Gerado pelo staff autenticado para uma mesa.
+Gerado pelo staff autenticado para uma mesa. **Este** é o QR que abre a comanda.
 
 | Campo | Regra |
 |-------|--------|
@@ -22,6 +23,15 @@ Gerado pelo staff autenticado para uma mesa.
 | Escopo | `venue_id` + `table_id` + `staff_user_id` |
 | Invalidação | Novo claim na mesma mesa invalida anterior não usado |
 | URL | `/{slug}/c/{token}` |
+
+### Onde o QR vive (UI)
+
+| Tipo | Onde | Export |
+|------|------|--------|
+| **Cardápio (fixo)** | `/painel/mesas` e `/painel/bar` | PNG para adesivo / Instagram / porta |
+| **Claim (comanda)** | `/painel/*` ao abrir mesa | PNG pontual; TTL + uso único |
+
+O cardápio público e a landing **não** geram claim. Modo comanda **só** após escanear o QR do garçom.
 
 ### Redeem
 

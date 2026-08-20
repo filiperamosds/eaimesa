@@ -46,7 +46,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-full bg-chili py-3 font-medium text-white hover:bg-chili-dark disabled:opacity-60"
+        className="btn-primary w-full"
       >
         {pending ? "Entrando…" : "Entrar"}
       </button>
@@ -111,7 +111,7 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-full bg-chili py-3 font-medium text-white hover:bg-chili-dark disabled:opacity-60"
+        className="btn-primary w-full"
       >
         {pending ? "Criando…" : "Criar cardápio"}
       </button>
@@ -149,7 +149,7 @@ function Field({
         placeholder={placeholder}
         autoComplete={autoComplete}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-xl border border-line bg-card px-3 py-2 outline-none ring-chili/30 focus:ring-2"
+        className="field"
         required
       />
     </label>

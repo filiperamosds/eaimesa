@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ORDER_STATUSES } from "./orders";
 import { isReservedSlug, normalizeSlug, SLUG_MAX, SLUG_MIN, SLUG_REGEX } from "./slug";
+import { TABLE_LABEL_MAX } from "./tables";
 
 export const slugSchema = z
   .string()
@@ -79,20 +80,40 @@ export const patchItemSchema = z.object({
   active: z.boolean().optional(),
 });
 
-export const createOrderSchema = z.object({
-  tableLabel: z.string().trim().min(1, "Informe a mesa ou o balcão.").max(40),
-  note: z.string().trim().max(280).optional().nullable(),
-  items: z
-    .array(
-      z.object({
-        catalogItemId: z.string().uuid(),
-        qty: z.number().int().min(1).max(99),
-        note: z.string().trim().max(80).optional().nullable(),
-      }),
-    )
-    .min(1, "Inclua pelo menos um item."),
-});
+export const createOrderSchema = z
+  .object({
+    tableId: z.string().uuid().optional(),
+    tableLabel: z.string().trim().min(1, "Informe a mesa ou o balcão.").max(40).optional(),
+    note: z.string().trim().max(280).optional().nullable(),
+    items: z
+      .array(
+        z.object({
+          catalogItemId: z.string().uuid(),
+          qty: z.number().int().min(1).max(99),
+          note: z.string().trim().max(80).optional().nullable(),
+        }),
+      )
+      .min(1, "Inclua pelo menos um item."),
+  })
+  .refine((b) => Boolean(b.tableId || b.tableLabel), {
+    message: "Escolha a mesa.",
+  });
 
 export const patchOrderSchema = z.object({
   status: z.enum(ORDER_STATUSES),
 });
+
+export const createTableSchema = z.object({
+  label: z.string().trim().min(1, "Informe o nome da mesa.").max(TABLE_LABEL_MAX),
+  sortOrder: z.number().int().min(0).optional(),
+});
+
+export const patchTableSchema = z
+  .object({
+    label: z.string().trim().min(1).max(TABLE_LABEL_MAX).optional(),
+    sortOrder: z.number().int().min(0).optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((b) => b.label !== undefined || b.sortOrder !== undefined || b.active !== undefined, {
+    message: "Envie label, sortOrder e/ou active.",
+  });

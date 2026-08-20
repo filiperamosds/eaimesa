@@ -34,7 +34,8 @@ Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando ho
 - `id`, `venue_id`
 - `status`: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`
 - `source`: `counter` | `guest` (`guest` reservado; fatia 2 só `counter`)
-- `table_label` (ex. "Mesa 4", "Balcão")
+- `table_id` (nullable → VenueTable; fatia 3)
+- `table_label` (snapshot, ex. "Mesa 4", "Balcão")
 - `note`
 - timestamps
 
@@ -44,11 +45,20 @@ Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando ho
 - `catalog_item_id` (nullable se o item do cardápio for apagado)
 - `name_snapshot`, `unit_price_cents_snapshot`, `qty`, `note`
 
+## Entidades — fatia 3 (mesas)
+
+### VenueTable
+
+- `id`, `venue_id`
+- `label` (ex. "Mesa 4", "Balcão") — único por venue
+- `sort_order`, `active`, timestamps
+
+No máximo **15 mesas ativas** por venue (plano Bar). Pedido pode apontar `table_id` (nullable, `ON DELETE SET NULL`); `table_label` no pedido é snapshot.
+
 ## Entidades — planejadas
 
 - **PlatformUser** — operador EaiMesa
 - **VenueMember** — `user_id`, `venue_id`, `role`: `owner` | `staff`
-- **Table** — `id`, `venue_id`, `label`, `sort_order`, `active`
 - **Tab** — `status`: `open` | `locked` | `closed`; `pin_hash`
 - **TableClaim** — `token_hash`, TTL, uso único
 - **GuestSession** — `tab_id`, `expires_at`
@@ -63,6 +73,8 @@ Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando ho
 - `catalog_items(venue_id, category_id)`
 - `orders(venue_id, status, created_at)`
 - `order_items(order_id)`
+- `venue_tables(venue_id, sort_order)`
+- `venue_tables(venue_id, label)` UNIQUE
 
 ## Regras de negócio
 
@@ -71,7 +83,8 @@ Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando ho
 3. DELETE categoria com itens → `CATEGORY_NOT_EMPTY`.
 4. `OrderItem` sempre grava snapshot de preço/nome; o cliente **não** envia preço.
 5. Pedido público pelo slug **não** existe nesta fatia.
-6. Fechar tab (futuro) → revoke sessions + claims pendentes.
+6. Pedido de balcão com `table_id` só aceita mesa **ativa** do mesmo venue; grava snapshot do rótulo.
+7. Fechar tab (futuro) → revoke sessions + claims pendentes.
 
 ## Diagrama ER
 
@@ -81,7 +94,9 @@ erDiagram
   Venue ||--o{ CatalogCategory : has
   CatalogCategory ||--o{ CatalogItem : contains
   Venue ||--o{ CatalogItem : has
+  Venue ||--o{ VenueTable : has
   Venue ||--o{ Order : has
+  VenueTable ||--o{ Order : optional
   Order ||--|{ OrderItem : contains
 ```
 

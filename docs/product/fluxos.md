@@ -2,7 +2,7 @@
 
 ## 0. Fatia 1 — publicar e ler o cardápio
 
-Escopo atual. Detalhe em [fatia-01-cardapio.md](fatia-01-cardapio.md).
+Detalhe em [fatia-01-cardapio.md](fatia-01-cardapio.md).
 
 ```mermaid
 sequenceDiagram
@@ -14,7 +14,7 @@ sequenceDiagram
   D->>W: /cadastro (e-mail, senha, nome, slug)
   W->>API: POST /v1/auth/register
   API-->>W: Set-Cookie eaimesa_owner
-  D->>W: /painel — Kanban de pedidos (abas: Pedidos, Cardápio, Meu bar)
+  D->>W: /painel — Kanban de pedidos (abas: Pedidos, Cardápio, Mesas, Meu bar)
   W->>API: GET /v1/owner/orders
   D->>W: /painel/cardapio — categorias e itens
   W->>API: CRUD /v1/owner/catalog/**
@@ -25,8 +25,8 @@ sequenceDiagram
 
 1. Dono cria conta + venue (nome + slug único).
 2. Monta categorias e itens (preço em centavos no servidor).
-3. Comparte `https://eaimesa.com.br/{slug}` (QR, Instagram, balcão).
-4. Cliente abre `/{slug}`: navega por **grupos**, toca o item para ver **foto** e descrição. **Não pede pelo link** (claim futuro). Pedidos de balcão: `/painel/pedidos`.
+3. Comparte `https://eaimesa.com.br/{slug}` (QR fixo na mesa, Instagram, balcão) — **só cardápio**.
+4. Cliente abre `/{slug}`: navega por **grupos**, toca o item para ver **foto** e descrição. **Não pede pelo link** (comanda exige QR do garçom). Pedidos de balcão: `/painel/pedidos`. Mesas + export do QR fixo: `/painel/mesas`.
 
 ## 0b. Fatia 2 — fila Kanban (balcão)
 
@@ -43,8 +43,28 @@ sequenceDiagram
 ```
 
 1. Staff entra (`/login`) e cai em `/painel/pedidos` (ou clica a aba **Pedidos**).
-2. Lança pedido de balcão ou vê os do seed.
+2. Lança pedido de balcão (escolhe a **mesa** cadastrada) ou vê os do seed.
 3. Avança o card nas colunas até **Entregues**.
+
+## 0c. Fatia 3 — cadastrar o salão
+
+Detalhe em [fatia-03-mesas.md](fatia-03-mesas.md). Claim por mesa continua **fora**.
+
+```mermaid
+sequenceDiagram
+  participant D as Dono
+  participant API as API
+
+  D->>API: POST /v1/owner/tables (rótulo)
+  API-->>D: Mesa ativa
+  D->>API: POST /v1/owner/orders (tableId + itens)
+  API-->>D: Pedido pending com snapshot do rótulo
+```
+
+1. Dono abre **Mesas** e cadastra até 15 ativas (ex. Balcão, Mesa 1…10).
+2. Exporta o **QR fixo** de cada mesa (destino: cardápio `/{slug}`) e cola no salão.
+3. No Kanban, o pedido de balcão escolhe uma mesa ativa.
+4. QR/claim do **garçom** (abre comanda) entra na fatia seguinte — gerado só no painel.
 
 ## 1. Onboarding do bar (B2B)
 
@@ -52,7 +72,7 @@ sequenceDiagram
 2. Cadastra venue: nome e **slug** (`bar-do-tiao`). CNPJ, CPF responsável e OTP entram em fatia posterior.
 3. Escolhe plano Bar; gateway marca `subscription_status = active` (fatia billing). Na fatia 1 o seed/cadastro fica em `trial`.
 4. Sistema gera `public_id` opaco interno; a URL pública é o slug.
-5. Dono cadastra cardápio (fatia 1) e depois mesas.
+5. Dono cadastra cardápio (fatia 1), fila (fatia 2) e mesas (fatia 3).
 6. Divulga `/{slug}` — **não** o claim.
 
 ## 2. Abertura da mesa (garçom → cliente)
@@ -66,8 +86,9 @@ sequenceDiagram
   participant C as Cliente (PWA)
 
   G->>API: POST /staff/tables/{id}/claims
-  API-->>G: QR URL + countdown TTL
-  G->>C: Mostra QR na mesa
+  API-->>G: QR URL + countdown TTL (só no /painel)
+  G->>G: Mostra no painel ou exporta PNG/PDF
+  G->>C: Cliente escaneia o claim
   C->>API: GET /v/{slug}/c/{claim} (redeem)
   API->>API: Valida hash, TTL, uso único
   API->>API: Cria Tab + PIN, GuestSession

@@ -53,10 +53,18 @@ export type PublicMenu = {
 
 export type OrderStatus = "pending" | "accepted" | "preparing" | "delivered" | "cancelled";
 
+export type VenueTable = {
+  id: string;
+  label: string;
+  sortOrder: number;
+  active: boolean;
+};
+
 export type StaffOrder = {
   id: string;
   status: OrderStatus;
   source: "counter" | "guest";
+  tableId: string | null;
   tableLabel: string;
   note: string | null;
   createdAt: string;

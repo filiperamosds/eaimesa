@@ -12,22 +12,25 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
   const suspended = menu.venue.subscriptionStatus === "suspended";
 
   return (
-    <div className="min-h-screen bg-paper">
-      <header className="border-b border-line bg-card">
-        <div className="mx-auto max-w-lg px-5 py-8 text-center">
-          <p className="text-[11px] font-medium uppercase tracking-[0.28em] text-ink-soft">Cardápio</p>
-          <h1 className="mt-2 font-serif text-4xl leading-tight">{menu.venue.name}</h1>
+    <div className="min-h-screen">
+      <header className="relative overflow-hidden bg-night text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(226,60,20,0.35),transparent_45%)]" />
+        <div className="relative mx-auto max-w-lg px-5 py-12 text-center">
+          <p className="text-[11px] font-medium uppercase tracking-[0.32em] text-white/50">Cardápio</p>
+          <h1 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">{menu.venue.name}</h1>
           {suspended ? (
-            <p className="mt-3 text-sm text-chili">Assinatura inativa — só leitura.</p>
+            <p className="mt-4 text-sm text-amber">Assinatura inativa — só leitura.</p>
           ) : (
-            <p className="mt-3 text-sm text-ink-soft">Toque no item para ver foto e descrição.</p>
+            <p className="mt-4 text-sm text-white/65">
+              Cardápio só leitura. Para pedir, peça o QR do garçom na mesa.
+            </p>
           )}
         </div>
       </header>
 
       {groups.length > 0 ? (
         <nav
-          className="sticky top-0 z-20 border-b border-line bg-paper/90 backdrop-blur-md"
+          className="sticky top-0 z-20 border-b border-line/80 bg-paper/80 backdrop-blur-xl"
           aria-label="Grupos do cardápio"
         >
           <ul className="mx-auto flex max-w-lg gap-2 overflow-x-auto px-4 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -35,7 +38,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
               <li key={g.id} className="shrink-0">
                 <a
                   href={`#grupo-${g.id}`}
-                  className="inline-block rounded-full border border-line bg-card px-3.5 py-1.5 text-sm text-ink hover:border-chili/40 hover:text-chili"
+                  className="inline-block rounded-full border border-line bg-card px-3.5 py-1.5 text-sm text-ink shadow-sm hover:border-chili/40 hover:text-chili"
                 >
                   {g.name}
                 </a>
@@ -45,26 +48,26 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
         </nav>
       ) : null}
 
-      <main className="mx-auto max-w-lg px-5 pb-16 pt-6">
+      <main className="mx-auto max-w-lg px-5 pb-16 pt-8">
         {groups.length === 0 ? (
           <p className="py-16 text-center text-ink-soft">Cardápio em montagem.</p>
         ) : (
           groups.map((group) => (
-            <section key={group.id} id={`grupo-${group.id}`} className="scroll-mt-20 pb-10">
-              <div className="mb-3 flex items-end gap-3">
-                <h2 className="font-serif text-2xl text-chili">{group.name}</h2>
+            <section key={group.id} id={`grupo-${group.id}`} className="scroll-mt-24 pb-10">
+              <div className="mb-4 flex items-end gap-3">
+                <h2 className="font-serif text-2xl">{group.name}</h2>
                 <span className="mb-1 h-px flex-1 bg-line" />
                 <span className="mb-0.5 text-[11px] uppercase tracking-wider text-ink-soft">
                   {group.items.length} {group.items.length === 1 ? "item" : "itens"}
                 </span>
               </div>
-              <ul className="overflow-hidden rounded-2xl border border-line bg-card">
-                {group.items.map((item, i) => {
+              <ul className="space-y-3">
+                {group.items.map((item) => {
                   const photo = mediaSrc(item.imageUrl);
                   const expandable = Boolean(item.description || photo);
                   const open = openId === item.id;
                   return (
-                    <li key={item.id} className={i > 0 ? "border-t border-line" : ""}>
+                    <li key={item.id} className="surface overflow-hidden">
                       <button
                         type="button"
                         onClick={() => {
@@ -79,27 +82,24 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
                           <img
                             src={photo}
                             alt=""
-                            className="h-14 w-14 shrink-0 rounded-xl object-cover"
+                            className="h-16 w-16 shrink-0 rounded-2xl object-cover"
                           />
                         ) : (
-                          <span className="h-14 w-14 shrink-0 rounded-xl bg-paper-2" aria-hidden />
+                          <span className="h-16 w-16 shrink-0 rounded-2xl bg-paper-2" aria-hidden />
                         )}
                         <span className="min-w-0 flex-1">
                           <span className="flex items-baseline justify-between gap-3">
                             <span className="font-medium leading-snug">{item.name}</span>
-                            <span className="shrink-0 tabular-nums text-ink">
+                            <span className="shrink-0 font-medium tabular-nums text-chili">
                               {formatBrlFromCents(item.priceCents)}
                             </span>
                           </span>
+                          {!open && item.description ? (
+                            <span className="mt-0.5 line-clamp-1 block text-sm text-ink-soft">
+                              {item.description}
+                            </span>
+                          ) : null}
                         </span>
-                        {expandable ? (
-                          <span
-                            className={`shrink-0 text-ink-soft transition-transform ${open ? "rotate-180" : ""}`}
-                            aria-hidden
-                          >
-                            ▾
-                          </span>
-                        ) : null}
                       </button>
                       {expandable && open ? (
                         <div className="space-y-3 px-3 pb-4">
@@ -107,7 +107,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
                             <img
                               src={photo}
                               alt={item.name}
-                              className="max-h-64 w-full rounded-xl object-cover"
+                              className="max-h-72 w-full rounded-2xl object-cover"
                             />
                           ) : null}
                           {item.description ? (
@@ -126,7 +126,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
 
       <footer className="pb-10 text-center text-xs text-ink-soft">
         Cardápio por{" "}
-        <Link href="/" className="underline">
+        <Link href="/" className="font-medium text-ink underline decoration-chili/40">
           EaiMesa
         </Link>
       </footer>

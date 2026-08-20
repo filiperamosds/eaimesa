@@ -89,15 +89,6 @@ export const accountsRelations = relations(accounts, ({ one }) => ({
   }),
 }));
 
-export const venuesRelations = relations(venues, ({ one, many }) => ({
-  owner: one(accounts, {
-    fields: [venues.ownerAccountId],
-    references: [accounts.id],
-  }),
-  categories: many(catalogCategories),
-  items: many(catalogItems),
-}));
-
 export const catalogCategoriesRelations = relations(catalogCategories, ({ one, many }) => ({
   venue: one(venues, {
     fields: [catalogCategories.venueId],
@@ -117,6 +108,25 @@ export const catalogItemsRelations = relations(catalogItems, ({ one }) => ({
   }),
 }));
 
+export const venueTables = pgTable(
+  "venue_tables",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("venue_tables_venue").on(t.venueId, t.sortOrder),
+    uniqueIndex("venue_tables_venue_label").on(t.venueId, t.label),
+  ],
+);
+
 export const orders = pgTable(
   "orders",
   {
@@ -126,6 +136,7 @@ export const orders = pgTable(
       .references(() => venues.id, { onDelete: "cascade" }),
     status: text("status").notNull().default("pending"),
     source: text("source").notNull().default("counter"),
+    tableId: uuid("table_id").references(() => venueTables.id, { onDelete: "set null" }),
     tableLabel: text("table_label").notNull(),
     note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -153,10 +164,33 @@ export const orderItems = pgTable(
   (t) => [index("order_items_order").on(t.orderId)],
 );
 
+export const venuesRelations = relations(venues, ({ one, many }) => ({
+  owner: one(accounts, {
+    fields: [venues.ownerAccountId],
+    references: [accounts.id],
+  }),
+  categories: many(catalogCategories),
+  items: many(catalogItems),
+  tables: many(venueTables),
+  orders: many(orders),
+}));
+
+export const venueTablesRelations = relations(venueTables, ({ one, many }) => ({
+  venue: one(venues, {
+    fields: [venueTables.venueId],
+    references: [venues.id],
+  }),
+  orders: many(orders),
+}));
+
 export const ordersRelations = relations(orders, ({ one, many }) => ({
   venue: one(venues, {
     fields: [orders.venueId],
     references: [venues.id],
+  }),
+  table: one(venueTables, {
+    fields: [orders.tableId],
+    references: [venueTables.id],
   }),
   items: many(orderItems),
 }));

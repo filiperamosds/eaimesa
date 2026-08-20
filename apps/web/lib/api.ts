@@ -36,8 +36,17 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
     | null;
 
   if (!res.ok) {
-    const err = data && typeof data === "object" && "error" in data ? data.error : undefined;
-    throw new ApiError(res.status, err?.code ?? "ERROR", err?.message ?? "Não foi possível concluir.");
+    const payload = data && typeof data === "object" ? (data as Record<string, unknown>) : null;
+    const nested =
+      payload?.error && typeof payload.error === "object"
+        ? (payload.error as { code?: string; message?: string })
+        : undefined;
+    const code =
+      nested?.code ?? (typeof payload?.code === "string" ? payload.code : "ERROR");
+    const message =
+      nested?.message ??
+      (typeof payload?.message === "string" ? payload.message : "Não foi possível concluir.");
+    throw new ApiError(res.status, code, message);
   }
 
   return data as T;
