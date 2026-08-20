@@ -158,6 +158,8 @@ O script `pnpm dev` já sobe o Next em `0.0.0.0:3000` e a API em `0.0.0.0:4000`.
 
 Garçom demo: `garcom@bardotiao.local` / `demo1234`.
 
+`http://mac-filipe.local` e o IP da LAN **não** são contexto seguro: `crypto.randomUUID` some no Chrome/Safari (Mac e celular). O carrinho gera o `Idempotency-Key` com fallback.
+
 ## Página em branco / não carrega (fora do Cursor)
 
 Sintoma: navegador fica carregando ou tela branca, terminal sem erro claro.
