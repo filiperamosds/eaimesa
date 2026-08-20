@@ -4,7 +4,8 @@
 
 | Camada | Tecnologia | Motivo |
 |--------|------------|--------|
-| Monorepo | **pnpm workspaces** | web + api compartilham types |
+| Git | **Dois repos** ([ADR-015](../decisions/ADR-015-dois-repositorios.md)) | API e Next sobem em processos/deploys separados |
+| Workspaces | **pnpm** em cada repo | API: `apps/api` + `packages/*`; front: Next + cópia de `shared` |
 | API | **Node.js + Fastify** | REST, cookies, plugins |
 | DB | **PostgreSQL 16** | Transações; RLS depois |
 | ORM | **Drizzle** | Migrations SQL, types |
@@ -14,24 +15,25 @@
 | Auth platform | Cookie **httpOnly** `eaimesa_platform` | JWT próprio (`PLATFORM_JWT_SECRET`) |
 | Cache/fila | Redis | Fase 2 |
 
-Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md), [ADR-006](../decisions/ADR-006-mesas.md), [ADR-014](../decisions/ADR-014-plan-kind-promo.md).
+Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md), [ADR-006](../decisions/ADR-006-mesas.md), [ADR-014](../decisions/ADR-014-plan-kind-promo.md), [ADR-015](../decisions/ADR-015-dois-repositorios.md).
 
-## Monorepo
+## Repositórios
 
 ```
-EaiMesa/
-├── apps/
-│   ├── api/          # Fastify REST
-│   └── web/          # Next.js (único front)
-├── packages/
-│   ├── db/           # schema Drizzle, SQL, seed
-│   └── shared/       # zod, slug, constantes
+eaimesa-backend/          # https://github.com/filiperamosds/eaimesa-backend
+├── apps/api/             # Fastify REST (:4000)
+├── packages/db/          # schema Drizzle, SQL, seed
+├── packages/shared/      # fonte de verdade (zod, slug, planos)
 ├── docs/
-├── docker-compose.yml
-└── .cursor/rules/    # docs-sync (atualizar specs)
+└── docker-compose.yml
+
+eaimesa-frontend/         # https://github.com/filiperamosds/eaimesa-frontend
+├── app/                  # Next.js único (:3000)
+├── packages/shared/      # cópia — sincronizar com o backend
+└── next.config.ts        # rewrite /v1 → API_URL
 ```
 
-Não existem `apps/guest` nem `apps/staff`.
+Não existem `apps/guest` nem `apps/staff`. Este monorepo (`filiperamosds/eaimesa`) espelha o conjunto; o dia a dia é nos dois repos acima.
 
 ## Multi-tenant
 
@@ -73,7 +75,7 @@ Não existem `apps/guest` nem `apps/staff`.
 
 | Env | Uso |
 |-----|-----|
-| `local` | Postgres 16 (Homebrew **ou** Docker Compose) + api + web |
+| `local` | Postgres 16 + **dois terminais**: backend `:4000`, frontend `:3000` |
 | `cursor-cloud` | Postgres 16 nativo (apt) via `.cursor/environment.json`; sem Docker |
 | `staging` | Piloto 1 bar |
 | `prod` | SaaS |
