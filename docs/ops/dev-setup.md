@@ -105,6 +105,57 @@ Serviço `postgres:16`; usuário/senha/db `eaimesa`; porta `5432`; volume nomead
 | Senha | `demo1234` (somente local; nunca prod) |
 | Garçom | `garcom@bardotiao.local` / `demo1234` |
 
+## Rede local (celular / tablet no mesmo Wi‑Fi)
+
+Para testar QR e `/garcom` no celular, o Mac precisa aceitar conexões na LAN e as URLs do QR precisam apontar para o hostname da máquina — não `localhost`.
+
+### 1. Nome do Mac na rede (Bonjour)
+
+No Mac: **Ajustes do Sistema → Geral → Compartilhamento → Nome local** (ex. `mac-filipe`).
+
+No iPhone/Android (mesmo Wi‑Fi), o endereço costuma ser:
+
+```text
+http://mac-filipe.local:3000/bar-do-tiao
+```
+
+Use **`.local`** — `mac-filipe:3000` sem `.local` muitas vezes não resolve no celular.
+
+Alternativa: IP fixo do Mac na rede (ex. `http://192.168.0.42:3000/...`). Descubra com `ifconfig` ou Ajustes → Rede.
+
+### 2. `.env` na raiz do projeto
+
+Com o hostname que o celular vai usar:
+
+```env
+APP_URL=http://mac-filipe.local:3000
+NEXT_PUBLIC_APP_URL=http://mac-filipe.local:3000
+API_URL=http://localhost:4000
+```
+
+- `APP_URL` — CORS da API e **URL do QR de comanda** gerado pelo garçom (precisa ser alcançável pelo celular).
+- `API_URL` — proxy interno do Next (`/v1/*` → `:4000`); pode continuar `localhost` porque só o servidor Next chama a API.
+- Não defina `NEXT_PUBLIC_API_URL` para `:4000` no celular; o browser usa `/v1` no mesmo host `:3000`.
+
+Reinicie `pnpm dev` após alterar o `.env`.
+
+### 3. Servidor escutando na LAN
+
+O script `pnpm dev` já sobe o Next em `0.0.0.0:3000` e a API em `0.0.0.0:4000`. Se ainda não abrir no celular:
+
+- Firewall do Mac: permitir Node/Terminal em conexões recebidas.
+- Celular e Mac na **mesma** rede Wi‑Fi (evitar rede de convidados isolada).
+
+### 4. O que testar no celular
+
+| URL | Uso |
+|-----|-----|
+| `http://mac-filipe.local:3000/bar-do-tiao` | Cardápio público |
+| `http://mac-filipe.local:3000/garcom` | App garçom (login demo) |
+| QR gerado em `/garcom` | Deve mostrar `mac-filipe.local` na URL, não `localhost` |
+
+Garçom demo: `garcom@bardotiao.local` / `demo1234`.
+
 ## Sem Docker
 
 - **Mac local:** Postgres 16 via Homebrew (passos acima).
