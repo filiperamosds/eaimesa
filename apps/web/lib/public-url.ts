@@ -11,3 +11,9 @@ export function publicMenuUrl(slug: string): string {
   const base = appPublicOrigin().replace(/\/$/, "");
   return `${base}/${slug}`;
 }
+
+/** URL de redeem do claim — QR do garçom. Abre comanda. */
+export function claimRedeemUrl(slug: string, token: string): string {
+  const base = appPublicOrigin().replace(/\/$/, "");
+  return `${base}/${slug}/c/${token}`;
+}

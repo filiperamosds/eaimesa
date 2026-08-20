@@ -59,8 +59,8 @@ export function TablesEditor() {
       <div className="surface mb-6 border-sage/20 bg-sage-soft/40 p-4 text-sm text-ink-soft">
         <p className="font-medium text-ink">QR fixo = cardápio. QR do garçom = comanda.</p>
         <p className="mt-1">
-          Exporte o QR de cada mesa e cole no salão. O cliente só lê o cardápio; pedir abre só com o
-          QR do garçom (em breve no painel).
+          Exporte o QR de cada mesa e cole no salão. Para abrir comanda, o garçom gera o QR em{" "}
+          <strong className="font-medium text-ink">/garcom</strong> (cadastre a equipe em Equipe).
         </p>
       </div>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">

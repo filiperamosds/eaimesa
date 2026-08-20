@@ -60,6 +60,35 @@ export type VenueTable = {
   active: boolean;
 };
 
+export type StaffMember = {
+  id: string;
+  name: string;
+  email: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type StaffSession = {
+  staff: { id: string; name: string; email: string };
+  venue: Venue;
+};
+
+export type StaffTable = {
+  id: string;
+  label: string;
+  sortOrder: number;
+};
+
+export type ClaimResponse = {
+  claimId: string;
+  tableId: string;
+  tableLabel: string;
+  claimUrl: string;
+  expiresAt: string;
+  expiresInSeconds: number;
+};
+
 export type StaffOrder = {
   id: string;
   status: OrderStatus;

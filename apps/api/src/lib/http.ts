@@ -3,6 +3,8 @@ import { ZodError, type ZodSchema } from "zod";
 import { AppError } from "../errors";
 
 export const OWNER_COOKIE = "eaimesa_owner";
+export const STAFF_COOKIE = "eaimesa_staff";
+export const GUEST_COOKIE = "eaimesa_guest";
 
 export function parseBody<T>(schema: ZodSchema<T>, data: unknown): T {
   try {
@@ -37,16 +39,36 @@ export function rateLimit(key: string, max: number, windowMs: number) {
   }
 }
 
-export function setOwnerCookie(reply: FastifyReply, token: string, maxAgeSec: number) {
-  reply.setCookie(OWNER_COOKIE, token, {
+function cookieOpts(maxAgeSec: number) {
+  return {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    sameSite: "lax" as const,
     path: "/",
     maxAge: maxAgeSec,
-  });
+  };
+}
+
+export function setOwnerCookie(reply: FastifyReply, token: string, maxAgeSec: number) {
+  reply.setCookie(OWNER_COOKIE, token, cookieOpts(maxAgeSec));
 }
 
 export function clearOwnerCookie(reply: FastifyReply) {
   reply.clearCookie(OWNER_COOKIE, { path: "/" });
+}
+
+export function setStaffCookie(reply: FastifyReply, token: string, maxAgeSec: number) {
+  reply.setCookie(STAFF_COOKIE, token, cookieOpts(maxAgeSec));
+}
+
+export function clearStaffCookie(reply: FastifyReply) {
+  reply.clearCookie(STAFF_COOKIE, { path: "/" });
+}
+
+export function setGuestCookie(reply: FastifyReply, token: string, maxAgeSec: number) {
+  reply.setCookie(GUEST_COOKIE, token, cookieOpts(maxAgeSec));
+}
+
+export function clearGuestCookie(reply: FastifyReply) {
+  reply.clearCookie(GUEST_COOKIE, { path: "/" });
 }

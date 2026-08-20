@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/painel/pedidos", label: "Pedidos", icon: "▣" },
   { href: "/painel/cardapio", label: "Cardápio", icon: "☰" },
   { href: "/painel/mesas", label: "Mesas", icon: "⊞" },
+  { href: "/painel/equipe", label: "Equipe", icon: "◎" },
   { href: "/painel/bar", label: "Meu bar", icon: "⌂" },
 ] as const;
 
@@ -66,7 +67,7 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
         aria-label="Painel"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur-xl sm:hidden"
       >
-        <ul className="grid grid-cols-4 px-2 py-2">
+        <ul className="grid grid-cols-5 px-2 py-2">
           {LINKS.map((l) => {
             const active = path.startsWith(l.href);
             return (

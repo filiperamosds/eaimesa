@@ -2,10 +2,20 @@ import { randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 import { db, sql } from "./client";
-import { accounts, catalogCategories, catalogItems, orderItems, orders, venues, venueTables } from "./schema";
+import {
+  accounts,
+  catalogCategories,
+  catalogItems,
+  orderItems,
+  orders,
+  staffAccounts,
+  venues,
+  venueTables,
+} from "./schema";
 
 const DEMO_EMAIL = "dono@bardotiao.local";
 const DEMO_PASSWORD = "demo1234";
+const DEMO_STAFF_EMAIL = "garcom@bardotiao.local";
 
 const MENU: {
   name: string;
@@ -235,9 +245,33 @@ async function seed() {
       { name: "Brahma lata", qty: 3 },
     ]);
     await demoOrder("Mesa 2", "delivered", 40, [{ name: "Negroni", qty: 2 }]);
+
+    let [staff] = await tx
+      .select()
+      .from(staffAccounts)
+      .where(eq(staffAccounts.email, DEMO_STAFF_EMAIL))
+      .limit(1);
+    if (!staff) {
+      [staff] = await tx
+        .insert(staffAccounts)
+        .values({
+          venueId: venue.id,
+          name: "João Garçom",
+          email: DEMO_STAFF_EMAIL,
+          passwordHash,
+          active: true,
+        })
+        .returning();
+    } else {
+      await tx
+        .update(staffAccounts)
+        .set({ name: "João Garçom", active: true, passwordHash, updatedAt: new Date() })
+        .where(eq(staffAccounts.id, staff.id));
+    }
   });
 
   console.log("Seed ok: /bar-do-tiao — dono@bardotiao.local / demo1234");
+  console.log("Garçom demo: garcom@bardotiao.local / demo1234 — /garcom");
   await sql.end();
 }
 

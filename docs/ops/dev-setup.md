@@ -76,8 +76,10 @@ URLs:
 | Cardápio seed | http://localhost:3000/bar-do-tiao |
 | Pedidos (Kanban) | http://localhost:3000/painel/pedidos |
 | Mesas | http://localhost:3000/painel/mesas |
+| Equipe | http://localhost:3000/painel/equipe |
+| Garçom | http://localhost:3000/garcom |
 
-Login demo abre direto o Kanban. O cardápio público (`/bar-do-tiao`) **não** tem fila de pedidos.
+Login demo abre direto o Kanban. Garçom demo: `garcom@bardotiao.local` / `demo1234`.
 
 Não há segundo front na porta 3001.
 
@@ -101,6 +103,7 @@ Serviço `postgres:16`; usuário/senha/db `eaimesa`; porta `5432`; volume nomead
 | Slug | `bar-do-tiao` |
 | E-mail | `dono@bardotiao.local` |
 | Senha | `demo1234` (somente local; nunca prod) |
+| Garçom | `garcom@bardotiao.local` / `demo1234` |
 
 ## Sem Docker
 

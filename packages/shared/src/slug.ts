@@ -18,6 +18,8 @@ export const RESERVED_SLUGS = [
   "robots.txt",
   "sitemap.xml",
   "manifest.json",
+  "garcom",
+  "bem-vindo",
 ] as const;
 
 export const SLUG_REGEX = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
