@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ORDER_STATUSES } from "./orders";
+import { normalizePhone } from "./phone";
 import { isReservedSlug, normalizeSlug, SLUG_MAX, SLUG_MIN, SLUG_REGEX } from "./slug";
 import { TABLE_LABEL_MAX } from "./tables";
 
@@ -133,3 +134,22 @@ export const patchStaffSchema = z
   .refine((b) => b.name !== undefined || b.active !== undefined || b.password !== undefined, {
     message: "Envie name, active e/ou password.",
   });
+
+export const joinTabSchema = z.object({
+  slug: slugSchema,
+  pin: z
+    .string()
+    .trim()
+    .regex(/^\d{4}$/, "PIN: informe os 4 dígitos."),
+});
+
+export const openComandaSchema = z.object({
+  name: z.string().trim().min(2, "Informe seu nome.").max(80),
+  phone: z
+    .string()
+    .trim()
+    .transform(normalizePhone)
+    .refine((p) => p.length >= 10 && p.length <= 11, {
+      message: "Telefone: DDD + número (10 ou 11 dígitos).",
+    }),
+});

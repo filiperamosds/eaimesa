@@ -8,9 +8,10 @@ import { api, ApiError } from "../lib/api";
 const WELCOME_KEY = "eaimesa_welcome";
 
 type RedeemResult = {
-  pinDisplay: string;
+  pinDisplay: string | null;
   tableLabel: string;
   slug: string;
+  needsProfile: boolean;
   redirectPath: string;
 };
 
@@ -59,11 +60,16 @@ export function ClaimRedeemView() {
       <div className="mx-auto max-w-lg px-5 py-24 text-center">
         <p className="font-serif text-2xl">Comanda</p>
         <p className="mt-4 text-chili">{error}</p>
-        <p className="mt-6 text-sm text-ink-soft">Peça um novo QR ao garçom.</p>
+        <p className="mt-6 text-sm text-ink-soft">Peça um novo QR ao garçom ou entre com o PIN da mesa.</p>
         {params.slug ? (
-          <Link href={`/${params.slug}`} className="btn-primary mt-8 inline-flex">
-            Ver cardápio
-          </Link>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <Link href={`/${params.slug}/entrar`} className="btn-primary inline-flex">
+              Tenho o PIN
+            </Link>
+            <Link href={`/${params.slug}`} className="btn-secondary inline-flex">
+              Ver cardápio
+            </Link>
+          </div>
         ) : null}
       </div>
     );

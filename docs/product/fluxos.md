@@ -85,46 +85,52 @@ sequenceDiagram
   participant C as Cliente
 
   D->>API: POST /v1/owner/staff (cadastro)
-  G->>API: POST /v1/staff/auth/login
+  G->>API: POST /v1/auth/login
   G->>API: POST /v1/staff/tables/{id}/claims
   API-->>G: claimUrl + TTL
   G->>C: Cliente escaneia QR
   C->>API: POST /v1/public/venues/{slug}/c/{token}/redeem
-  API->>API: Tab + PIN + GuestSession + cookie
-  API-->>C: pinDisplay → /{slug}/bem-vindo
+  API->>API: TableSession + PIN + GuestSession
+  API-->>C: pinDisplay → /{slug}/bem-vindo (PIN + nome/telefone)
 ```
 
 1. Dono cadastra garçons em **Equipe** (`/painel/equipe`).
-2. Garçom entra em `/garcom/login`, escolhe mesa, mostra QR (countdown ~3 min).
-3. Cliente escaneia → redeem → PIN grande em `/{slug}/bem-vindo` + cookie guest.
-4. Pedido pelo cardápio (fatia 6) exige sessão guest ativa.
+2. Garçom entra em `/login` → `/garcom`, escolhe mesa, mostra QR (countdown ~3 min).
+3. Cliente escaneia → redeem → PIN da mesa + **nome e telefone** (comanda pessoal).
+4. Pedido pelo cardápio exige comanda pessoal aberta (fatia seguinte).
 
-## 3. Outros celulares na mesa
+## 3. Outros celulares na mesa (fatia 5)
 
-*Fatia futura.*
+Detalhe em [fatia-05-pin-join.md](fatia-05-pin-join.md).
 
-1. Cliente abre `/{slug}`.
-2. Tab já aberta → pede **PIN** (4 dígitos).
-3. PIN correto → nova `GuestSession` na mesma `Tab`.
+```mermaid
+sequenceDiagram
+  participant C2 as Outro celular
+  participant API as API
+
+  C2->>API: POST /v1/guest/tabs/join { slug, pin }
+  API->>API: TableSession open + PIN
+  API-->>C2: Set-Cookie eaimesa_guest
+  C2->>API: POST /v1/guest/tabs { name, phone }
+  API-->>C2: comanda pessoal (ou retoma se o telefone já existe)
+```
+
+1. Cliente abre `/{slug}` (QR fixo) ou `/{slug}/entrar`.
+2. Informa o PIN de 4 dígitos da **mesa**.
+3. Nome + telefone → comanda pessoal na mesma ocupação.
 4. Garçom **não** precisa voltar.
 
 ## 4. Pedido
 
-*Fatia futura.*
+*Fatia futura (carrinho guest).* Pedidos que existirem gravam `tab_id` da comanda pessoal.
 
-1. Guest autenticado monta carrinho (`itemId`, `qty`, `note` opcional).
-2. `POST /guest/orders` com `Idempotency-Key`.
-3. API calcula preço pelo catálogo do **venue da sessão**.
-4. Pedido entra na fila staff: `pending` → `accepted` → `preparing` → `delivered`.
-5. MVP: staff pode aceitar direto (sem “confirmar mesa vazia” — garçom já gerou claim).
+## 5. Fechamento (fatia 6)
 
-## 5. Fechamento
+Detalhe em [fatia-06-comandas-individuais.md](fatia-06-comandas-individuais.md).
 
-*Fatia futura.*
-
-1. Staff/caixa: `POST /staff/tabs/{id}/close`.
-2. Tab → `closed`; revoga cookies e claims pendentes da tab.
-3. Próxima rodada na mesa = **novo claim**.
+1. Staff: `POST /v1/staff/tabs/{id}/close` — fecha **uma** comanda (revoga sessões daquela conta).
+2. Staff: `POST /v1/staff/tables/{id}/close` — encerra a **mesa** só se todas as comandas estão `closed`.
+3. Próxima rodada na mesa = novo claim (novo PIN).
 
 ## 6. Venue suspenso (billing)
 
@@ -136,13 +142,10 @@ Na fatia 1, `suspended` ainda mostra o cardápio (read-only) com aviso, se o sta
 
 ## Estados da Tab
 
-*Fatia futura.*
-
 | Estado | Guest | Staff |
 |--------|-------|-------|
-| `open` | Pede | Normal |
-| `locked` | Só leitura ou 403 | Travada (QR vazou) |
-| `closed` | Redirect / nova visita | Arquivo |
+| `open` | Comanda da pessoa | Parcial no dialog da mesa |
+| `closed` | Precisa de nova comanda | Arquivo; mesa só encerra se todas closed |
 
 ## Impressora (fase 2)
 

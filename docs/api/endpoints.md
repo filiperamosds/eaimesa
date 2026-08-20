@@ -15,7 +15,7 @@ Formato: JSON. Erros:
 
 CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 
-## Implementado (fatias 1–4)
+## Implementado (fatias 1–6)
 
 ### Saúde
 
@@ -160,8 +160,11 @@ Auth: cookie com `role: owner | staff`.
 
 | Método | Path | Descrição |
 |--------|------|-----------|
-| GET | `/v1/staff/tables` | Mesas ativas do venue |
-| POST | `/v1/staff/tables/{tableId}/claims` | Gera claim (TTL, uso único) |
+| GET | `/v1/staff/tables` | Mesas ativas + `openTabCount` / `sessionOpen` |
+| POST | `/v1/staff/tables/{tableId}/claims` | Gera claim (TTL, uso único). Permitido com mesa ocupada |
+| GET | `/v1/staff/tables/{tableId}/tabs` | Comandas da mesa + parcial de pedidos |
+| POST | `/v1/staff/tabs/{tabId}/close` | Fecha uma comanda |
+| POST | `/v1/staff/tables/{tableId}/close` | Encerra a mesa (409 se ainda houver comanda aberta) |
 
 Resposta do claim:
 
@@ -182,7 +185,7 @@ Cookie guest: `eaimesa_guest`.
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| POST | `/v1/public/venues/{slug}/c/{token}/redeem` | — | Abre tab, PIN, Set-Cookie guest |
+| POST | `/v1/public/venues/{slug}/c/{token}/redeem` | — | Abre/reusa TableSession, PIN (só na 1ª), Set-Cookie guest |
 
 Resposta:
 
@@ -191,11 +194,40 @@ Resposta:
   "pinDisplay": "4821",
   "tableLabel": "Mesa 4",
   "slug": "bar-do-tiao",
+  "needsProfile": true,
   "redirectPath": "/bar-do-tiao/bem-vindo"
 }
 ```
 
-Front: `/{slug}/c/{token}` chama redeem e redireciona; `/{slug}/bem-vindo` exibe PIN.
+`pinDisplay` é `null` se a mesa já tinha PIN (segundo QR). Front: `/{slug}/c/{token}` → bem-vindo ou `/comanda`.
+
+### Guest — PIN join (fatia 5) e comanda pessoal (fatia 6)
+
+Cookie guest: `eaimesa_guest`. Join não exige cookie. Abrir comanda exige cookie da mesa.
+
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/v1/guest/tabs/join` | — | `{ slug, pin }` → sessão na mesa |
+| POST | `/v1/guest/tabs` | Cookie guest | `{ name, phone }` → cria ou retoma comanda |
+| GET | `/v1/guest/tab` | Cookie guest | Mesa + comanda (`needsProfile` se ainda sem nome) |
+
+#### POST /v1/guest/tabs/join (body)
+
+```json
+{ "slug": "bar-do-tiao", "pin": "4821" }
+```
+
+PIN casa com **TableSession** `open`. Resposta: `tableLabel`, `slug`, `needsProfile`, `redirectPath` (`/{slug}/comanda`).
+
+#### POST /v1/guest/tabs (body)
+
+```json
+{ "name": "Maria", "phone": "11988887777" }
+```
+
+Telefone: 10–13 dígitos. Mesmo telefone na sessão retoma a comanda. Resposta inclui `guestName`, `tableLabel`, `redirectPath`.
+
+Erros: `PIN_INVALID`, `PIN_LOCKED`, `TAB_CLOSED`, `TABS_STILL_OPEN` (ao encerrar mesa), `SESSION_REQUIRED`.
 
 #### PATCH /v1/owner/orders/{id}
 
@@ -209,12 +241,10 @@ Valores: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`.
 
 Não implementar agora. Mantido para não perder o contrato do MVP.
 
-### Guest / comanda (parcial — fatia 4 fez redeem + tab + PIN)
+### Guest / pedidos (fatia seguinte)
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| POST | `/v1/guest/tabs/join` | — | Body `{ slug, pin }` — fatia 5 |
-| GET | `/v1/guest/tab` | Cookie guest | Tab atual |
 | POST | `/v1/guest/orders` | Cookie guest | Header `Idempotency-Key` |
 | GET | `/v1/guest/orders/{id}` | Cookie guest | Status |
 
@@ -228,8 +258,7 @@ Auth: cookie `eaimesa_staff`.
 |--------|------|------|-----------|
 | GET | `/v1/staff/orders` | staff | Fila (hoje: `/v1/owner/orders`) |
 | PATCH | `/v1/staff/orders/{id}` | staff | `{ status }` |
-| POST | `/v1/staff/tabs/{tabId}/lock` | staff | Trava tab |
-| POST | `/v1/staff/tabs/{tabId}/close` | owner/staff | Fecha conta |
+| POST | `/v1/staff/tabs/{tabId}/lock` | staff | Trava tab (futuro) |
 | GET | `/v1/staff/orders/stream` | staff | SSE |
 
 ### Owner (além do catálogo)
@@ -275,4 +304,8 @@ Auth: cookie `eaimesa_staff`.
 | `STAFF_INACTIVE` | 403 |
 | `CLAIM_INVALID` | 404 |
 | `TAB_CLOSED` | 409 |
-| `FORBIDDEN_CROSS_VENUE` | 403 | gerar em `apps/api/openapi.yaml` quando o contrato da fatia 1 estabilizar.
+| `TABS_STILL_OPEN` | 409 |
+| `SESSION_REQUIRED` | 401 |
+| `FORBIDDEN_CROSS_VENUE` | 403 |
+
+OpenAPI: gerar em `apps/api/openapi.yaml` quando o contrato da fatia 1 estabilizar.

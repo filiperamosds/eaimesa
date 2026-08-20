@@ -19,7 +19,8 @@ export type StaffToken = VenueToken & { role: "staff" };
 export type GuestToken = {
   sub: string;
   venueId: string;
-  tabId: string;
+  tableSessionId: string;
+  tabId: string | null;
   role: "guest";
 };
 
@@ -67,7 +68,12 @@ export async function verifyOwnerToken(token: string): Promise<VenueToken> {
 }
 
 export async function signGuestToken(payload: GuestToken) {
-  return new SignJWT({ venueId: payload.venueId, tabId: payload.tabId, role: payload.role })
+  return new SignJWT({
+    venueId: payload.venueId,
+    tableSessionId: payload.tableSessionId,
+    tabId: payload.tabId,
+    role: payload.role,
+  })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(payload.sub)
     .setIssuedAt()
@@ -81,14 +87,15 @@ export async function verifyGuestToken(token: string): Promise<GuestToken> {
     !payload.sub ||
     payload.role !== "guest" ||
     typeof payload.venueId !== "string" ||
-    typeof payload.tabId !== "string"
+    typeof payload.tableSessionId !== "string"
   ) {
     throw new Error("token inválido");
   }
   return {
     sub: payload.sub,
     venueId: payload.venueId,
-    tabId: payload.tabId,
+    tableSessionId: payload.tableSessionId,
+    tabId: typeof payload.tabId === "string" ? payload.tabId : null,
     role: "guest",
   };
 }

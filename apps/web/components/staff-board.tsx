@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
 import type { ClaimResponse, Session, StaffTable } from "../lib/types";
 import { ClaimQrModal } from "./claim-qr-modal";
+import { StaffTableDialog } from "./staff-table-dialog";
 
 type TablesPayload = { tables: StaffTable[] };
 
@@ -14,6 +15,12 @@ export function StaffBoard() {
   const [error, setError] = useState<string | null>(null);
   const [claiming, setClaiming] = useState<string | null>(null);
   const [activeClaim, setActiveClaim] = useState<ClaimResponse | null>(null);
+  const [openTable, setOpenTable] = useState<StaffTable | null>(null);
+
+  async function refreshTables() {
+    const data = await api<TablesPayload>("/v1/staff/tables");
+    setTables(data.tables);
+  }
 
   useEffect(() => {
     Promise.all([api<Session>("/v1/auth/me"), api<TablesPayload>("/v1/staff/tables")])
@@ -40,6 +47,14 @@ export function StaffBoard() {
     }
   }
 
+  function onTableTap(table: StaffTable) {
+    if (table.sessionOpen || table.openTabCount > 0) {
+      setOpenTable(table);
+      return;
+    }
+    void openClaim(table);
+  }
+
   if (loading) {
     return <p className="flex min-h-[40vh] items-center justify-center text-ink-soft">Carregando mesas…</p>;
   }
@@ -53,7 +68,7 @@ export function StaffBoard() {
   return (
     <div>
       <p className="text-sm text-ink-soft">
-        {me.venue.name} · toque na mesa para gerar o QR da comanda
+        {me.venue.name} · mesa livre gera QR; mesa ocupada mostra as comandas
       </p>
       {error ? <p className="mt-4 text-sm text-chili">{error}</p> : null}
       {tables.length === 0 ? (
@@ -65,18 +80,37 @@ export function StaffBoard() {
               <button
                 type="button"
                 disabled={claiming === table.id}
-                onClick={() => void openClaim(table)}
+                onClick={() => onTableTap(table)}
                 className="surface flex min-h-[5.5rem] w-full flex-col items-center justify-center rounded-2xl border border-line px-3 py-4 text-center transition hover:border-chili/40 hover:shadow-md disabled:opacity-60"
               >
                 <span className="font-serif text-xl">{table.label}</span>
                 <span className="mt-1 text-xs text-ink-soft">
-                  {claiming === table.id ? "Gerando…" : "Abrir comanda"}
+                  {claiming === table.id
+                    ? "Gerando…"
+                    : table.openTabCount > 0
+                      ? `${table.openTabCount} comanda${table.openTabCount === 1 ? "" : "s"}`
+                      : table.sessionOpen
+                        ? "Mesa aberta"
+                        : "Abrir mesa"}
                 </span>
               </button>
             </li>
           ))}
         </ul>
       )}
+      {openTable ? (
+        <StaffTableDialog
+          tableId={openTable.id}
+          tableLabel={openTable.label}
+          onClose={() => setOpenTable(null)}
+          onGenerateQr={() => {
+            const t = openTable;
+            setOpenTable(null);
+            void openClaim(t);
+          }}
+          onChanged={() => void refreshTables()}
+        />
+      ) : null}
       {activeClaim ? (
         <ClaimQrModal
           venueName={me.venue.name}

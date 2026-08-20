@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { ZodError, type ZodSchema } from "zod";
 import { AppError } from "../errors";
+import { ERROR_CODES } from "@eaimesa/shared";
 
 export const OWNER_COOKIE = "eaimesa_owner";
 export const STAFF_COOKIE = "eaimesa_staff";
@@ -37,6 +38,36 @@ export function rateLimit(key: string, max: number, windowMs: number) {
   if (cur.n > max) {
     throw new AppError(429, "RATE_LIMITED", "Muitas tentativas. Espere um minuto.");
   }
+}
+
+const pinFailBuckets = new Map<string, { fails: number; reset: number }>();
+
+/** Conta só falhas de PIN. Sucesso zera o balde. */
+export function pinJoinLock(key: string, maxFails: number, windowMs: number) {
+  const now = Date.now();
+  const cur = pinFailBuckets.get(key);
+  if (cur && cur.reset >= now && cur.fails >= maxFails) {
+    throw new AppError(429, ERROR_CODES.PIN_LOCKED, "Muitas tentativas. Espere 15 minutos e peça o PIN de novo.");
+  }
+  return {
+    fail() {
+      const existing = pinFailBuckets.get(key);
+      if (!existing || existing.reset < Date.now()) {
+        pinFailBuckets.set(key, { fails: 1, reset: Date.now() + windowMs });
+        if (1 >= maxFails) {
+          throw new AppError(429, ERROR_CODES.PIN_LOCKED, "Muitas tentativas. Espere 15 minutos e peça o PIN de novo.");
+        }
+        return;
+      }
+      existing.fails += 1;
+      if (existing.fails >= maxFails) {
+        throw new AppError(429, ERROR_CODES.PIN_LOCKED, "Muitas tentativas. Espere 15 minutos e peça o PIN de novo.");
+      }
+    },
+    succeed() {
+      pinFailBuckets.delete(key);
+    },
+  };
 }
 
 function cookieOpts(maxAgeSec: number) {

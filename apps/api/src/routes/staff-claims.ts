@@ -1,6 +1,6 @@
-import { db, tableClaims, tabs, venueTables, venues } from "@eaimesa/db";
+import { db, tableClaims, tableSessions, tabs, venueTables, venues } from "@eaimesa/db";
 import { ERROR_CODES } from "@eaimesa/shared";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { AppError } from "../errors";
@@ -17,11 +17,33 @@ export async function staffClaimRoutes(app: FastifyInstance) {
       .from(venueTables)
       .where(and(eq(venueTables.venueId, venueId), eq(venueTables.active, true)))
       .orderBy(asc(venueTables.sortOrder), asc(venueTables.createdAt));
+
+    const openSessions = await db
+      .select({ tableId: tableSessions.tableId })
+      .from(tableSessions)
+      .where(and(eq(tableSessions.venueId, venueId), eq(tableSessions.status, "open")));
+    const sessionOpen = new Set(openSessions.map((s) => s.tableId));
+
+    const counts = await db
+      .select({
+        tableId: tabs.tableId,
+        n: sql<number>`count(*)::int`,
+      })
+      .from(tabs)
+      .innerJoin(tableSessions, eq(tabs.tableSessionId, tableSessions.id))
+      .where(
+        and(eq(tabs.venueId, venueId), eq(tabs.status, "open"), eq(tableSessions.status, "open")),
+      )
+      .groupBy(tabs.tableId);
+    const countByTable = new Map(counts.map((c) => [c.tableId, Number(c.n)]));
+
     return {
       tables: rows.map((t) => ({
         id: t.id,
         label: t.label,
         sortOrder: t.sortOrder,
+        sessionOpen: sessionOpen.has(t.id),
+        openTabCount: countByTable.get(t.id) ?? 0,
       })),
     };
   });
@@ -40,19 +62,6 @@ export async function staffClaimRoutes(app: FastifyInstance) {
       .limit(1);
     if (!table) {
       throw new AppError(404, ERROR_CODES.TABLE_NOT_FOUND, "Mesa não encontrada ou inativa.");
-    }
-
-    const [openTab] = await db
-      .select({ id: tabs.id })
-      .from(tabs)
-      .where(and(eq(tabs.venueId, venueId), eq(tabs.tableId, tableId), eq(tabs.status, "open")))
-      .limit(1);
-    if (openTab) {
-      throw new AppError(
-        409,
-        ERROR_CODES.TAB_ALREADY_OPEN,
-        "Esta mesa já tem comanda aberta. Feche a conta antes de gerar outro QR.",
-      );
     }
 
     const token = generateClaimToken();

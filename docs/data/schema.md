@@ -67,38 +67,45 @@ Garçom vinculado ao venue (mesmo login do painel).
 
 Máximo **5 membros staff ativos** por venue (plano Bar).
 
-### Tab
+## Entidades — fatia 6 (comandas individuais)
 
-Comanda da mesa.
+### TableSession
+
+Ocupação da mesa + PIN do grupo.
 
 - `id`, `venue_id`, `table_id` → VenueTable
-- `status`: `open` | `locked` | `closed`
-- `pin_hash` (bcrypt do PIN de 4 dígitos)
-- timestamps
+- `pin_hash` (bcrypt, 4 dígitos)
+- `status`: `open` | `closed`
+- `closed_at`, timestamps
+
+No máximo **uma** sessão `open` por mesa.
+
+### Tab (comanda pessoal)
+
+- `id`, `venue_id`, `table_id`, `table_session_id` → TableSession
+- `guest_name`, `guest_phone` (só dígitos)
+- `status`: `open` | `closed`
+- `closed_at`, timestamps
+
+Várias tabs `open` por sessão. Telefone único entre as `open` da mesma sessão (retoma a conta noutro aparelho).
 
 ### TableClaim
 
-Token de abertura (QR do garçom).
-
-- `id`, `venue_id`, `table_id`
-- `staff_account_id` ou `owner_account_id` (quem gerou)
-- `token_hash` (SHA-256), `expires_at`
-- `redeemed_at`, `invalidated_at`, `tab_id` (após redeem)
-- timestamps
+Como na fatia 4; `table_session_id` preenchido no redeem. **Não** cria a tab pessoal.
 
 ### GuestSession
 
-Sessão do cliente após redeem.
-
-- `id`, `venue_id`, `tab_id` → Tab
+- `id`, `venue_id`, `table_session_id` (obrigatório)
+- `tab_id` (nullable até nome+telefone)
 - `expires_at`, timestamps
 
-Cookie `eaimesa_guest` referencia a sessão (JWT assinado).
+### Order
+
+- `tab_id` nullable → Tab (parcial da pessoa; `guest` na fatia seguinte; balcão pode ficar só na mesa)
 
 ## Entidades — planejadas
 
 - **PlatformUser** — operador EaiMesa
-- **VenueMember** — alternativa futura a StaffAccount + owner 1:1
 - **AuditLog** — `venue_id`, `actor_type`, `actor_id`, `action`, `metadata_json`
 
 ## Índices críticos
@@ -113,10 +120,9 @@ Cookie `eaimesa_guest` referencia a sessão (JWT assinado).
 - `venue_tables(venue_id, sort_order)`
 - `venue_tables(venue_id, label)` UNIQUE
 - `venue_members(venue_id, account_id)` UNIQUE
-- `venue_members(account_id)`
-- `tabs(venue_id, table_id, status)`
-- `table_claims(venue_id, table_id, token_hash)`
-- `guest_sessions(tab_id, expires_at)`
+- `table_sessions(table_id) WHERE status = open` UNIQUE
+- `tabs(table_session_id, guest_phone) WHERE status = open` UNIQUE
+- `guest_sessions(table_session_id, tab_id)`
 
 ## Regras de negócio
 
@@ -124,15 +130,37 @@ Cookie `eaimesa_guest` referencia a sessão (JWT assinado).
 2. Menu público: `active = true` em categoria e item.
 3. DELETE categoria com itens → `CATEGORY_NOT_EMPTY`.
 4. `OrderItem` sempre grava snapshot de preço/nome; o cliente **não** envia preço.
-5. Pedido público pelo slug **não** existe nesta fatia.
+5. Pedido público pelo slug ainda não existe (carrinho = fatia seguinte).
 6. Pedido de balcão com `table_id` só aceita mesa **ativa** do mesmo venue; grava snapshot do rótulo.
-7. Fechar tab (futuro) → revoke sessions + claims pendentes.
+7. PIN join casa o PIN com uma **TableSession** `open`.
+8. Nome+telefone abre ou retoma comanda pessoal na sessão.
+9. Encerrar mesa só se todas as comandas da sessão estão `closed`. Revoga sessões da comanda ao fechá-la.
 
 ## Diagrama ER
 
 ```mermaid
 erDiagram
   Account ||--|| Venue : owns
+  Account ||--o{ VenueMember : staff
+  Venue ||--o{ VenueMember : has
+  Venue ||--o{ CatalogCategory : has
+  CatalogCategory ||--o{ CatalogItem : contains
+  Venue ||--o{ VenueTable : has
+  VenueTable ||--o{ TableSession : occupancy
+  TableSession ||--o{ Tab : comandas
+  Tab ||--o{ GuestSession : devices
+  Tab ||--o{ Order : parcial
+  Venue ||--o{ Order : has
+  Order ||--|{ OrderItem : contains
+```
+
+## Diagrama ER
+
+```mermaid
+erDiagram
+  Account ||--|| Venue : owns
+  Account ||--o{ VenueMember : staff
+  Venue ||--o{ VenueMember : has
   Venue ||--o{ CatalogCategory : has
   CatalogCategory ||--o{ CatalogItem : contains
   Venue ||--o{ CatalogItem : has
@@ -140,6 +168,10 @@ erDiagram
   Venue ||--o{ Order : has
   VenueTable ||--o{ Order : optional
   Order ||--|{ OrderItem : contains
+  Venue ||--o{ Tab : has
+  VenueTable ||--o{ Tab : hosts
+  Tab ||--o{ GuestSession : sessions
+  Tab ||--o{ TableClaim : opened_by
 ```
 
 ## Postgres RLS (recomendado fase 1.5)

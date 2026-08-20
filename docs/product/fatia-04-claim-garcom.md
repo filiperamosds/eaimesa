@@ -22,8 +22,8 @@ O garçom abre a comanda na mesa. O dono cadastra usuários de **garçom** no pa
 
 ## Não inclui
 
-- Pedido guest pelo cardápio (`POST /guest/orders`)
-- PIN join em outro aparelho (`POST /guest/tabs/join`) — fatia 5
+- Pedido guest pelo cardápio (`POST /guest/orders`) — fatia 6
+- PIN join em outro aparelho (`POST /guest/tabs/join`) — [fatia 5](fatia-05-pin-join.md)
 - Fechar / travar tab
 - Impressora, SSE
 

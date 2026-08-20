@@ -1,7 +1,9 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
+import { db, guestSessions } from "@eaimesa/db";
+import { eq } from "drizzle-orm";
 import { AppError } from "../errors";
-import { OWNER_COOKIE } from "../lib/http";
-import { verifyVenueToken, type VenueToken } from "../lib/jwt";
+import { GUEST_COOKIE, OWNER_COOKIE } from "../lib/http";
+import { verifyGuestToken, verifyVenueToken, type GuestToken, type VenueToken } from "../lib/jwt";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -9,6 +11,7 @@ declare module "fastify" {
     /** @deprecated use session */
     owner?: VenueToken;
     venueActor?: { venueId: string; memberId?: string; ownerId?: string };
+    guest?: GuestToken;
   }
 }
 
@@ -55,4 +58,33 @@ export async function requireVenueActor(req: FastifyRequest, _reply: FastifyRepl
       ownerId: session.sub,
     };
   }
+}
+
+export async function requireGuest(req: FastifyRequest, _reply: FastifyReply) {
+  const token = req.cookies[GUEST_COOKIE];
+  if (!token) {
+    throw new AppError(401, "UNAUTHORIZED", "Entre na comanda com o PIN da mesa.");
+  }
+  let session: GuestToken;
+  try {
+    session = await verifyGuestToken(token);
+  } catch {
+    throw new AppError(401, "UNAUTHORIZED", "Sessão expirada. Entre de novo com o PIN.");
+  }
+
+  const [row] = await db.select().from(guestSessions).where(eq(guestSessions.id, session.sub)).limit(1);
+  if (
+    !row ||
+    row.venueId !== session.venueId ||
+    row.tableSessionId !== session.tableSessionId ||
+    row.expiresAt.getTime() < Date.now()
+  ) {
+    throw new AppError(401, "UNAUTHORIZED", "Sessão expirada. Entre de novo com o PIN.");
+  }
+
+  req.guest = {
+    ...session,
+    tabId: row.tabId,
+    tableSessionId: row.tableSessionId,
+  };
 }

@@ -6,16 +6,16 @@
 2. **QR público ≠ auth:** slug da casa / QR fixo na mesa não abre comanda. Modo comanda **só** com QR do garçom (claim).
 3. **Presença (MVP):** claim do garçom (TTL, uso único) + PIN para o grupo. Export do claim não vira adesivo permanente.
 4. **Preço no servidor:** painel envia `priceCents` no cardápio; pedido de balcão manda só `catalogItemId` + qtd.
-5. **Separação de auth:** cookie dono ≠ cookie guest (futuro) ≠ platform admin.
+5. **Separação de auth:** cookie dono ≠ cookie guest ≠ platform admin.
 
 ## Papéis
 
-| Papel | Auth | Escopo | Fatia 3 |
+| Papel | Auth | Escopo | Fatia 5 |
 |-------|------|--------|---------|
 | Público | — | Ler cardápio por slug | Sim |
-| Owner | Cookie `eaimesa_owner` | Cardápio, venue, fila Kanban, **mesas** | Sim |
-| Guest | Cookie `eaimesa_guest` | Uma tab, um venue | Não |
-| Staff | Cookie/JWT staff | Fila, claims, mesas | Ainda o dono no mesmo cookie |
+| Owner | Cookie `eaimesa_owner` | Cardápio, venue, fila, mesas, equipe | Sim |
+| Guest | Cookie `eaimesa_guest` | Mesa + comanda pessoal | Sim |
+| Staff | Cookie `eaimesa_owner` (`role: staff`) | Claims, mesas | Sim |
 | Platform | SSO interno + 2FA | Tenants, suspensão | Não |
 
 ## Ameaças SaaS
@@ -43,8 +43,8 @@
 | Ação | Limite |
 |------|--------|
 | Login / register | 10/min/IP |
-| Redeem claim (futuro) | 10/min/IP |
-| PIN join (futuro) | 5 falhas / 15 min / tab |
+| Redeem claim | 20/min/IP |
+| PIN join | 5 falhas / 15 min / IP+venue |
 
 Na fatia 1 o limiter de login pode ser in-memory (um processo).
 
@@ -54,6 +54,7 @@ Na fatia 1 o limiter de login pode ser in-memory (um processo).
 - **Operador:** EaiMesa (infra, processamento).
 - Cadastro B2B na fatia 1: só e-mail + senha + nome do bar. CNPJ/CPF na fatia KYC.
 - CPF do **consumidor** não coletar no MVP para pedir.
+- **Telefone + nome** na comanda pessoal (fatia 6): PII do estabelecimento (controlador). API staff devolve telefone **mascarado**. Não logar telefone.
 
 ## Cadastro B2B (KYC — fatia posterior)
 

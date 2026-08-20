@@ -139,6 +139,7 @@ export const orders = pgTable(
     source: text("source").notNull().default("counter"),
     tableId: uuid("table_id").references(() => venueTables.id, { onDelete: "set null" }),
     tableLabel: text("table_label").notNull(),
+    tabId: uuid("tab_id").references(() => tabs.id, { onDelete: "set null" }),
     note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -176,6 +177,7 @@ export const venuesRelations = relations(venues, ({ one, many }) => ({
   orders: many(orders),
   members: many(venueMembers),
   tabs: many(tabs),
+  tableSessions: many(tableSessions),
 }));
 
 export const venueTablesRelations = relations(venueTables, ({ one, many }) => ({
@@ -184,6 +186,8 @@ export const venueTablesRelations = relations(venueTables, ({ one, many }) => ({
     references: [venues.id],
   }),
   orders: many(orders),
+  sessions: many(tableSessions),
+  tabs: many(tabs),
 }));
 
 export const ordersRelations = relations(orders, ({ one, many }) => ({
@@ -194,6 +198,10 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   table: one(venueTables, {
     fields: [orders.tableId],
     references: [venueTables.id],
+  }),
+  tab: one(tabs, {
+    fields: [orders.tabId],
+    references: [tabs.id],
   }),
   items: many(orderItems),
 }));
@@ -231,6 +239,25 @@ export const venueMembers = pgTable(
   ],
 );
 
+export const tableSessions = pgTable(
+  "table_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    tableId: uuid("table_id")
+      .notNull()
+      .references(() => venueTables.id, { onDelete: "restrict" }),
+    pinHash: text("pin_hash").notNull(),
+    status: text("status").notNull().default("open"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+  },
+  (t) => [index("table_sessions_venue_table").on(t.venueId, t.tableId)],
+);
+
 export const tabs = pgTable(
   "tabs",
   {
@@ -241,10 +268,15 @@ export const tabs = pgTable(
     tableId: uuid("table_id")
       .notNull()
       .references(() => venueTables.id, { onDelete: "restrict" }),
+    tableSessionId: uuid("table_session_id")
+      .notNull()
+      .references(() => tableSessions.id, { onDelete: "restrict" }),
+    guestName: text("guest_name").notNull(),
+    guestPhone: text("guest_phone").notNull(),
     status: text("status").notNull().default("open"),
-    pinHash: text("pin_hash").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
   },
   (t) => [index("tabs_venue_table").on(t.venueId, t.tableId)],
 );
@@ -270,6 +302,9 @@ export const tableClaims = pgTable(
     redeemedAt: timestamp("redeemed_at", { withTimezone: true }),
     invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
     tabId: uuid("tab_id").references(() => tabs.id, { onDelete: "set null" }),
+    tableSessionId: uuid("table_session_id").references(() => tableSessions.id, {
+      onDelete: "set null",
+    }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
@@ -282,9 +317,10 @@ export const guestSessions = pgTable(
   "guest_sessions",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    tabId: uuid("tab_id")
+    tabId: uuid("tab_id").references(() => tabs.id, { onDelete: "cascade" }),
+    tableSessionId: uuid("table_session_id")
       .notNull()
-      .references(() => tabs.id, { onDelete: "cascade" }),
+      .references(() => tableSessions.id, { onDelete: "cascade" }),
     venueId: uuid("venue_id")
       .notNull()
       .references(() => venues.id, { onDelete: "cascade" }),
@@ -300,11 +336,20 @@ export const venueMembersRelations = relations(venueMembers, ({ one, many }) => 
   claims: many(tableClaims),
 }));
 
+export const tableSessionsRelations = relations(tableSessions, ({ one, many }) => ({
+  venue: one(venues, { fields: [tableSessions.venueId], references: [venues.id] }),
+  table: one(venueTables, { fields: [tableSessions.tableId], references: [venueTables.id] }),
+  tabs: many(tabs),
+  guestSessions: many(guestSessions),
+}));
+
 export const tabsRelations = relations(tabs, ({ one, many }) => ({
   venue: one(venues, { fields: [tabs.venueId], references: [venues.id] }),
   table: one(venueTables, { fields: [tabs.tableId], references: [venueTables.id] }),
+  session: one(tableSessions, { fields: [tabs.tableSessionId], references: [tableSessions.id] }),
   claims: many(tableClaims),
-  sessions: many(guestSessions),
+  guestSessions: many(guestSessions),
+  orders: many(orders),
 }));
 
 export const tableClaimsRelations = relations(tableClaims, ({ one }) => ({
@@ -316,5 +361,9 @@ export const tableClaimsRelations = relations(tableClaims, ({ one }) => ({
 
 export const guestSessionsRelations = relations(guestSessions, ({ one }) => ({
   tab: one(tabs, { fields: [guestSessions.tabId], references: [tabs.id] }),
+  tableSession: one(tableSessions, {
+    fields: [guestSessions.tableSessionId],
+    references: [tableSessions.id],
+  }),
   venue: one(venues, { fields: [guestSessions.venueId], references: [venues.id] }),
 }));

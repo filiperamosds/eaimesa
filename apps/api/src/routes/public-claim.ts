@@ -1,12 +1,12 @@
-import { db, guestSessions, tableClaims, tabs, venueTables, venues } from "@eaimesa/db";
+import { db, tableClaims, tableSessions, venueTables, venues } from "@eaimesa/db";
 import { ERROR_CODES } from "@eaimesa/shared";
 import { and, eq } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { AppError } from "../errors";
-import { clientIp, rateLimit, setGuestCookie } from "../lib/http";
 import { generatePin, hashClaimToken } from "../lib/claim";
-import { signGuestToken } from "../lib/jwt";
+import { issueGuestCookie } from "../lib/guest-cookie";
+import { clientIp, rateLimit } from "../lib/http";
 import { hashPassword } from "../lib/password";
 
 export async function publicClaimRoutes(app: FastifyInstance) {
@@ -48,62 +48,57 @@ export async function publicClaimRoutes(app: FastifyInstance) {
       throw new AppError(404, ERROR_CODES.TABLE_NOT_FOUND, "Mesa não encontrada.");
     }
 
-    const [openTab] = await db
+    const [existingSession] = await db
       .select()
-      .from(tabs)
-      .where(and(eq(tabs.venueId, venue.id), eq(tabs.tableId, table.id), eq(tabs.status, "open")))
+      .from(tableSessions)
+      .where(
+        and(
+          eq(tableSessions.venueId, venue.id),
+          eq(tableSessions.tableId, table.id),
+          eq(tableSessions.status, "open"),
+        ),
+      )
       .limit(1);
-    if (openTab) {
-      throw new AppError(409, ERROR_CODES.TAB_ALREADY_OPEN, "Comanda já aberta nesta mesa.");
-    }
 
-    const pinDisplay = generatePin();
-    const pinHash = await hashPassword(pinDisplay);
+    let pinDisplay: string | null = null;
+    let sessionRow = existingSession;
 
-    const result = await db.transaction(async (tx) => {
-      const [tab] = await tx
-        .insert(tabs)
+    if (!sessionRow) {
+      pinDisplay = generatePin();
+      const pinHash = await hashPassword(pinDisplay);
+      const [created] = await db
+        .insert(tableSessions)
         .values({
           venueId: venue.id,
           tableId: table.id,
-          status: "open",
           pinHash,
+          status: "open",
         })
         .returning();
-      if (!tab) throw new AppError(500, "INTERNAL", "Falha ao abrir comanda.");
+      if (!created) throw new AppError(500, "INTERNAL", "Falha ao abrir a mesa.");
+      sessionRow = created;
+    }
 
-      await tx
-        .update(tableClaims)
-        .set({ redeemedAt: new Date(), tabId: tab.id })
-        .where(eq(tableClaims.id, claim.id));
+    await db
+      .update(tableClaims)
+      .set({
+        redeemedAt: new Date(),
+        tableSessionId: sessionRow.id,
+      })
+      .where(eq(tableClaims.id, claim.id));
 
-      const expiresAt = new Date(Date.now() + env.guestSessionTtlHours * 3600 * 1000);
-      const [session] = await tx
-        .insert(guestSessions)
-        .values({
-          tabId: tab.id,
-          venueId: venue.id,
-          expiresAt,
-        })
-        .returning();
-      if (!session) throw new AppError(500, "INTERNAL", "Falha na sessão.");
-
-      return { tab, session, expiresAt };
-    });
-
-    const guestJwt = await signGuestToken({
-      sub: result.session.id,
+    await issueGuestCookie(reply, {
       venueId: venue.id,
-      tabId: result.tab.id,
-      role: "guest",
+      tableSessionId: sessionRow.id,
+      tabId: null,
     });
-    setGuestCookie(reply, guestJwt, env.guestSessionTtlHours * 3600);
 
     return {
       pinDisplay,
       tableLabel: table.label,
       slug: venue.slug,
-      redirectPath: `/${venue.slug}/bem-vindo`,
+      needsProfile: true,
+      redirectPath: pinDisplay ? `/${venue.slug}/bem-vindo` : `/${venue.slug}/comanda`,
     };
   });
 }

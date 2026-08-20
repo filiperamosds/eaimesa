@@ -81,6 +81,8 @@ export type StaffTable = {
   id: string;
   label: string;
   sortOrder: number;
+  sessionOpen: boolean;
+  openTabCount: number;
 };
 
 export type ClaimResponse = {
@@ -90,6 +92,50 @@ export type ClaimResponse = {
   claimUrl: string;
   expiresAt: string;
   expiresInSeconds: number;
+};
+
+export type JoinTabResponse = {
+  tableLabel: string;
+  slug: string;
+  needsProfile: boolean;
+  redirectPath: string;
+};
+
+export type GuestTab = {
+  tabId: string | null;
+  status: "open" | "closed";
+  needsProfile: boolean;
+  guestName: string | null;
+  tableLabel: string;
+  slug: string;
+  venueName: string;
+  expiresAt: string;
+};
+
+export type OpenComandaResponse = {
+  tabId: string;
+  guestName: string;
+  tableLabel: string;
+  slug: string;
+  needsProfile: boolean;
+  redirectPath: string;
+};
+
+export type StaffTabOrder = StaffOrder;
+
+export type StaffTableTab = {
+  id: string;
+  guestName: string;
+  guestPhoneMasked: string;
+  status: "open" | "closed";
+  createdAt: string;
+  totalCents: number;
+  orders: StaffTabOrder[];
+};
+
+export type StaffTableTabsPayload = {
+  table: { id: string; label: string; sessionOpen: boolean; openTabCount: number };
+  tabs: StaffTableTab[];
 };
 
 export type StaffOrder = {
