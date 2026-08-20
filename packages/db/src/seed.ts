@@ -9,6 +9,9 @@ import {
   guestSessions,
   orderItems,
   orders,
+  planCatalog,
+  platformSettings,
+  platformUsers,
   tableClaims,
   tableSessions,
   tabs,
@@ -21,6 +24,7 @@ const DEMO_EMAIL = "dono@bardotiao.local";
 const DEMO_PASSWORD = "demo1234";
 const DEMO_STAFF_EMAIL = "garcom@bardotiao.local";
 const CARDAPIO_EMAIL = "dono@cafedalina.local";
+const OPS_EMAIL = "ops@eaimesa.local";
 
 const MENU: {
   name: string;
@@ -392,9 +396,67 @@ async function seed() {
     }
   });
 
+  const opsHash = await bcrypt.hash(DEMO_PASSWORD, 10);
+  const [ops] = await db.select().from(platformUsers).where(eq(platformUsers.email, OPS_EMAIL)).limit(1);
+  if (!ops) {
+    await db.insert(platformUsers).values({
+      email: OPS_EMAIL,
+      passwordHash: opsHash,
+      name: "Operação EaiMesa",
+      active: true,
+    });
+  } else {
+    await db
+      .update(platformUsers)
+      .set({ passwordHash: opsHash, name: "Operação EaiMesa", active: true })
+      .where(eq(platformUsers.id, ops.id));
+  }
+
+  const [settings] = await db.select().from(platformSettings).where(eq(platformSettings.id, "default")).limit(1);
+  if (!settings) {
+    await db.insert(platformSettings).values({ id: "default", trialDays: 7, paidPeriodDays: 30 });
+  }
+
+  const planDefaults = [
+    {
+      id: "cardapio",
+      name: "Cardápio",
+      priceCents: 4900,
+      blurb: "Cardápio público com a sua URL. Sem pedido no celular.",
+      features: ["URL pública /seu-bar", "Categorias, itens e foto", "QR do cardápio", "1 estabelecimento"],
+    },
+    {
+      id: "auto_atendimento",
+      name: "Auto atendimento",
+      priceCents: 14900,
+      blurb: "O cliente pede no celular. O garçom opera a fila.",
+      features: [
+        "Tudo do Cardápio",
+        "Mesas e equipe (até 15 mesas, 5 garçons)",
+        "QR do garçom + PIN",
+        "Pedido, parcial e Kanban",
+      ],
+    },
+  ];
+  for (const [i, plan] of planDefaults.entries()) {
+    const [row] = await db.select().from(planCatalog).where(eq(planCatalog.id, plan.id)).limit(1);
+    if (!row) {
+      await db.insert(planCatalog).values({
+        id: plan.id,
+        name: plan.name,
+        priceCents: plan.priceCents,
+        blurb: plan.blurb,
+        features: plan.features,
+        listed: true,
+        sortOrder: i,
+      });
+    }
+  }
+
   console.log("Seed ok: /bar-do-tiao — dono@bardotiao.local / demo1234 (Auto atendimento)");
   console.log("Garçom demo: garcom@bardotiao.local / demo1234 — login em /login → /garcom");
   console.log("Seed ok: /cafe-da-lina — dono@cafedalina.local / demo1234 (Cardápio)");
+  console.log("Console SaaS: /admin — ops@eaimesa.local / demo1234");
   await sql.end();
 }
 

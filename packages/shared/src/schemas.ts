@@ -179,3 +179,24 @@ export const idempotencyKeySchema = z
   .string()
   .trim()
   .uuid("Idempotency-Key: informe um UUID.");
+
+export const patchPlanCatalogSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80).optional(),
+    priceCents: z.number().int().min(0).max(10_000_000).optional(),
+    blurb: z.string().trim().min(1).max(280).optional(),
+    features: z.array(z.string().trim().min(1).max(120)).min(1).max(12).optional(),
+    listed: z.boolean().optional(),
+  })
+  .refine((b) => Object.values(b).some((v) => v !== undefined), {
+    message: "Envie ao menos um campo do plano.",
+  });
+
+export const patchPlatformSettingsSchema = z
+  .object({
+    trialDays: z.number().int().min(0).max(90).optional(),
+    paidPeriodDays: z.number().int().min(1).max(366).optional(),
+  })
+  .refine((b) => b.trialDays !== undefined || b.paidPeriodDays !== undefined, {
+    message: "Envie trialDays e/ou paidPeriodDays.",
+  });

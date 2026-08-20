@@ -3,6 +3,7 @@ import {
   boolean,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -371,3 +372,55 @@ export const guestSessionsRelations = relations(guestSessions, ({ one }) => ({
   }),
   venue: one(venues, { fields: [guestSessions.venueId], references: [venues.id] }),
 }));
+
+export const platformUsers = pgTable(
+  "platform_users",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    email: text("email").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    name: text("name").notNull(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("platform_users_email_lower").on(t.email)],
+);
+
+export const platformSettings = pgTable("platform_settings", {
+  id: text("id").primaryKey(),
+  trialDays: integer("trial_days").notNull().default(7),
+  paidPeriodDays: integer("paid_period_days").notNull().default(30),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const planCatalog = pgTable("plan_catalog", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  priceCents: integer("price_cents").notNull(),
+  blurb: text("blurb").notNull(),
+  features: jsonb("features").$type<string[]>().notNull().default([]),
+  listed: boolean("listed").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const billingEvents = pgTable(
+  "billing_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    plan: text("plan").notNull(),
+    planName: text("plan_name").notNull(),
+    method: text("method").notNull(),
+    amountCents: integer("amount_cents").notNull(),
+    provider: text("provider").notNull().default("stub"),
+    status: text("status").notNull().default("success"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("billing_events_created").on(t.createdAt),
+    index("billing_events_venue").on(t.venueId, t.createdAt),
+  ],
+);

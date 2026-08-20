@@ -1,6 +1,6 @@
 # Pricing
 
-Mensalidade fixa; **sem comissão** sobre consumo. Trial de **7 dias** no plano escolhido; a cobrança começa depois. Nesta fatia o checkout é **stub**: o front mostra cartão/PIX e o valor; a API espera ~2s e devolve sucesso, sem gateway.
+Mensalidade fixa; **sem comissão** sobre consumo. Trial e vigência (default **7** e **30** dias) vêm de `platform_settings`. Preço e copy da vitrine vêm de `plan_catalog` (editáveis em `/admin/planos`). Nesta fatia o checkout é **stub**: o front mostra cartão/PIX e o valor; a API espera ~2s e devolve sucesso, sem gateway.
 
 ## Planos vendáveis
 

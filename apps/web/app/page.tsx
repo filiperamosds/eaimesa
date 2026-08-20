@@ -1,9 +1,14 @@
 import Link from "next/link";
-import { formatBrlFromCents, PLANS } from "@eaimesa/shared";
+import { formatBrlFromCents } from "@eaimesa/shared";
 import { PlanMarketingCards } from "../components/plan-cards";
 import { SiteFooter, SiteHeader } from "../components/site-chrome";
+import { loadBillingPlans } from "../lib/load-billing-plans";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const catalog = await loadBillingPlans();
+  const cardapio = catalog.plans.find((p) => p.id === "cardapio");
+  const auto = catalog.plans.find((p) => p.id === "auto_atendimento");
+
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
@@ -22,18 +27,22 @@ export default function HomePage() {
                 público nunca abre comanda sozinho.
               </p>
               <div className="mt-9 flex flex-wrap gap-3">
-                <Link href="/cadastro?plano=cardapio" className="btn-primary">
-                  Adquirir Cardápio · {formatBrlFromCents(PLANS.cardapio.priceCents)}/mês
-                </Link>
-                <Link href="/cadastro?plano=auto_atendimento" className="btn-secondary">
-                  Adquirir Auto atendimento · {formatBrlFromCents(PLANS.auto_atendimento.priceCents)}/mês
-                </Link>
+                {cardapio ? (
+                  <Link href="/cadastro?plano=cardapio" className="btn-primary">
+                    Adquirir {cardapio.name} · {formatBrlFromCents(cardapio.priceCents)}/mês
+                  </Link>
+                ) : null}
+                {auto ? (
+                  <Link href="/cadastro?plano=auto_atendimento" className="btn-secondary">
+                    Adquirir {auto.name} · {formatBrlFromCents(auto.priceCents)}/mês
+                  </Link>
+                ) : null}
               </div>
               <dl className="mt-10 grid max-w-md grid-cols-3 gap-4 text-sm">
                 {[
-                  ["7 dias", "de trial"],
+                  [`${catalog.trialDays} dias`, "de trial"],
                   ["0%", "comissão"],
-                  ["2 planos", "agora"],
+                  [`${catalog.plans.filter((p) => p.listed !== false).length} planos`, "agora"],
                 ].map(([k, v]) => (
                   <div key={v}>
                     <dt className="font-serif text-2xl text-ink">{k}</dt>
@@ -104,11 +113,11 @@ export default function HomePage() {
           <p className="eyebrow">Planos</p>
           <h2 className="mt-3 font-serif text-4xl">Escolha o que o bar precisa</h2>
           <p className="mt-3 max-w-xl text-ink-soft">
-            Dois planos, com preço na hora. Trial de 7 dias; depois cobra o valor do plano. Pagamento
-            (cartão ou PIX) no painel — ainda sem gateway.
+            Dois planos, com preço na hora. Trial de {catalog.trialDays} dias; depois cobra o valor do
+            plano. Pagamento (cartão ou PIX) no painel — ainda sem gateway.
           </p>
           <div className="mt-10">
-            <PlanMarketingCards />
+            <PlanMarketingCards plans={catalog.plans} trialDays={catalog.trialDays} />
           </div>
         </section>
       </main>

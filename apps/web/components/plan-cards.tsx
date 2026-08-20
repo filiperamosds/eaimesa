@@ -1,16 +1,24 @@
 import Link from "next/link";
-import { formatBrlFromCents, PLANS, PLAN_FUTURE, type PlanId } from "@eaimesa/shared";
+import { formatBrlFromCents, PLAN_FUTURE, type PlanId } from "@eaimesa/shared";
+import type { BillingPlan } from "../lib/load-billing-plans";
 
 const DEMOS: Record<PlanId, { href: string; label: string }> = {
   cardapio: { href: "/cafe-da-lina", label: "Ver demo Café da Lina" },
   auto_atendimento: { href: "/bar-do-tiao", label: "Ver demo Bar do Tião" },
 };
 
-export function PlanMarketingCards() {
+export function PlanMarketingCards({
+  plans,
+  trialDays,
+}: {
+  plans: BillingPlan[];
+  trialDays: number;
+}) {
+  const listed = plans.filter((p) => p.listed !== false);
   return (
     <div>
       <div className="grid gap-6 md:grid-cols-2">
-        {Object.values(PLANS).map((plan) => {
+        {listed.map((plan) => {
           const featured = plan.id === "auto_atendimento";
           const demo = DEMOS[plan.id];
           return (
@@ -37,15 +45,18 @@ export function PlanMarketingCards() {
               <Link href={`/cadastro?plano=${plan.id}`} className="btn-primary mt-8 w-full">
                 Adquirir {plan.name} · {formatBrlFromCents(plan.priceCents)}/mês
               </Link>
-              <Link href={demo.href} className="mt-3 block text-center text-sm text-ink-soft underline">
-                {demo.label}
-              </Link>
+              {demo ? (
+                <Link href={demo.href} className="mt-3 block text-center text-sm text-ink-soft underline">
+                  {demo.label}
+                </Link>
+              ) : null}
             </article>
           );
         })}
       </div>
       <p className="mt-6 text-sm text-ink-soft">
-        {PLAN_FUTURE.name}: {PLAN_FUTURE.blurb} Trial de 7 dias; a cobrança do valor do plano entra depois.
+        {PLAN_FUTURE.name}: {PLAN_FUTURE.blurb} Trial de {trialDays} dias; a cobrança do valor do plano
+        entra depois.
       </p>
     </div>
   );

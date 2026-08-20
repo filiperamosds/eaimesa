@@ -6,6 +6,7 @@ import { ERROR_CODES } from "@eaimesa/shared";
 export const OWNER_COOKIE = "eaimesa_owner";
 export const STAFF_COOKIE = "eaimesa_staff";
 export const GUEST_COOKIE = "eaimesa_guest";
+export const PLATFORM_COOKIE = "eaimesa_platform";
 
 export function parseBody<T>(schema: ZodSchema<T>, data: unknown): T {
   try {
@@ -102,4 +103,12 @@ export function setGuestCookie(reply: FastifyReply, token: string, maxAgeSec: nu
 
 export function clearGuestCookie(reply: FastifyReply) {
   reply.clearCookie(GUEST_COOKIE, { path: "/" });
+}
+
+export function setPlatformCookie(reply: FastifyReply, token: string, maxAgeSec: number) {
+  reply.setCookie(PLATFORM_COOKIE, token, cookieOpts(maxAgeSec));
+}
+
+export function clearPlatformCookie(reply: FastifyReply) {
+  reply.clearCookie(PLATFORM_COOKIE, { path: "/" });
 }

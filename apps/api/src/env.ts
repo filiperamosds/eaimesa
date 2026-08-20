@@ -28,6 +28,8 @@ export const env = {
   ownerJwtTtlHours: Number(process.env.OWNER_JWT_TTL_HOURS ?? 12),
   guestSessionSecret: req("GUEST_SESSION_SECRET"),
   guestSessionTtlHours: Number(process.env.GUEST_SESSION_TTL_HOURS ?? 4),
+  platformJwtSecret: req("PLATFORM_JWT_SECRET"),
+  platformJwtTtlHours: Number(process.env.PLATFORM_JWT_TTL_HOURS ?? 12),
   claimTtlSeconds: Number(process.env.CLAIM_TTL_SECONDS ?? 180),
   pinJoinMaxFailures: Number(process.env.PIN_JOIN_MAX_FAILURES ?? 5),
   pinJoinWindowMinutes: Number(process.env.PIN_JOIN_WINDOW_MINUTES ?? 15),

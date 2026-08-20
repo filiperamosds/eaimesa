@@ -11,6 +11,7 @@
 | UI | **Next.js** (um app) | Landing + painel + cardápio |
 | Auth dono | Cookie **httpOnly** `eaimesa_owner` | JWT assinado |
 | Auth guest | Cookie `eaimesa_guest` | Redeem (fatia 4) e PIN join (fatia 5) |
+| Auth platform | Cookie **httpOnly** `eaimesa_platform` | JWT próprio (`PLATFORM_JWT_SECRET`) |
 | Cache/fila | Redis | Fase 2 |
 
 Ver [ADR-001](../decisions/ADR-001-stack.md), [ADR-003](../decisions/ADR-003-frontend-unico.md), [ADR-004](../decisions/ADR-004-slug-publico.md), [ADR-005](../decisions/ADR-005-kanban-pedidos.md), [ADR-006](../decisions/ADR-006-mesas.md).
@@ -57,7 +58,8 @@ Não existem `apps/guest` nem `apps/staff`.
 | `/{slug}/comanda` | Nome + telefone **ou** parcial da comanda |
 | `/garcom` | Mesas do garçom |
 | `/garcom/pedidos` | Kanban do garçom |
-| `/painel/equipe` | Cadastro de garçons |
+| `/admin/login`, `/admin` | Console da plataforma (operador) |
+| `/admin/bares`, `/admin/planos` | Tenants e catálogo |
 
 ## Integrações futuras
 

@@ -188,6 +188,15 @@ sequenceDiagram
 3. Subir Cardápio → Auto atendimento: sempre. Descer: só depois do fim da vigência **paga**.
 4. Plano Cardápio: API responde 403 `PLAN_FEATURE` em mesas, equipe, pedidos, claim, PIN e comanda. O `/{slug}` não mostra PIN nem “Entrar para pedir”; `/entrar` redireciona ao cardápio.
 
+## 5c. Fatia 11 — console SaaS
+
+Detalhe em [fatia-11-console-saas.md](fatia-11-console-saas.md).
+
+1. Operador entra em `/admin/login` (cookie `eaimesa_platform`).
+2. Dashboard: bares, MRR estimado, checkouts stub.
+3. `/admin/bares`: suspender / reativar.
+4. `/admin/planos`: preço e copy; `GET /v1/billing/plans` alimenta landing e cadastro.
+
 ## 6. Venue suspenso (billing)
 
 - `GET /{slug}` → cardápio + aviso “assinatura inativa”.

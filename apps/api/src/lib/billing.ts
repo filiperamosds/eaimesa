@@ -5,13 +5,12 @@ import {
   PAID_PERIOD_DAYS,
   planAllowsService,
   planRank,
-  PLANS,
-  TRIAL_DAYS,
   type PlanId,
 } from "@eaimesa/shared";
 import { eq } from "drizzle-orm";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { AppError } from "../errors";
+import { planNameSync } from "./plan-catalog";
 
 export type VenueRow = typeof venues.$inferSelect;
 
@@ -22,7 +21,7 @@ export function serializeVenue(v: VenueRow) {
     slug: v.slug,
     publicId: v.publicId,
     plan: v.plan,
-    planName: PLANS[v.plan as PlanId]?.name ?? v.plan,
+    planName: planNameSync(v.plan),
     subscriptionStatus: v.subscriptionStatus,
     acceptsOrders: v.acceptsOrders && planAllowsService(v.plan) && subscriptionAllowsUse(v).ok,
     trialEndsAt: v.trialEndsAt?.toISOString() ?? null,
@@ -118,10 +117,10 @@ export async function requireServicePlan(req: FastifyRequest, _reply: FastifyRep
   assertServicePlan(venue);
 }
 
-export function trialEndsAtFrom(now = new Date()): Date {
-  return addDays(now, TRIAL_DAYS);
+export function trialEndsAtFrom(now = new Date(), days = 7): Date {
+  return addDays(now, days);
 }
 
-export function paidPeriodEndsAtFrom(now = new Date()): Date {
-  return addDays(now, PAID_PERIOD_DAYS);
+export function paidPeriodEndsAtFrom(now = new Date(), days = PAID_PERIOD_DAYS): Date {
+  return addDays(now, days);
 }

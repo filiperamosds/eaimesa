@@ -1,10 +1,11 @@
 "use client";
 
-import { formatBrlFromCents, PLANS } from "@eaimesa/shared";
+import { formatBrlFromCents, PLANS, type PlanId } from "@eaimesa/shared";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ApiError } from "../lib/api";
+import type { BillingPlan, BillingPlansPayload } from "../lib/load-billing-plans";
 import type { LoginResponse } from "../lib/types";
 
 export function LoginForm() {
@@ -79,9 +80,26 @@ export function RegisterForm() {
   const [password, setPassword] = useState("");
   const [venueName, setVenueName] = useState("");
   const [slug, setSlug] = useState("");
-  const [plan, setPlan] = useState(requested === "auto_atendimento" ? "auto_atendimento" : "cardapio");
+  const [plan, setPlan] = useState<PlanId>(
+    requested === "auto_atendimento" ? "auto_atendimento" : "cardapio",
+  );
+  const [plans, setPlans] = useState<BillingPlan[]>(Object.values(PLANS));
+  const [trialDays, setTrialDays] = useState(7);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    api<BillingPlansPayload>("/v1/billing/plans")
+      .then((data) => {
+        const listed = data.plans.filter((p) => p.listed !== false);
+        if (listed.length) setPlans(listed);
+        setTrialDays(data.trialDays);
+        setPlan((cur) => (listed.some((p) => p.id === cur) ? cur : (listed[0]?.id ?? cur)));
+      })
+      .catch(() => {
+        /* fallback PLANS */
+      });
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -122,9 +140,9 @@ export function RegisterForm() {
         autoComplete="new-password"
       />
       <fieldset>
-        <legend className="mb-2 text-sm font-medium">Plano (trial de 7 dias)</legend>
+        <legend className="mb-2 text-sm font-medium">Plano (trial de {trialDays} dias)</legend>
         <div className="grid gap-2 sm:grid-cols-2">
-          {Object.values(PLANS).map((p) => (
+          {plans.map((p) => (
             <label
               key={p.id}
               className={`cursor-pointer rounded-2xl border px-3 py-3 text-sm ${
