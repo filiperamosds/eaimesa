@@ -117,3 +117,19 @@ export const patchTableSchema = z
   .refine((b) => b.label !== undefined || b.sortOrder !== undefined || b.active !== undefined, {
     message: "Envie label, sortOrder e/ou active.",
   });
+
+export const createStaffSchema = z.object({
+  name: z.string().trim().min(2, "Nome: mínimo 2 caracteres.").max(80),
+  email: z.string().trim().email("E-mail inválido.").transform((e) => e.toLowerCase()),
+  password: z.string().min(8, "Senha: mínimo 8 caracteres."),
+});
+
+export const patchStaffSchema = z
+  .object({
+    name: z.string().trim().min(2).max(80).optional(),
+    active: z.boolean().optional(),
+    password: z.string().min(8).optional(),
+  })
+  .refine((b) => b.name !== undefined || b.active !== undefined || b.password !== undefined, {
+    message: "Envie name, active e/ou password.",
+  });

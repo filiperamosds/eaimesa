@@ -8,9 +8,13 @@ import { sendUpload } from "./lib/uploads";
 import { authRoutes } from "./routes/auth";
 import { ownerCatalogRoutes } from "./routes/owner-catalog";
 import { ownerOrderRoutes } from "./routes/owner-orders";
+import { ownerStaffRoutes } from "./routes/owner-staff";
 import { ownerTableRoutes } from "./routes/owner-tables";
 import { ownerVenueRoutes } from "./routes/owner-venue";
+import { publicClaimRoutes } from "./routes/public-claim";
 import { publicMenuRoutes } from "./routes/public-menu";
+import { staffAuthRoutes } from "./routes/staff-auth";
+import { staffClaimRoutes } from "./routes/staff-claims";
 
 export async function buildApp() {
   const app = Fastify({
@@ -38,6 +42,10 @@ export async function buildApp() {
   await app.register(ownerCatalogRoutes);
   await app.register(ownerOrderRoutes);
   await app.register(ownerTableRoutes);
+  await app.register(ownerStaffRoutes);
+  await app.register(staffAuthRoutes);
+  await app.register(staffClaimRoutes);
+  await app.register(publicClaimRoutes);
   await app.register(publicMenuRoutes);
 
   app.setErrorHandler((err, req, reply) => {

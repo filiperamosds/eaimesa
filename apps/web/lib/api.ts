@@ -10,15 +10,19 @@ export class ApiError extends Error {
 }
 
 export function apiBase() {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+  if (typeof window !== "undefined") {
+    return "";
+  }
+  return process.env.NEXT_PUBLIC_API_URL ?? process.env.API_URL ?? "http://localhost:4000";
 }
 
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers);
   const isForm = typeof FormData !== "undefined" && init?.body instanceof FormData;
+  const hasBody = init?.body != null && init.body !== "";
   if (isForm) {
     headers.delete("Content-Type");
-  } else if (!headers.has("Content-Type")) {
+  } else if (hasBody && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
 

@@ -26,6 +26,11 @@ export const env = {
   appUrl: process.env.APP_URL ?? "http://localhost:3000",
   ownerJwtSecret: req("OWNER_JWT_SECRET"),
   ownerJwtTtlHours: Number(process.env.OWNER_JWT_TTL_HOURS ?? 12),
+  staffJwtSecret: req("STAFF_JWT_SECRET"),
+  staffJwtTtlHours: Number(process.env.STAFF_JWT_TTL_HOURS ?? 12),
+  guestSessionSecret: req("GUEST_SESSION_SECRET"),
+  guestSessionTtlHours: Number(process.env.GUEST_SESSION_TTL_HOURS ?? 4),
+  claimTtlSeconds: Number(process.env.CLAIM_TTL_SECONDS ?? 180),
 };
 
 export const isProd = env.nodeEnv === "production";

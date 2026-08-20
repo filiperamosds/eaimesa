@@ -8,7 +8,7 @@ Um único frontend: landing, autenticação do estabelecimento e cardápio por s
 
 ## Fatia atual
 
-[Cardápio](docs/product/fatia-01-cardapio.md), [pedidos Kanban](docs/product/fatia-02-pedidos.md) e [mesas](docs/product/fatia-03-mesas.md).
+[Cardápio](docs/product/fatia-01-cardapio.md), [pedidos Kanban](docs/product/fatia-02-pedidos.md), [mesas](docs/product/fatia-03-mesas.md) e [claim garçom](docs/product/fatia-04-claim-garcom.md).
 
 ```bash
 cp .env.example .env
@@ -24,7 +24,10 @@ pnpm dev
 - Cardápio demo: http://localhost:3000/bar-do-tiao
 - Pedidos: http://localhost:3000/painel/pedidos
 - Mesas: http://localhost:3000/painel/mesas
+- Equipe (garçons): http://localhost:3000/painel/equipe
+- App garçom: http://localhost:3000/garcom
 - Painel: `dono@bardotiao.local` / `demo1234` (seed local)
+- Garçom demo: `garcom@bardotiao.local` / `demo1234`
 
 Setup completo: [docs/ops/dev-setup.md](docs/ops/dev-setup.md).
 

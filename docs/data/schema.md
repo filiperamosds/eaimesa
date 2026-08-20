@@ -55,13 +55,49 @@ Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando ho
 
 No máximo **15 mesas ativas** por venue (plano Bar). Pedido pode apontar `table_id` (nullable, `ON DELETE SET NULL`); `table_label` no pedido é snapshot.
 
+## Entidades — fatia 4 (equipe + comanda)
+
+### StaffAccount
+
+Garçom cadastrado pelo dono.
+
+- `id`, `venue_id` → Venue
+- `name`, `email` UNIQUE (global), `password_hash`, `active`, timestamps
+
+Máximo **5 ativos** por venue (plano Bar).
+
+### Tab
+
+Comanda da mesa.
+
+- `id`, `venue_id`, `table_id` → VenueTable
+- `status`: `open` | `locked` | `closed`
+- `pin_hash` (bcrypt do PIN de 4 dígitos)
+- timestamps
+
+### TableClaim
+
+Token de abertura (QR do garçom).
+
+- `id`, `venue_id`, `table_id`
+- `staff_account_id` ou `owner_account_id` (quem gerou)
+- `token_hash` (SHA-256), `expires_at`
+- `redeemed_at`, `invalidated_at`, `tab_id` (após redeem)
+- timestamps
+
+### GuestSession
+
+Sessão do cliente após redeem.
+
+- `id`, `venue_id`, `tab_id` → Tab
+- `expires_at`, timestamps
+
+Cookie `eaimesa_guest` referencia a sessão (JWT assinado).
+
 ## Entidades — planejadas
 
 - **PlatformUser** — operador EaiMesa
-- **VenueMember** — `user_id`, `venue_id`, `role`: `owner` | `staff`
-- **Tab** — `status`: `open` | `locked` | `closed`; `pin_hash`
-- **TableClaim** — `token_hash`, TTL, uso único
-- **GuestSession** — `tab_id`, `expires_at`
+- **VenueMember** — alternativa futura a StaffAccount + owner 1:1
 - **AuditLog** — `venue_id`, `actor_type`, `actor_id`, `action`, `metadata_json`
 
 ## Índices críticos
@@ -75,6 +111,11 @@ No máximo **15 mesas ativas** por venue (plano Bar). Pedido pode apontar `table
 - `order_items(order_id)`
 - `venue_tables(venue_id, sort_order)`
 - `venue_tables(venue_id, label)` UNIQUE
+- `staff_accounts(email)` UNIQUE
+- `staff_accounts(venue_id, active)`
+- `tabs(venue_id, table_id, status)`
+- `table_claims(venue_id, table_id, token_hash)`
+- `guest_sessions(tab_id, expires_at)`
 
 ## Regras de negócio
 

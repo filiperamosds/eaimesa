@@ -64,7 +64,7 @@ sequenceDiagram
 1. Dono abre **Mesas** e cadastra até 15 ativas (ex. Balcão, Mesa 1…10).
 2. Exporta o **QR fixo** de cada mesa (destino: cardápio `/{slug}`) e cola no salão.
 3. No Kanban, o pedido de balcão escolhe uma mesa ativa.
-4. QR/claim do **garçom** (abre comanda) entra na fatia seguinte — gerado só no painel.
+4. QR/claim do **garçom** (abre comanda): garçom em `/garcom` ou dono autenticado — fatia 4.
 
 ## 1. Onboarding do bar (B2B)
 
@@ -77,24 +77,27 @@ sequenceDiagram
 
 ## 2. Abertura da mesa (garçom → cliente)
 
-*Fatia futura.*
-
 ```mermaid
 sequenceDiagram
-  participant G as Garçom (staff)
+  participant D as Dono
+  participant G as Garçom
   participant API as API
-  participant C as Cliente (PWA)
+  participant C as Cliente
 
-  G->>API: POST /staff/tables/{id}/claims
-  API-->>G: QR URL + countdown TTL (só no /painel)
-  G->>G: Mostra no painel ou exporta PNG/PDF
-  G->>C: Cliente escaneia o claim
-  C->>API: GET /v/{slug}/c/{claim} (redeem)
-  API->>API: Valida hash, TTL, uso único
-  API->>API: Cria Tab + PIN, GuestSession
-  API-->>C: Set-Cookie + redirect /{slug}
-  C->>C: Exibe PIN para o grupo
+  D->>API: POST /v1/owner/staff (cadastro)
+  G->>API: POST /v1/staff/auth/login
+  G->>API: POST /v1/staff/tables/{id}/claims
+  API-->>G: claimUrl + TTL
+  G->>C: Cliente escaneia QR
+  C->>API: POST /v1/public/venues/{slug}/c/{token}/redeem
+  API->>API: Tab + PIN + GuestSession + cookie
+  API-->>C: pinDisplay → /{slug}/bem-vindo
 ```
+
+1. Dono cadastra garçons em **Equipe** (`/painel/equipe`).
+2. Garçom entra em `/garcom/login`, escolhe mesa, mostra QR (countdown ~3 min).
+3. Cliente escaneia → redeem → PIN grande em `/{slug}/bem-vindo` + cookie guest.
+4. Pedido pelo cardápio (fatia 6) exige sessão guest ativa.
 
 ## 3. Outros celulares na mesa
 

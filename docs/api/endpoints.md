@@ -15,7 +15,7 @@ Formato: JSON. Erros:
 
 CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 
-## Implementado (fatia 1 — cardápio; fatia 2 — pedidos; fatia 3 — mesas)
+## Implementado (fatias 1–4)
 
 ### Saúde
 
@@ -139,6 +139,70 @@ Auth: cookie `eaimesa_owner`. `venue_id` da sessão. Limite: 15 mesas **ativas**
 
 Rótulo único por venue. `TABLE_LIMIT` se já houver 15 ativas. `TABLE_LABEL_TAKEN` se o nome já existir.
 
+### Owner — equipe / garçons (fatia 4)
+
+Auth: cookie `eaimesa_owner`. Limite: **5 garçons ativos**.
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | `/v1/owner/staff` | Lista garçons + contagem ativa |
+| POST | `/v1/owner/staff` | `{ name, email, password }` |
+| PATCH | `/v1/owner/staff/{id}` | `{ name?, active?, password? }` |
+| DELETE | `/v1/owner/staff/{id}` | Remove garçom |
+
+### Auth garçom (fatia 4)
+
+Cookie: `eaimesa_staff` (httpOnly, SameSite=Lax, Path=/).
+
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/v1/staff/auth/login` | — | E-mail/senha; Set-Cookie |
+| POST | `/v1/staff/auth/logout` | Cookie staff | Clear-Cookie |
+| GET | `/v1/staff/auth/me` | Cookie staff | Garçom + venue |
+
+### Staff — mesas e claim (fatia 4)
+
+Auth: cookie `eaimesa_staff` **ou** `eaimesa_owner` (dono pode gerar claim para testes).
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | `/v1/staff/tables` | Mesas ativas do venue |
+| POST | `/v1/staff/tables/{tableId}/claims` | Gera claim (TTL, uso único) |
+
+Resposta do claim:
+
+```json
+{
+  "claimId": "uuid",
+  "tableId": "uuid",
+  "tableLabel": "Mesa 4",
+  "claimUrl": "http://localhost:3000/bar-do-tiao/c/{token}",
+  "expiresAt": "2026-…",
+  "expiresInSeconds": 180
+}
+```
+
+### Público — redeem claim (fatia 4)
+
+Cookie guest: `eaimesa_guest`.
+
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| POST | `/v1/public/venues/{slug}/c/{token}/redeem` | — | Abre tab, PIN, Set-Cookie guest |
+
+Resposta:
+
+```json
+{
+  "pinDisplay": "4821",
+  "tableLabel": "Mesa 4",
+  "slug": "bar-do-tiao",
+  "redirectPath": "/bar-do-tiao/bem-vindo"
+}
+```
+
+Front: `/{slug}/c/{token}` chama redeem e redireciona; `/{slug}/bem-vindo` exibe PIN.
+
 #### PATCH /v1/owner/orders/{id}
 
 ```json
@@ -151,27 +215,25 @@ Valores: `pending` | `accepted` | `preparing` | `delivered` | `cancelled`.
 
 Não implementar agora. Mantido para não perder o contrato do MVP.
 
-### Guest / comanda
+### Guest / comanda (parcial — fatia 4 fez redeem + tab + PIN)
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
-| POST | `/v1/public/venues/{slug}/c/{token}/redeem` | — | Abre tab, Set-Cookie guest |
-| POST | `/v1/guest/tabs/join` | — | Body `{ slug, pin }` |
+| POST | `/v1/guest/tabs/join` | — | Body `{ slug, pin }` — fatia 5 |
 | GET | `/v1/guest/tab` | Cookie guest | Tab atual |
 | POST | `/v1/guest/orders` | Cookie guest | Header `Idempotency-Key` |
 | GET | `/v1/guest/orders/{id}` | Cookie guest | Status |
 
 Preço **não** enviado pelo cliente no pedido.
 
-### Staff
+### Staff (além do claim — fatia 4)
 
-Auth futura: cookie `eaimesa_staff` ou Bearer. Rotas no **mesmo** `apps/web` (`/painel/...`).
+Auth: cookie `eaimesa_staff`.
 
 | Método | Path | Role | Descrição |
 |--------|------|------|-----------|
 | GET | `/v1/staff/orders` | staff | Fila (hoje: `/v1/owner/orders`) |
 | PATCH | `/v1/staff/orders/{id}` | staff | `{ status }` |
-| POST | `/v1/staff/tables/{tableId}/claims` | staff | Gera claim |
 | POST | `/v1/staff/tabs/{tabId}/lock` | staff | Trava tab |
 | POST | `/v1/staff/tabs/{tabId}/close` | owner/staff | Fecha conta |
 | GET | `/v1/staff/orders/stream` | staff | SSE |
@@ -180,7 +242,7 @@ Auth futura: cookie `eaimesa_staff` ou Bearer. Rotas no **mesmo** `apps/web` (`/
 
 | Método | Path | Descrição |
 |--------|------|-----------|
-| POST | `/v1/owner/staff/invites` | Convite staff |
+| POST | `/v1/owner/staff/invites` | Convite staff (futuro) |
 
 ### Platform (futuro)
 
@@ -213,7 +275,10 @@ Auth futura: cookie `eaimesa_staff` ou Bearer. Rotas no **mesmo** `apps/web` (`/
 | `CLAIM_ALREADY_USED` | 409 |
 | `PIN_INVALID` | 401 |
 | `PIN_LOCKED` | 429 |
+| `TAB_ALREADY_OPEN` | 409 |
+| `STAFF_NOT_FOUND` | 404 |
+| `STAFF_LIMIT` | 409 |
+| `STAFF_INACTIVE` | 403 |
+| `CLAIM_INVALID` | 404 |
 | `TAB_CLOSED` | 409 |
-| `FORBIDDEN_CROSS_VENUE` | 403 |
-
-OpenAPI: gerar em `apps/api/openapi.yaml` quando o contrato da fatia 1 estabilizar.
+| `FORBIDDEN_CROSS_VENUE` | 403 | gerar em `apps/api/openapi.yaml` quando o contrato da fatia 1 estabilizar.

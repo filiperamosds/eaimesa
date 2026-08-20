@@ -173,6 +173,8 @@ export const venuesRelations = relations(venues, ({ one, many }) => ({
   items: many(catalogItems),
   tables: many(venueTables),
   orders: many(orders),
+  staff: many(staffAccounts),
+  tabs: many(tabs),
 }));
 
 export const venueTablesRelations = relations(venueTables, ({ one, many }) => ({
@@ -204,4 +206,111 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
     fields: [orderItems.catalogItemId],
     references: [catalogItems.id],
   }),
+}));
+
+export const staffAccounts = pgTable(
+  "staff_accounts",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    passwordHash: text("password_hash").notNull(),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("staff_accounts_email").on(t.email),
+    index("staff_accounts_venue").on(t.venueId),
+  ],
+);
+
+export const tabs = pgTable(
+  "tabs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    tableId: uuid("table_id")
+      .notNull()
+      .references(() => venueTables.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("open"),
+    pinHash: text("pin_hash").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("tabs_venue_table").on(t.venueId, t.tableId)],
+);
+
+export const tableClaims = pgTable(
+  "table_claims",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    tableId: uuid("table_id")
+      .notNull()
+      .references(() => venueTables.id, { onDelete: "cascade" }),
+    staffAccountId: uuid("staff_account_id").references(() => staffAccounts.id, {
+      onDelete: "set null",
+    }),
+    ownerAccountId: uuid("owner_account_id").references(() => accounts.id, {
+      onDelete: "set null",
+    }),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    redeemedAt: timestamp("redeemed_at", { withTimezone: true }),
+    invalidatedAt: timestamp("invalidated_at", { withTimezone: true }),
+    tabId: uuid("tab_id").references(() => tabs.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("table_claims_token_hash").on(t.tokenHash),
+    index("table_claims_venue_table").on(t.venueId, t.tableId),
+  ],
+);
+
+export const guestSessions = pgTable(
+  "guest_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    tabId: uuid("tab_id")
+      .notNull()
+      .references(() => tabs.id, { onDelete: "cascade" }),
+    venueId: uuid("venue_id")
+      .notNull()
+      .references(() => venues.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("guest_sessions_tab").on(t.tabId)],
+);
+
+export const staffAccountsRelations = relations(staffAccounts, ({ one, many }) => ({
+  venue: one(venues, { fields: [staffAccounts.venueId], references: [venues.id] }),
+  claims: many(tableClaims),
+}));
+
+export const tabsRelations = relations(tabs, ({ one, many }) => ({
+  venue: one(venues, { fields: [tabs.venueId], references: [venues.id] }),
+  table: one(venueTables, { fields: [tabs.tableId], references: [venueTables.id] }),
+  claims: many(tableClaims),
+  sessions: many(guestSessions),
+}));
+
+export const tableClaimsRelations = relations(tableClaims, ({ one }) => ({
+  venue: one(venues, { fields: [tableClaims.venueId], references: [venues.id] }),
+  table: one(venueTables, { fields: [tableClaims.tableId], references: [venueTables.id] }),
+  staff: one(staffAccounts, { fields: [tableClaims.staffAccountId], references: [staffAccounts.id] }),
+  tab: one(tabs, { fields: [tableClaims.tabId], references: [tabs.id] }),
+}));
+
+export const guestSessionsRelations = relations(guestSessions, ({ one }) => ({
+  tab: one(tabs, { fields: [guestSessions.tabId], references: [tabs.id] }),
+  venue: one(venues, { fields: [guestSessions.venueId], references: [venues.id] }),
 }));
