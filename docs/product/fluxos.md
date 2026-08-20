@@ -97,7 +97,8 @@ sequenceDiagram
 1. Dono cadastra garçons em **Equipe** (`/painel/equipe`).
 2. Garçom entra em `/login` → `/garcom`, escolhe mesa, mostra QR (countdown ~3 min).
 3. Cliente escaneia → redeem → PIN da mesa + **nome e telefone** (comanda pessoal).
-4. Pedido pelo cardápio exige comanda pessoal aberta (fatia seguinte).
+4. O quadro do garçom lista os nomes na mesa e, ao toque, abre a parcial. Não gera outro QR se a mesa já está ocupada.
+5. Pedido pelo cardápio exige comanda pessoal aberta (fatia seguinte).
 
 ## 3. Outros celulares na mesa (fatia 5)
 
