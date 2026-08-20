@@ -15,7 +15,7 @@ Formato: JSON. Erros:
 
 CORS: origin explícita do único front (`APP_URL`), `credentials: true`.
 
-## Implementado (fatias 1–8)
+## Implementado (fatias 1–10)
 
 ### Saúde
 
@@ -41,7 +41,8 @@ Cookie: `eaimesa_owner` (httpOnly, SameSite=Lax, Path=/). JWT inclui `role: owne
   "email": "dono@bar.com",
   "password": "mínimo 8 chars",
   "venueName": "Bar do Tião",
-  "slug": "bar-do-tiao"
+  "slug": "bar-do-tiao",
+  "plan": "auto_atendimento"
 }
 ```
 
@@ -57,7 +58,19 @@ Cookie: `eaimesa_owner` (httpOnly, SameSite=Lax, Path=/). JWT inclui `role: owne
 |--------|------|------|-----------|
 | GET | `/v1/public/venues/{slug}` | — | Venue + categorias ativas + itens ativos |
 
-Itens inativos e categorias inativas **não** entram na resposta pública. Venue `suspended`: ainda retorna o cardápio com `subscriptionStatus` para o front avisar.
+Itens inativos e categorias inativas **não** entram na resposta pública. Venue `suspended`: ainda retorna o cardápio com `subscriptionStatus` para o front avisar. `plan` entra no payload (`cardapio` não oferece PIN/pedido).
+
+### Billing (fatia 10)
+
+Checkout **stub**: sem Asaas. Resposta de sucesso para o front.
+
+| Método | Path | Auth | Descrição |
+|--------|------|------|-----------|
+| GET | `/v1/billing/plans` | — | Catálogo dos planos vendáveis + futuro |
+| GET | `/v1/billing/me` | Owner | Plano atual, trial/vigência, `canUpgrade` / `canDowngrade` |
+| POST | `/v1/billing/checkout` | Owner | `{ plan }` → `status: success`, `active` 30 dias |
+
+Downgrade com vigência paga em aberto → 409 `PLAN_DOWNGRADE_LOCKED`. Recurso de Auto atendimento no plano Cardápio → 403 `PLAN_FEATURE`. Trial/vigência vencidos → 403 `BILLING_INACTIVE`.
 
 ### Owner — venue e catálogo
 
@@ -340,7 +353,7 @@ Implementado na fatia 8 (`GET/PATCH/POST /v1/staff/orders`). `lock` e SSE contin
 
 ### Webhooks (futuro)
 
-- `POST /v1/webhooks/asaas` — assinatura B2B (HMAC)
+- `POST /v1/webhooks/asaas` — assinatura B2B (HMAC). Checkout da fatia 10 é stub.
 
 ## Códigos de erro (amostra)
 
@@ -359,6 +372,9 @@ Implementado na fatia 8 (`GET/PATCH/POST /v1/staff/orders`). `lock` e SSE contin
 | `EMAIL_TAKEN` | 409 |
 | `TAB_REQUIRED` | 403 |
 | `VENUE_SUSPENDED` | 403 |
+| `PLAN_FEATURE` | 403 |
+| `PLAN_DOWNGRADE_LOCKED` | 409 |
+| `BILLING_INACTIVE` | 403 |
 | `CLAIM_EXPIRED` | 410 |
 | `CLAIM_ALREADY_USED` | 409 |
 | `PIN_INVALID` | 401 |

@@ -7,3 +7,4 @@ export * from "./tables";
 export * from "./staff";
 export * from "./phone";
 export * from "./uuid";
+export * from "./plans";

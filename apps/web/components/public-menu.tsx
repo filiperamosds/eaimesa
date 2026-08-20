@@ -62,7 +62,7 @@ export function PublicMenuView({ menu }: { menu: PublicMenu }) {
           )}
         </div>
       </header>
-      <GuestTabBar slug={menu.venue.slug} tab={tab} partialCents={totalCents} />
+      <GuestTabBar slug={menu.venue.slug} tab={tab} partialCents={totalCents} showJoin={menu.venue.acceptsOrders} />
 
       {groups.length > 0 ? (
         <nav

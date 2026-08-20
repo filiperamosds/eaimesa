@@ -1,11 +1,13 @@
 import { createOrderSchema, patchOrderSchema } from "@eaimesa/shared";
 import type { FastifyInstance } from "fastify";
 import { requireOwner } from "../lib/auth-guard";
+import { requireServicePlan } from "../lib/billing";
 import { parseBody } from "../lib/http";
 import { createCounterOrder, listKanbanOrders, patchKanbanOrder } from "../lib/order-ops";
 
 export async function ownerOrderRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireOwner);
+  app.addHook("preHandler", requireServicePlan);
 
   app.get("/v1/owner/orders", async (req) => listKanbanOrders(req.owner!.venueId));
 

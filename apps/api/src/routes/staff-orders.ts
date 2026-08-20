@@ -1,11 +1,13 @@
 import { createOrderSchema, patchOrderSchema } from "@eaimesa/shared";
 import type { FastifyInstance } from "fastify";
 import { requireVenueActor } from "../lib/auth-guard";
+import { requireServicePlan } from "../lib/billing";
 import { parseBody } from "../lib/http";
 import { createCounterOrder, getVenueCatalog, listKanbanOrders, patchKanbanOrder } from "../lib/order-ops";
 
 export async function staffOrderRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireVenueActor);
+  app.addHook("preHandler", requireServicePlan);
 
   app.get("/v1/staff/catalog", async (req) => getVenueCatalog(req.venueActor!.venueId));
 

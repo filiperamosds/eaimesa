@@ -3,8 +3,12 @@ export type Venue = {
   name: string;
   slug: string;
   publicId: string;
+  plan: string;
+  planName?: string;
   subscriptionStatus: string;
   acceptsOrders: boolean;
+  trialEndsAt?: string | null;
+  currentPeriodEndsAt?: string | null;
 };
 
 export type Session = {
@@ -42,6 +46,7 @@ export type PublicMenu = {
     name: string;
     slug: string;
     subscriptionStatus: string;
+    plan?: string;
     acceptsOrders: boolean;
   };
   categories: {

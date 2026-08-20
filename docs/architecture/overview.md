@@ -46,10 +46,11 @@ Não existem `apps/guest` nem `apps/staff`.
 |------|-----|
 | `/` | Landing SaaS |
 | `/cadastro`, `/login` | Auth estabelecimento |
-| `/painel` | Redirect para `/painel/pedidos` |
-| `/painel/pedidos` | Kanban do dono |
+| `/painel` | Redirect pedidos ou cardápio conforme o plano |
+| `/painel/pedidos` | Kanban do dono (Auto atendimento) |
 | `/painel/cardapio`, `/painel/mesas`, `/painel/bar` | Cardápio, salão e dados do bar |
-| `/{slug}` | Cardápio público (+ carrinho e parcial se comanda aberta) |
+| `/painel/pagamento` | Checkout stub |
+| `/{slug}` | Cardápio público (+ carrinho e parcial se Auto atendimento) |
 | `/{slug}/c/{token}` | Redeem do claim |
 | `/{slug}/bem-vindo` | PIN no primeiro aparelho |
 | `/{slug}/entrar` | PIN join (outros aparelhos) |

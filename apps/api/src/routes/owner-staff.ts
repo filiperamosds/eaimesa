@@ -9,6 +9,7 @@ import { and, asc, count, eq, sql } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireOwner } from "../lib/auth-guard";
+import { requireServicePlan } from "../lib/billing";
 import { parseBody } from "../lib/http";
 import { hashPassword } from "../lib/password";
 
@@ -48,6 +49,7 @@ async function listMembers(venueId: string) {
 
 export async function ownerStaffRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireOwner);
+  app.addHook("preHandler", requireServicePlan);
 
   app.get("/v1/owner/staff", async (req) => {
     const venueId = req.owner!.venueId;
@@ -76,7 +78,7 @@ export async function ownerStaffRoutes(app: FastifyInstance) {
       throw new AppError(
         409,
         ERROR_CODES.STAFF_LIMIT,
-        `Plano Bar: no máximo ${PLAN_BAR_MAX_STAFF} garçons ativos.`,
+        `Auto atendimento: no máximo ${PLAN_BAR_MAX_STAFF} garçons ativos.`,
       );
     }
 
@@ -123,7 +125,7 @@ export async function ownerStaffRoutes(app: FastifyInstance) {
         throw new AppError(
           409,
           ERROR_CODES.STAFF_LIMIT,
-          `Plano Bar: no máximo ${PLAN_BAR_MAX_STAFF} garçons ativos.`,
+          `Auto atendimento: no máximo ${PLAN_BAR_MAX_STAFF} garçons ativos.`,
         );
       }
     }

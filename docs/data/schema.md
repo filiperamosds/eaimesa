@@ -14,11 +14,13 @@ Login do dono.
 
 - `id`, `owner_account_id` → Account
 - `name`, `slug` UNIQUE, `public_id` UNIQUE
+- `plan`: `cardapio` | `auto_atendimento`
 - `subscription_status`: `trial` | `active` | `past_due` | `suspended`
-- `accepts_orders`: bool (seed demo = true na fatia 7)
+- `accepts_orders`: true só no Auto atendimento com assinatura válida
+- `trial_ends_at`, `current_period_ends_at` (vigência paga)
 - `created_at`, `updated_at`
 
-Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando houver staff.
+Um account possui **um** venue (1:1). `VenueMember` só no plano Auto atendimento.
 
 ### Cardápio
 
@@ -55,7 +57,7 @@ Um account possui **um** venue no plano Bar (1:1). `VenueMember` entra quando ho
 - `label` (ex. "Mesa 4", "Balcão") — único por venue
 - `sort_order`, `active`, timestamps
 
-No máximo **15 mesas ativas** por venue (plano Bar). Pedido pode apontar `table_id` (nullable, `ON DELETE SET NULL`); `table_label` no pedido é snapshot.
+No máximo **15 mesas ativas** por venue no plano Auto atendimento.
 
 ## Entidades — fatia 4 (equipe + comanda)
 
@@ -67,7 +69,7 @@ Garçom vinculado ao venue (mesmo login do painel).
 - `role`: `staff` (owner continua via `venues.owner_account_id`)
 - `name`, `active`, timestamps
 
-Máximo **5 membros staff ativos** por venue (plano Bar).
+Máximo **5 membros staff ativos** por venue no plano Auto atendimento.
 
 ## Entidades — fatia 6 (comandas individuais)
 

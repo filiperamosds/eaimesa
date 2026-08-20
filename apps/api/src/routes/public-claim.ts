@@ -6,6 +6,7 @@ import { env } from "../env";
 import { AppError } from "../errors";
 import { generatePin, hashClaimToken } from "../lib/claim";
 import { issueGuestCookie } from "../lib/guest-cookie";
+import { assertServicePlan } from "../lib/billing";
 import { clientIp, rateLimit } from "../lib/http";
 import { hashPassword } from "../lib/password";
 
@@ -19,6 +20,7 @@ export async function publicClaimRoutes(app: FastifyInstance) {
     if (!venue) {
       throw new AppError(404, ERROR_CODES.VENUE_NOT_FOUND, "Este cardápio não existe.");
     }
+    assertServicePlan(venue);
 
     const [claim] = await db
       .select()

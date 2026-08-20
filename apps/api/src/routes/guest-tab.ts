@@ -5,6 +5,7 @@ import type { FastifyInstance } from "fastify";
 import { env } from "../env";
 import { AppError } from "../errors";
 import { requireGuest } from "../lib/auth-guard";
+import { assertServicePlan, requireServicePlan } from "../lib/billing";
 import { issueGuestCookie } from "../lib/guest-cookie";
 import { clientIp, parseBody, pinJoinLock, rateLimit } from "../lib/http";
 import { verifyPassword } from "../lib/password";
@@ -18,6 +19,7 @@ export async function guestTabRoutes(app: FastifyInstance) {
     if (!venue) {
       throw new AppError(404, ERROR_CODES.VENUE_NOT_FOUND, "Este cardápio não existe.");
     }
+    assertServicePlan(venue);
 
     const lock = pinJoinLock(
       `pinjoin:${clientIp(req)}:${venue.id}`,
@@ -60,7 +62,7 @@ export async function guestTabRoutes(app: FastifyInstance) {
     };
   });
 
-  app.post("/v1/guest/tabs", { preHandler: requireGuest }, async (req, reply) => {
+  app.post("/v1/guest/tabs", { preHandler: [requireGuest, requireServicePlan] }, async (req, reply) => {
     const guest = req.guest!;
     const body = parseBody(openComandaSchema, req.body);
 
@@ -132,7 +134,7 @@ export async function guestTabRoutes(app: FastifyInstance) {
     };
   });
 
-  app.get("/v1/guest/tab", { preHandler: requireGuest }, async (req) => {
+  app.get("/v1/guest/tab", { preHandler: [requireGuest, requireServicePlan] }, async (req) => {
     const guest = req.guest!;
     const [row] = await db
       .select({

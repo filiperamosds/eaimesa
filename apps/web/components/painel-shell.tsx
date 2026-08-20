@@ -3,16 +3,17 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { planAllowsService } from "@eaimesa/shared";
 import { api } from "../lib/api";
 import type { Session } from "../lib/types";
 import { Logo } from "./site-chrome";
 
-const LINKS = [
-  { href: "/painel/pedidos", label: "Pedidos", icon: "▣" },
-  { href: "/painel/cardapio", label: "Cardápio", icon: "☰" },
-  { href: "/painel/mesas", label: "Mesas", icon: "⊞" },
-  { href: "/painel/equipe", label: "Equipe", icon: "◎" },
-  { href: "/painel/bar", label: "Meu bar", icon: "⌂" },
+const ALL_LINKS = [
+  { href: "/painel/pedidos", label: "Pedidos", icon: "▣", service: true },
+  { href: "/painel/cardapio", label: "Cardápio", icon: "☰", service: false },
+  { href: "/painel/mesas", label: "Mesas", icon: "⊞", service: true },
+  { href: "/painel/equipe", label: "Equipe", icon: "◎", service: true },
+  { href: "/painel/bar", label: "Meu bar", icon: "⌂", service: false },
 ] as const;
 
 export function PainelShell({ children }: { children: React.ReactNode }) {
@@ -29,12 +30,16 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
           return;
         }
         setMe(session);
+        const service = planAllowsService(session.venue.plan);
+        if (!service && (path.startsWith("/painel/pedidos") || path.startsWith("/painel/mesas") || path.startsWith("/painel/equipe"))) {
+          router.replace("/painel/cardapio");
+        }
       })
       .catch(() => {
         setErr("Sessão inválida");
         router.replace("/login");
       });
-  }, [router]);
+  }, [router, path]);
 
   async function logout() {
     await api("/v1/auth/logout", { method: "POST" });
@@ -49,6 +54,8 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
+
+  const links = ALL_LINKS.filter((l) => !l.service || planAllowsService(me.venue.plan));
 
   return (
     <div className="min-h-screen pb-24 sm:pb-0">
@@ -65,7 +72,7 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="mx-auto hidden max-w-[88rem] px-5 pb-3 sm:block">
-          <PainelNav path={path} />
+          <PainelNav path={path} links={links} />
         </div>
       </header>
       <div className="mx-auto max-w-[88rem] px-5 py-6">{children}</div>
@@ -73,8 +80,8 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
         aria-label="Painel"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur-xl sm:hidden"
       >
-        <ul className="grid grid-cols-5 px-2 py-2">
-          {LINKS.map((l) => {
+        <ul className={`grid px-2 py-2 ${links.length > 2 ? "grid-cols-5" : "grid-cols-2"}`}>
+          {links.map((l) => {
             const active = path.startsWith(l.href);
             return (
               <li key={l.href}>
@@ -98,10 +105,16 @@ export function PainelShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function PainelNav({ path }: { path: string }) {
+function PainelNav({
+  path,
+  links,
+}: {
+  path: string;
+  links: { href: string; label: string }[];
+}) {
   return (
     <nav aria-label="Painel" className="flex rounded-2xl bg-paper-2/80 p-1">
-      {LINKS.map((l) => {
+      {links.map((l) => {
         const active = path.startsWith(l.href);
         return (
           <Link

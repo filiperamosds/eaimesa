@@ -1,40 +1,48 @@
-# Pricing (referência comercial)
+# Pricing
 
-Valores para bar pequeno (~10 mesas). Mensalidade fixa; **sem comissão** sobre consumo.
+Mensalidade fixa; **sem comissão** sobre consumo. Trial de **7 dias** no plano escolhido; a cobrança começa depois. Nesta fatia o checkout é **stub** (sucesso sem gateway).
 
-## Plano Bar (MVP)
+## Planos vendáveis
 
-| Item | Valor |
-|------|-------|
-| Mensal | **R$ 149/mês** |
-| Mesas incluídas | Até **15** |
-| Pedidos | Ilimitados |
-| Usuários staff | Até 5 (ajustável) |
-| KDS | Tela (web) |
-| Termica | Não incluída |
+| | **Cardápio** | **Auto atendimento** |
+|--|--------------|----------------------|
+| Mensal | **R$ 49/mês** | **R$ 149/mês** |
+| Cardápio público + QR | Sim | Sim |
+| Pedido no celular / comanda / Kanban | Não | Sim |
+| Mesas | — | Até **15** |
+| Staff | — | Até **5** |
+| Pedidos | — | Ilimitados |
+| Térmica | Não | Não |
 
-## Early adopters
+Vigência paga no stub: **30 dias** a partir do checkout.
 
-- **R$ 119/mês** nos primeiros 10 estabelecimentos, preço travado 12 meses.
+## Em breve (não vender agora)
 
-## Anual
+**Equipamento na mesa** — tablet/hardware no salão. Sem preço e sem CTA de compra.
 
-- **R$ 1.490/ano** (~10 meses) para quem prefere PIX anual.
+## Troca de plano
+
+- **Subir** (Cardápio → Auto atendimento): a qualquer momento, via checkout.
+- **Descer** (Auto atendimento → Cardápio): só depois do fim da vigência **paga**. No trial, pode trocar.
+
+## Early adopters / anual
+
+Fora desta fatia (o “Plano Bar” único e o desconto de R$ 119 saem).
 
 ## Setup
 
-- **R$ 0** self-serve.
-- **R$ 150** opcional: cadastro assistido do cardápio.
+- **R$ 0** self-serve no trial.
+- **R$ 150** opcional: cadastro assistido do cardápio (comercial; não está no app).
 
-## O que não cobrar no MVP
+## O que não cobrar
 
 - Percentual sobre consumo
 - Taxa por pedido
-- Por mesa extra (só após 15 mesas, ex. R$ 8/mesa)
+- Gateway nesta fatia (checkout devolve sucesso)
 
 ## Referência de mercado (2026)
 
 - Cardápio QR básico: ~R$ 20–100/mês
-- Comanda self-service: ~R$ 150–199/mês (Pedis Pro, Sabor Digital, etc.)
+- Comanda self-service: ~R$ 150–199/mês
 
-EaiMesa se posiciona na faixa de **comanda confiável**, não cardápio PDF.
+EaiMesa: **Cardápio** na faixa QR; **Auto atendimento** na faixa de comanda confiável.

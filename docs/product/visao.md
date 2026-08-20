@@ -21,14 +21,15 @@ Plataforma **SaaS multi-tenant**: cada estabelecimento paga aluguel mensal; o co
 
 Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-frontend-unico.md), [fatia 1](fatia-01-cardapio.md) e [fatia 2](fatia-02-pedidos.md).
 
-| Superfície | Rota | Usuário | Fatia 9 | MVP completo |
-|------------|------|---------|---------|--------------|
-| **Landing** | `/` | Visitante B2B | Sim | Sim |
-| **Auth estabelecimento** | `/cadastro`, `/login` | Dono / garçom | Sim | Sim |
-| **Painel** | `/painel/*` | Dono | Cardápio, Kanban (guest + balcão), mesas, equipe | — |
-| **Garçom** | `/garcom` | Staff | QR + dialog + **Kanban** | — |
-| **Cardápio público** | `/{slug}` | Cliente | PIN + comanda + carrinho + **parcial** | — |
-| **Platform** | futuro | Operador EaiMesa | Não | Onboarding, billing, suspender |
+| Superfície | Rota | Usuário | Fatia 10 | MVP completo |
+|------------|------|---------|----------|--------------|
+| **Landing** | `/` | Visitante B2B | Planos Cardápio + Auto atendimento | Sim |
+| **Auth estabelecimento** | `/cadastro`, `/login` | Dono / garçom | Trial 7 dias no plano escolhido | Sim |
+| **Painel** | `/painel/*` | Dono | Cardápio; resto só no Auto atendimento | — |
+| **Pagamento** | `/painel/pagamento` | Dono | Checkout stub (sucesso) | Gateway |
+| **Garçom** | `/garcom` | Staff | Só Auto atendimento | — |
+| **Cardápio público** | `/{slug}` | Cliente | Sempre leitura; pedido só Auto atendimento | — |
+| **Platform** | futuro | Operador EaiMesa | Não | Onboarding, billing real |
 
 ## Personas
 
@@ -38,17 +39,16 @@ Tudo no **mesmo** frontend (`apps/web`). Ver [ADR-003](../decisions/ADR-003-fron
 
 ## Fatia atual vs MVP
 
-Implementação **agora**: [fatia 9 — parcial do cliente](fatia-09-parcial-guest.md).
+Implementação **agora**: [fatia 10 — planos](fatia-10-planos.md).
 
 ### MVP (quando as fatias somarem)
 
 - Signup B2B: e-mail, senha; CNPJ/OTP entram depois
-- Plano **Bar**: até 15 mesas, 1 venue, pedidos ilimitados
+- Planos **Cardápio** e **Auto atendimento**; trial 7 dias
 - Cardápio CRUD (texto, preço no servidor)
-- Mesas + claim do garçom + PIN + cookie guest
-- Fila staff (KDS na tela; sem térmica)
+- Auto atendimento: mesas + claim + PIN + pedido guest + fila staff
 - Multi-tenant com `venue_id` em toda query
-- Billing gate: venue suspenso não cria pedido
+- Billing stub + gate: trial/vigência expirada não opera comanda
 
 ### Fora do MVP
 

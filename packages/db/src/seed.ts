@@ -20,6 +20,7 @@ import {
 const DEMO_EMAIL = "dono@bardotiao.local";
 const DEMO_PASSWORD = "demo1234";
 const DEMO_STAFF_EMAIL = "garcom@bardotiao.local";
+const CARDAPIO_EMAIL = "dono@cafedalina.local";
 
 const MENU: {
   name: string;
@@ -132,14 +133,25 @@ async function seed() {
           name: "Bar do Tião",
           slug: "bar-do-tiao",
           publicId: randomBytes(6).toString("hex"),
+          plan: "auto_atendimento",
           subscriptionStatus: "trial",
           acceptsOrders: true,
+          trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         })
         .returning();
     } else {
       [venue] = await tx
         .update(venues)
-        .set({ name: "Bar do Tião", slug: "bar-do-tiao", acceptsOrders: true, updatedAt: new Date() })
+        .set({
+          name: "Bar do Tião",
+          slug: "bar-do-tiao",
+          plan: "auto_atendimento",
+          subscriptionStatus: "trial",
+          acceptsOrders: true,
+          trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          currentPeriodEndsAt: null,
+          updatedAt: new Date(),
+        })
         .where(eq(venues.id, venue.id))
         .returning();
     }
@@ -296,10 +308,93 @@ async function seed() {
         .set({ passwordHash })
         .where(eq(accounts.id, staffAccount.id));
     }
+
+    let [cardapioAccount] = await tx.select().from(accounts).where(eq(accounts.email, CARDAPIO_EMAIL)).limit(1);
+    if (!cardapioAccount) {
+      [cardapioAccount] = await tx
+        .insert(accounts)
+        .values({ email: CARDAPIO_EMAIL, passwordHash })
+        .returning();
+    } else {
+      await tx.update(accounts).set({ passwordHash }).where(eq(accounts.id, cardapioAccount.id));
+    }
+    if (!cardapioAccount) throw new Error("Falha ao criar account Café da Lina");
+
+    let [cardapioVenue] = await tx
+      .select()
+      .from(venues)
+      .where(eq(venues.ownerAccountId, cardapioAccount.id))
+      .limit(1);
+    if (!cardapioVenue) {
+      [cardapioVenue] = await tx
+        .insert(venues)
+        .values({
+          ownerAccountId: cardapioAccount.id,
+          name: "Café da Lina",
+          slug: "cafe-da-lina",
+          publicId: randomBytes(6).toString("hex"),
+          plan: "cardapio",
+          subscriptionStatus: "trial",
+          acceptsOrders: false,
+          trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        })
+        .returning();
+    } else {
+      [cardapioVenue] = await tx
+        .update(venues)
+        .set({
+          name: "Café da Lina",
+          slug: "cafe-da-lina",
+          plan: "cardapio",
+          subscriptionStatus: "trial",
+          acceptsOrders: false,
+          trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          currentPeriodEndsAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(venues.id, cardapioVenue.id))
+        .returning();
+    }
+    if (!cardapioVenue) throw new Error("Falha ao criar venue Café da Lina");
+
+    await tx.delete(orders).where(eq(orders.venueId, cardapioVenue.id));
+    await tx.delete(guestSessions).where(eq(guestSessions.venueId, cardapioVenue.id));
+    await tx.delete(tableClaims).where(eq(tableClaims.venueId, cardapioVenue.id));
+    await tx.delete(tabs).where(eq(tabs.venueId, cardapioVenue.id));
+    await tx.delete(tableSessions).where(eq(tableSessions.venueId, cardapioVenue.id));
+    await tx.delete(venueTables).where(eq(venueTables.venueId, cardapioVenue.id));
+    await tx.delete(catalogItems).where(eq(catalogItems.venueId, cardapioVenue.id));
+    await tx.delete(catalogCategories).where(eq(catalogCategories.venueId, cardapioVenue.id));
+
+    for (const [i, cat] of MENU.slice(0, 3).entries()) {
+      const [category] = await tx
+        .insert(catalogCategories)
+        .values({
+          venueId: cardapioVenue.id,
+          name: cat.name,
+          sortOrder: i,
+          active: true,
+        })
+        .returning();
+      if (!category) continue;
+      await tx.insert(catalogItems).values(
+        cat.items.map((item, j) => ({
+          venueId: cardapioVenue.id,
+          categoryId: category.id,
+          name: item.name,
+          description: item.description,
+          imageUrl: item.imageUrl,
+          priceCents: item.priceCents,
+          sortOrder: j,
+          active: true,
+        })),
+      );
+    }
   });
 
-  console.log("Seed ok: /bar-do-tiao — dono@bardotiao.local / demo1234");
+  console.log("Seed ok: /bar-do-tiao — dono@bardotiao.local / demo1234 (Auto atendimento)");
   console.log("Garçom demo: garcom@bardotiao.local / demo1234 — login em /login → /garcom");
+  console.log("Seed ok: /cafe-da-lina — dono@cafedalina.local / demo1234 (Cardápio)");
   await sql.end();
 }
 

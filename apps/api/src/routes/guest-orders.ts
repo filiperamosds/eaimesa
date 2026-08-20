@@ -4,6 +4,7 @@ import { and, desc, eq, gt, inArray } from "drizzle-orm";
 import type { FastifyInstance } from "fastify";
 import { AppError } from "../errors";
 import { requireGuest } from "../lib/auth-guard";
+import { requireServicePlan } from "../lib/billing";
 import { clientIp, parseBody, rateLimit } from "../lib/http";
 import { serializeOrder } from "../lib/orders";
 
@@ -73,6 +74,7 @@ async function loadOrderBundle(order: typeof orders.$inferSelect, guestName: str
 
 export async function guestOrderRoutes(app: FastifyInstance) {
   app.addHook("preHandler", requireGuest);
+  app.addHook("preHandler", requireServicePlan);
 
   app.get("/v1/guest/orders", async (req) => {
     const ctx = await loadGuestTabContext(req.guest!);

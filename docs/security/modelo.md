@@ -10,12 +10,12 @@
 
 ## Papéis
 
-| Papel | Auth | Escopo | Fatia 8 |
-|-------|------|--------|---------|
+| Papel | Auth | Escopo | Fatia 10 |
+|-------|------|--------|----------|
 | Público | — | Ler cardápio por slug | Sim |
-| Owner | Cookie `eaimesa_owner` | Cardápio, venue, fila, mesas, equipe | Sim |
-| Guest | Cookie `eaimesa_guest` | Mesa + comanda + pedidos da tab | Sim |
-| Staff | Cookie `eaimesa_owner` (`role: staff`) | Mesas, claims, fila | Sim |
+| Owner | Cookie `eaimesa_owner` | Cardápio; resto conforme o plano | Sim |
+| Guest | Cookie `eaimesa_guest` | Mesa + comanda + pedidos (Auto atendimento) | Sim |
+| Staff | Cookie `eaimesa_owner` (`role: staff`) | Mesas, claims, fila (Auto atendimento) | Sim |
 | Platform | SSO interno + 2FA | Tenants, suspensão | Não |
 
 ## Ameaças SaaS
@@ -23,7 +23,8 @@
 | Ameaça | Controle |
 |--------|----------|
 | IDOR entre bares | Filtro `venue_id` da sessão; testes depois; RLS |
-| Pedido remoto | Claim + PIN + comanda pessoal; slug sozinho não cria pedido |
+| Pedido remoto | Claim + PIN + comanda pessoal; slug sozinho não cria pedido; plano Cardápio não tem pedido |
+| Plano / feature | `PLAN_FEATURE` no servidor; UI esconde mesas/garçom no Cardápio |
 | Preço adulterado no pedido | Recalcular no servidor |
 | XSS no cardápio | Texto; escape no React; CSP depois |
 | Guest → admin | Cookies distintos; RBAC server-side |
