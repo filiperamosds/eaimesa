@@ -9,7 +9,7 @@ O código ativo não fica mais só neste monorepo. Clone e rode **cada um num te
 
 `APP_URL` no backend deve ser `http://localhost:3000`. O Next faz proxy de `/v1` para `API_URL`. Ver [ADR-015](../decisions/ADR-015-dois-repositorios.md).
 
-Os passos abaixo ainda valem se você estiver neste monorepo (`filiperamosds/eaimesa`).
+3. Backend Laravel + MySQL (pasta `eaimesa-laravel/`, [ADR-016](../decisions/ADR-016-laravel-mysql.md)): `php artisan migrate --seed && php artisan serve --port=8000`. No front, `API_URL=http://localhost:8000`.
 
 ## Pré-requisitos
 

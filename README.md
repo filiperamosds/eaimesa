@@ -2,7 +2,7 @@
 
 SaaS B2B para bares e restaurantes pequenos: cardápio no celular do cliente e, no MVP completo, comanda com QR do garçom.
 
-O desenvolvimento ativo está em **dois repositórios** ([ADR-015](docs/decisions/ADR-015-dois-repositorios.md)):
+O desenvolvimento ativo está em **dois repositórios** ([ADR-015](docs/decisions/ADR-015-dois-repositorios.md)). Backend Laravel + MySQL (em paralelo): pasta [`eaimesa-laravel/`](eaimesa-laravel/README.md) ([ADR-016](docs/decisions/ADR-016-laravel-mysql.md)).
 
 | Repo | O que é | Terminal local |
 |------|---------|----------------|

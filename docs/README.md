@@ -22,7 +22,7 @@
 8. [Modelo de dados](data/schema.md) — entidades fatia 1–11 + planejadas
 9. [API](api/endpoints.md) — REST fatia 1–11 + contrato futuro
 10. [Dev setup](ops/dev-setup.md) — pnpm, Postgres, seed `bar-do-tiao`, `cafe-da-lina` e console
-11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, mesas, comandas, pedido guest, fila garçom, planos, console SaaS, SKU + promo, **dois repositórios**
+11. [ADRs](decisions/ADR-001-stack.md) — stack, claim, front único, slug, Kanban, mesas, comandas, pedido guest, fila garçom, planos, console SaaS, SKU + promo, dois repositórios, **Laravel + MySQL**
 
 ## Cursor
 
