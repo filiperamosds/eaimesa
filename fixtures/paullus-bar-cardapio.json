@@ -1,0 +1,258 @@
+{
+  "venue": {
+    "name": "Paullu's Bar",
+    "tagline": "Sabores com Qualidade — Porções e Caldos",
+    "notes": [
+      "Cobramos 10% de garçom aos finais de semana"
+    ]
+  },
+  "categories": [
+    {
+      "name": "Porções",
+      "sortOrder": 0,
+      "items": [
+        {
+          "name": "Caldos",
+          "description": "",
+          "priceCents": 2000,
+          "priceReais": 20.0,
+          "sortOrder": 0
+        },
+        {
+          "name": "Carne Chapa Picanha/Filé/Carne de Sol",
+          "description": "",
+          "priceCents": 6800,
+          "priceReais": 68.0,
+          "sortOrder": 1
+        },
+        {
+          "name": "Linguicinha de Porco",
+          "description": "",
+          "priceCents": 3800,
+          "priceReais": 38.0,
+          "sortOrder": 2
+        },
+        {
+          "name": "Lombinho de Porco",
+          "description": "",
+          "priceCents": 4500,
+          "priceReais": 45.0,
+          "sortOrder": 3
+        },
+        {
+          "name": "Batata Frita",
+          "description": "",
+          "priceCents": 2800,
+          "priceReais": 28.0,
+          "sortOrder": 4
+        },
+        {
+          "name": "Mini Kibes",
+          "description": "",
+          "priceCents": 2500,
+          "priceReais": 25.0,
+          "sortOrder": 5
+        }
+      ]
+    },
+    {
+      "name": "Bebidas",
+      "sortOrder": 1,
+      "items": [
+        {
+          "name": "Energético Redbull/Monsters",
+          "description": "",
+          "priceCents": 1200,
+          "priceReais": 12.0,
+          "sortOrder": 0
+        },
+        {
+          "name": "Ice 51",
+          "description": "",
+          "priceCents": 900,
+          "priceReais": 9.0,
+          "sortOrder": 1
+        },
+        {
+          "name": "H2O / Guaraná Antártica 1lt",
+          "description": "",
+          "priceCents": 800,
+          "priceReais": 8.0,
+          "sortOrder": 2
+        },
+        {
+          "name": "Refrigerante/Suco/Schweppes Latas",
+          "description": "",
+          "priceCents": 600,
+          "priceReais": 6.0,
+          "sortOrder": 3
+        },
+        {
+          "name": "Coca Cola KS",
+          "description": "",
+          "priceCents": 500,
+          "priceReais": 5.0,
+          "sortOrder": 4
+        },
+        {
+          "name": "Refrigerante 1.5",
+          "description": "",
+          "priceCents": 1100,
+          "priceReais": 11.0,
+          "sortOrder": 5
+        },
+        {
+          "name": "Refrigerante 2lt",
+          "description": "",
+          "priceCents": 1200,
+          "priceReais": 12.0,
+          "sortOrder": 6
+        },
+        {
+          "name": "Suco 1 LT",
+          "description": "",
+          "priceCents": 950,
+          "priceReais": 9.5,
+          "sortOrder": 7
+        },
+        {
+          "name": "Suco Caixinha",
+          "description": "",
+          "priceCents": 300,
+          "priceReais": 3.0,
+          "sortOrder": 8
+        },
+        {
+          "name": "Água Sem Gás",
+          "description": "",
+          "priceCents": 300,
+          "priceReais": 3.0,
+          "sortOrder": 9
+        },
+        {
+          "name": "Águas Com Gás",
+          "description": "",
+          "priceCents": 400,
+          "priceReais": 4.0,
+          "sortOrder": 10
+        }
+      ]
+    },
+    {
+      "name": "Cervejas",
+      "sortOrder": 2,
+      "items": [
+        {
+          "name": "Antarctica/Brahma/Skol 600ml",
+          "description": "600 ml",
+          "priceCents": 1200,
+          "priceReais": 12.0,
+          "sortOrder": 0
+        },
+        {
+          "name": "Amstel/Original/Spaten 600ml",
+          "description": "600 ml",
+          "priceCents": 1300,
+          "priceReais": 13.0,
+          "sortOrder": 1
+        },
+        {
+          "name": "Heineken 600ml",
+          "description": "600 ml",
+          "priceCents": 1700,
+          "priceReais": 17.0,
+          "sortOrder": 2
+        },
+        {
+          "name": "Corona/Heineken/Stella 330ml",
+          "description": "330 ml",
+          "priceCents": 1000,
+          "priceReais": 10.0,
+          "sortOrder": 3
+        },
+        {
+          "name": "Budweiser 330ml",
+          "description": "330 ml",
+          "priceCents": 900,
+          "priceReais": 9.0,
+          "sortOrder": 4
+        },
+        {
+          "name": "Antarctica/Brahma/Skol Profissa",
+          "description": "",
+          "priceCents": 500,
+          "priceReais": 5.0,
+          "sortOrder": 5
+        },
+        {
+          "name": "Original Profissa",
+          "description": "",
+          "priceCents": 600,
+          "priceReais": 6.0,
+          "sortOrder": 6
+        },
+        {
+          "name": "Antarctica/Brahma/Original/Amstel/Kaiser — Lata",
+          "description": "Lata",
+          "priceCents": 500,
+          "priceReais": 5.0,
+          "sortOrder": 7
+        }
+      ]
+    },
+    {
+      "name": "Whiskeys / Tequilas / Vodkas",
+      "sortOrder": 3,
+      "items": [
+        {
+          "name": "Old Par / Jack Daniels",
+          "description": "",
+          "priceCents": 1800,
+          "priceReais": 18.0,
+          "sortOrder": 0
+        },
+        {
+          "name": "Red Label/Ballantines/Horse",
+          "description": "",
+          "priceCents": 1000,
+          "priceReais": 10.0,
+          "sortOrder": 1
+        },
+        {
+          "name": "Passport/Natu Nobilis",
+          "description": "",
+          "priceCents": 900,
+          "priceReais": 9.0,
+          "sortOrder": 2
+        },
+        {
+          "name": "José Cuervo",
+          "description": "",
+          "priceCents": 1500,
+          "priceReais": 15.0,
+          "sortOrder": 3
+        },
+        {
+          "name": "Orloff ou Gin Rocks",
+          "description": "",
+          "priceCents": 600,
+          "priceReais": 6.0,
+          "sortOrder": 4
+        },
+        {
+          "name": "Campari",
+          "description": "",
+          "priceCents": 1100,
+          "priceReais": 11.0,
+          "sortOrder": 5
+        }
+      ]
+    }
+  ],
+  "omitted": [
+    {
+      "name": "Budweiser Zero — Lata",
+      "reason": "Preço ilegível / sem etiqueta visível nas fotos"
+    }
+  ]
+}
